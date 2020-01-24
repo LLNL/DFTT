@@ -1,0 +1,71 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package llnl.gnem.core.gui.waveform.plotPrefs;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+
+/**
+ *
+ * @author dodge1
+ */
+public class PlotPrefsPanel extends JPanel {
+
+    private final PlotPresentationPrefs prefs;
+    private final BorderRegionPanel borderPanel;
+    private final DrawingRegionPanel centerPanel;
+    private final AxisPrefsPanel xPrefsPanel;
+    private final AxisPrefsPanel yPrefsPanel;
+    private final PickPrefsPanel pickPrefsPanel;
+    private final PickPrefsPanel predPickPrefsPanel;
+    private final MiscPropertiesPanel miscPropertiesPanel;
+
+    public PlotPrefsPanel(PlotPresentationPrefs prefs) {
+        super(new BorderLayout());
+        this.prefs = prefs;
+
+        JTabbedPane tabbedPane = new JTabbedPane();
+
+        borderPanel = new BorderRegionPanel(prefs.getBorderPrefs());
+        tabbedPane.addTab("Border", null, borderPanel);
+
+        centerPanel = new DrawingRegionPanel(prefs.getPlotRegionPrefs());
+        tabbedPane.addTab("Interior", null, centerPanel);
+
+        xPrefsPanel = new AxisPrefsPanel(prefs.getxAxisPrefs());
+        tabbedPane.addTab("X-Axis", null, xPrefsPanel);
+
+        yPrefsPanel = new AxisPrefsPanel(prefs.getyAxisPrefs());
+        tabbedPane.addTab("Y-Axis", null, yPrefsPanel);
+
+        pickPrefsPanel = new PickPrefsPanel(prefs.getPickPrefs());
+        tabbedPane.addTab("Pick", null, pickPrefsPanel);
+
+        predPickPrefsPanel = new PickPrefsPanel(prefs.getPredPickPrefs());
+        tabbedPane.addTab("Pred-Pick", null, predPickPrefsPanel);
+
+        miscPropertiesPanel = new MiscPropertiesPanel(prefs);
+        tabbedPane.addTab("Miscellaneous", null, miscPropertiesPanel);
+
+        add(tabbedPane, BorderLayout.CENTER);
+        this.setBorder(BorderFactory.createLineBorder(Color.blue));
+        setPreferredSize(new Dimension(500, 350));
+    }
+
+    void updatePrefsFromControls() {
+        borderPanel.updatePrefsFromControls();
+        centerPanel.updatePrefsFromControls();
+        xPrefsPanel.updatePrefsFromControls();
+        yPrefsPanel.updatePrefsFromControls();
+        pickPrefsPanel.updatePrefsFromControls();
+        predPickPrefsPanel.updatePrefsFromControls();
+
+        miscPropertiesPanel.updatePrefsFromControls();
+    }
+}

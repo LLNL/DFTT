@@ -1,0 +1,157 @@
+package llnl.gnem.core.gui.waveform.recsec;
+
+
+
+import java.io.IOException;
+import java.util.logging.Level;
+import llnl.gnem.core.gui.map.origins.OriginInfo;
+import llnl.gnem.core.waveform.components.BaseSingleComponent;
+import llnl.gnem.core.traveltime.Ak135.TraveltimeCalculatorProducer;
+import llnl.gnem.core.traveltime.Point3D;
+import llnl.gnem.core.traveltime.SinglePhaseTraveltimeCalculator;
+import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.core.util.SeriesMath;
+
+/**
+ * User: Doug
+ * Date: Dec 13, 2009
+ * Time: 1:40:44 PM
+ * COPYRIGHT NOTICE
+ * Copyright (C) 2008 Doug Dodge.
+ */
+public abstract class BaseWaveformHolder implements WaveformHolder {
+    protected final BaseSingleComponent component;
+    protected final double meanValue;
+    private double thisDataRange;
+    private double maxDataRange;
+    protected ScalingType scalingType;
+    protected double magnification = 1;
+    private final double referenceTime;
+
+    public BaseWaveformHolder(double thisRange,
+            BaseSingleComponent channelData,
+            ScalingType scalingType,
+            double meanValue,
+            double maxRange,
+            double referenceTime) {
+        thisDataRange = thisRange;
+        this.component = channelData;
+        this.scalingType = scalingType;
+        this.meanValue = meanValue;
+        maxDataRange = maxRange;
+        this.referenceTime = referenceTime;
+    }
+
+    @Override
+    public void updateAmplitudeInformation(double maxPeakToPeak, double range) {
+        maxDataRange = maxPeakToPeak;
+        thisDataRange = range;
+    }
+
+    @Override
+    public double getHeight() {
+        return 20;     // height in millimeters.
+    }
+
+    @Override
+    public double getCenter() {
+        return meanValue;
+    }
+
+    @Override
+    public void magnify() {
+        magnification *= 2;
+    }
+
+    @Override
+    public void reduce() {
+        magnification /= 2;
+    }
+
+    @Override
+    public abstract float[] getPlotArray();
+
+    @Override
+    public double getTime() {
+        return component.getTraceData().getTime().getEpochTime() - referenceTime;
+    }
+
+    @Override
+    public double getSamprate() {
+        return component.getTraceData().getSampleRate();
+    }
+
+    @Override
+    public BaseSingleComponent getChannelData() {
+        return component;
+    }
+
+    @Override
+    public void setScalingType(ScalingType scalingType) {
+        this.scalingType = scalingType;
+    }
+
+
+    protected float[] getPlotArray(double scaleFactor2) {
+        float[] data = component.getTraceData().getPlotData();
+        SeriesMath.removeMean(data);
+        if (thisDataRange > 0) {
+            double scale = 1 / maxDataRange; // backup in case this trace is flatline.
+            switch (scalingType) {
+                case Fixed:
+                    scale = 1 / thisDataRange * scaleFactor2;
+                    break;
+                case Relative:
+                    scale = 1 / maxDataRange * scaleFactor2;
+                    break;
+            }
+            SeriesMath.MultiplyScalar(data, scale * magnification);
+        }
+        SeriesMath.AddScalar(data, meanValue);
+
+        return data;
+    }
+
+    @Override
+    public double getDataRange() {
+        return thisDataRange;
+    }
+
+    @Override
+    public double getMaxDataRange() {
+        return maxDataRange;
+    }
+
+    @Override
+    public ScalingType getScalingType() {
+        return scalingType;
+    }
+
+
+    @Override
+    public double getTimeReduction(TimeReductionType timeReduction, OriginInfo origin) {
+        if (origin == null) {
+            return 0;
+        } else {
+            switch (timeReduction) {
+                case None:
+                    return 0;
+                case Ptime: {
+                try {
+                    SinglePhaseTraveltimeCalculator calculator = TraveltimeCalculatorProducer.getInstance().getSinglePhaseTraveltimeCalculator("P");
+
+                    Point3D pos = component.getPoint3D();
+                    return calculator.getTT(origin.getPoint3D(), pos);// + origin.getTime();
+                } catch (IOException ex) {
+                    ApplicationLogger.getInstance().log(Level.SEVERE, null, ex);
+                } catch (ClassNotFoundException ex) {
+                    ApplicationLogger.getInstance().log(Level.SEVERE, null, ex);
+                }
+                }
+                default:
+                    throw new IllegalArgumentException("Unsupported Reduction Type: " + timeReduction);
+            }
+        }
+    }
+
+}

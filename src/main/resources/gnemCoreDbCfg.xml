@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<oracleDbServices xmlns="http://www.llnl.gov/gnemcore/1.0.0">
+    <services>
+        <service>        
+            <serviceId>GMPLOCAL</serviceId>
+            <connectionDescriptor>(DESCRIPTION =
+                (ADDRESS_LIST =
+                (ADDRESS = (PROTOCOL = TCP)(HOST = 192.168.99.10)(PORT = 1521)) )
+                (CONNECT_DATA =
+                (SERVICE_NAME = ORCL)
+                ))</connectionDescriptor>
+            <isSensitiveService>false</isSensitiveService>
+        </service>
+    </services>
+</oracleDbServices>
+

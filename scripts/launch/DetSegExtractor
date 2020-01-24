@@ -1,0 +1,4 @@
+#!/bin/csh
+java -ms1024m -mx4000m  -d64 -Djava.util.prefs.systemRoot=/tmp/.java -Djava.util.prefs.syncInterval=2000000  -cp "/opt/gnem/java/applications/DetectionFramework/latest/*" llnl.gnem.apps.detection.util.DetSegExtractor $*
+
+

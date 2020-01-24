@@ -1,0 +1,240 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package llnl.gnem.apps.detection.sdBuilder.configuration;
+
+import java.awt.Color;
+import javax.swing.BorderFactory;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SpringLayout;
+import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.core.gui.util.SpringUtilities;
+
+/**
+ *
+ * @author dodge1
+ */
+public class GeneralParamsPanel extends JPanel {
+
+    private static final long serialVersionUID = 4510467557517001233L;
+
+    private final JFormattedTextField clusterThresholdField;
+
+    private final JFormattedTextField traceLengthField;
+    private final JComboBox detectorTypeCombo;
+
+    private final JCheckBox fixShiftsChk;
+    private final JCheckBox suppressBadDetectorsChk;
+    private final JCheckBox requireCorrelationChk;
+
+    private final JTextField siteTableField;
+    private final JTextField originTableField;
+    private final JFormattedTextField minDetectionCountField;
+    private final JFormattedTextField prePickSecondsField;
+    private final JFormattedTextField minDetStatField;
+    private final JFormattedTextField maxDetStatField;
+    private final JCheckBox autoApplyFilterChk;
+    private final JCheckBox retrieveByBlocksChk;
+    private final JFormattedTextField blockSizeField;
+
+    public GeneralParamsPanel(double clusterThreshold,
+            DetectorType detectorType,
+            double traceLength,
+            boolean fixShiftsToZero,
+            String siteTableName,
+            String originTableName,
+            int minDetectionCount,
+            double windowStart,
+            double minDetectionStat,
+            double maxDetectionStat, 
+            boolean suppressBadDetectors,
+            boolean requireCorrelation,
+            boolean autoApplyFilter, 
+            boolean retrieveByBlocks, 
+            int blockSize) {
+
+        super(new SpringLayout());
+        JLabel label = new JLabel("SITE Table Name", JLabel.TRAILING);
+        add(label);
+        siteTableField = new JTextField(siteTableName);
+        label.setLabelFor(siteTableField);
+        add(siteTableField);
+
+        label = new JLabel("ORIGIN Table Name", JLabel.TRAILING);
+        add(label);
+        originTableField = new JTextField(originTableName);
+        label.setLabelFor(originTableField);
+        add(originTableField);
+
+        label = new JLabel("Pre-Detection Seconds", JLabel.TRAILING);
+        add(label);
+        prePickSecondsField = new JFormattedTextField(windowStart);
+        prePickSecondsField.setColumns(10);
+        add(prePickSecondsField);
+        label.setLabelFor(prePickSecondsField);
+
+        label = new JLabel("Retrieved Trace Length", JLabel.TRAILING);
+        add(label);
+
+        traceLengthField = new JFormattedTextField(traceLength);
+        traceLengthField.setColumns(10);
+        add(traceLengthField);
+        label.setLabelFor(traceLengthField);
+
+        label = new JLabel("Min Detection STAT", JLabel.TRAILING);
+        add(label);
+        minDetStatField = new JFormattedTextField(minDetectionStat);
+        minDetStatField.setColumns(10);
+        add(minDetStatField);
+        label.setLabelFor(minDetStatField);
+
+        label = new JLabel("Max Detection STAT", JLabel.TRAILING);
+        add(label);
+        maxDetStatField = new JFormattedTextField(maxDetectionStat);
+        maxDetStatField.setColumns(10);
+        add(maxDetStatField);
+        label.setLabelFor(maxDetStatField);
+
+        label = new JLabel("Force Zero Shifts", JLabel.TRAILING);
+        add(label);
+        fixShiftsChk = new JCheckBox("", fixShiftsToZero);
+        label.setLabelFor(fixShiftsChk);
+        fixShiftsChk.setSelected(fixShiftsToZero);
+        add(fixShiftsChk);
+
+        label = new JLabel("Cluster Threshold", JLabel.TRAILING);
+        add(label);
+
+        clusterThresholdField = new JFormattedTextField(clusterThreshold);
+        clusterThresholdField.setColumns(10);
+        add(clusterThresholdField);
+        label.setLabelFor(clusterThresholdField);
+
+        label = new JLabel("Detector Type", JLabel.TRAILING);
+        add(label);
+
+        DetectorType[] types = {DetectorType.SUBSPACE, DetectorType.ARRAY_CORRELATION,};
+        detectorTypeCombo = new JComboBox(types);
+        add(detectorTypeCombo);
+        label.setLabelFor(detectorTypeCombo);
+        detectorTypeCombo.setSelectedItem(detectorType);
+
+        label = new JLabel("Min DetectionCount", JLabel.TRAILING);
+        add(label);
+        minDetectionCountField = new JFormattedTextField(minDetectionCount);
+        minDetectionCountField.setColumns(10);
+        add(minDetectionCountField);
+        label.setLabelFor(minDetectionCountField);
+        
+        label = new JLabel("Suppress Bad Detectors", JLabel.TRAILING);
+        add(label);
+        suppressBadDetectorsChk = new JCheckBox("", suppressBadDetectors);
+        label.setLabelFor(suppressBadDetectorsChk);
+        suppressBadDetectorsChk.setSelected(suppressBadDetectors);
+        add(suppressBadDetectorsChk);
+        
+        label = new JLabel("Require Correlation for Rebuild", JLabel.TRAILING);
+        add(label);
+        requireCorrelationChk = new JCheckBox("", requireCorrelation);
+        label.setLabelFor(requireCorrelationChk);
+        requireCorrelationChk.setSelected(requireCorrelation);
+        add(requireCorrelationChk);
+        
+        label = new JLabel("Auto-Apply Filter", JLabel.TRAILING);
+        add(label);
+        autoApplyFilterChk = new JCheckBox("", autoApplyFilter);
+        label.setLabelFor(autoApplyFilterChk);
+        autoApplyFilterChk.setSelected(autoApplyFilter);
+        add(autoApplyFilterChk);
+        
+        label = new JLabel("Retrieve by Blocks", JLabel.TRAILING);
+        add(label);
+        retrieveByBlocksChk = new JCheckBox("", retrieveByBlocks);
+        label.setLabelFor(retrieveByBlocksChk);
+        retrieveByBlocksChk.setSelected(retrieveByBlocks);
+        add(retrieveByBlocksChk);
+        
+        label = new JLabel("Block Size", JLabel.TRAILING);
+        add(label);
+        blockSizeField = new JFormattedTextField(blockSize);
+        blockSizeField.setColumns(10);
+        add(blockSizeField);
+        label.setLabelFor(blockSizeField);
+
+        this.setBorder(BorderFactory.createLineBorder(Color.blue));
+
+        SpringUtilities.makeCompactGrid(this,
+                15, 2,
+                5, 5, //initX, initY
+                5, 5);
+
+    }
+
+    public String getSiteTableName() {
+        return siteTableField.getText();
+    }
+
+    public String getOriginTableName() {
+        return originTableField.getText();
+    }
+
+    public double getClusterThreshold() {
+        return (Double) clusterThresholdField.getValue();
+    }
+
+    public double getMinDetStatThreshold() {
+        return (Double) minDetStatField.getValue();
+    }
+
+    public double getMaxDetStatThreshold() {
+        return (Double) maxDetStatField.getValue();
+    }
+
+    public DetectorType getDetectorType() {
+        return (DetectorType) detectorTypeCombo.getSelectedItem();
+    }
+
+    public double getTraceLength() {
+        return (Double) traceLengthField.getValue();
+    }
+
+    public boolean isFixShiftsToZero() {
+        return fixShiftsChk.isSelected();
+    }
+
+    public int getMinDetectionCount() {
+        return (Integer) minDetectionCountField.getValue();
+    }
+    
+    public boolean isSuppressBadDetectors() {
+        return suppressBadDetectorsChk.isSelected();
+    }
+    
+    public boolean isRequireCorrelation() {
+        return requireCorrelationChk.isSelected();
+    }
+
+    public double getWindowStart() {
+        return (Double) this.prePickSecondsField.getValue();
+    }
+    
+    public boolean isAutoApplyFilter()
+    {
+        return autoApplyFilterChk.isSelected();
+    }
+    
+    public boolean isRetrieveByBlocks() {
+        return retrieveByBlocksChk.isSelected();
+    }
+
+    public int getBlockSize() {
+        return (Integer) blockSizeField.getValue();
+    }
+    
+}
