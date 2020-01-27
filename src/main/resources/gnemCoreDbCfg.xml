@@ -1,6 +1,48 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <oracleDbServices xmlns="http://www.llnl.gov/gnemcore/1.0.0">
     <services>
+        <service>
+            <serviceId>gmp</serviceId>
+            <connectionDescriptor>(DESCRIPTION = (ADDRESS_LIST = (ADDRESS = (PROTOCOL = TCP)(HOST = adamite.llnl.gov)(PORT = 1521))  
+                (ADDRESS = (PROTOCOL = TCP)(HOST = halite.llnl.gov)(PORT = 1521))
+                (ADDRESS = (PROTOCOL = TCP)(HOST = brookite.llnl.gov)(PORT = 1521)) )
+                (CONNECT_DATA =
+                (SERVICE_NAME = gmp)
+                ))
+            </connectionDescriptor>
+            <isSensitiveService>true</isSensitiveService>
+        </service>
+        
+        <service>        
+            <serviceId>GMPDEV1</serviceId>
+            <connectionDescriptor>(DESCRIPTION =
+                (ADDRESS_LIST =
+                (ADDRESS = (PROTOCOL = TCP)(HOST = barite.llnl.gov)(PORT = 1521)) )
+                (CONNECT_DATA =
+                (SERVICE_NAME = gmp)
+                ))</connectionDescriptor>
+            <isSensitiveService>false</isSensitiveService>
+        </service>
+        <service>        
+            <serviceId>GMPDEV3</serviceId>
+            <connectionDescriptor>(DESCRIPTION =
+                (ADDRESS_LIST =
+                (ADDRESS = (PROTOCOL = TCP)(HOST = bromite.llnl.gov)(PORT = 1521)) )
+                (CONNECT_DATA =
+                (SERVICE_NAME = gmpdev3)
+                ))</connectionDescriptor>
+            <isSensitiveService>false</isSensitiveService>
+        </service>
+        <service>        
+            <serviceId>GMPPRE1</serviceId>
+            <connectionDescriptor>(DESCRIPTION =
+                (ADDRESS_LIST =
+                (ADDRESS = (PROTOCOL = TCP)(HOST = barite.llnl.gov)(PORT = 1521)) )
+                (CONNECT_DATA =
+                (SERVICE_NAME = gmppre1)
+                ))</connectionDescriptor>
+            <isSensitiveService>false</isSensitiveService>
+        </service>
         <service>        
             <serviceId>GMPLOCAL</serviceId>
             <connectionDescriptor>(DESCRIPTION =
@@ -11,6 +53,7 @@
                 ))</connectionDescriptor>
             <isSensitiveService>false</isSensitiveService>
         </service>
+
     </services>
 </oracleDbServices>
 

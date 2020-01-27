@@ -1,38 +1,28 @@
 /*
-
-CODE TRANSLATED FROM C TO JAVA BY TIMOTHY PAIK
-CREATED: 6/14/04
-LAST MODIFIED: 6/14/04
-
-From mrp@angmar.llnl.gov Wed Nov 16 15:44 PST 1994
-Date: Wed, 16 Nov 1994 15:46:36 -0800
-From: Mike Portnoff <mrp@angmar.llnl.gov>
-To: dbh@s18.es.llnl.gov
-Subject: Split-Radix Complex FFT (not my latest version but should work fine)
-*/
-/******************************************************************************
- *                                                                            *
- *  void cfft  (z, nz)     << forward fft >>                                  *
- *                                                                            *
- *      In-place, split-radix complex fft procedure using decimation-in-      *
- *      frequency with internal look-up tables for cos, sin and bit reverser. *
- *                                                                            *
- *  input/output                                                              *
- *      z     - array of nz complex floats to be transformed in place         *
- *              data are stored with real and imaginary parts interleaved     *
- *      nz    - transform size (must be an integer power of 2)                *
- *                                                                            *
- *  author:                                                                   *
- *      M. R. Portnoff,   Lawrence Livermore Nat'l. Lab      June 1991        *
- *                                                                            *
- *  acknowledgement:                                                          *
- *      internal procedures cfft_(), cfft_stage() and cfft_table() were       *
- *      adapted from fortran codes by H. V. Sorensen (Dec. 1984, Jul. 1987)   *
- *                                                                            *
- *      This program may be used and distributed freely                       *
- *      so long as this header is included                                    *
- ******************************************************************************/
-
+ * #%L
+ * Detection Framework (Release)
+ * %%
+ * Copyright (C) 2015 - 2020 Lawrence Livermore National Laboratory (LLNL)
+ * %%
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ * #L%
+ */
 package llnl.gnem.core.signalprocessing.extended;
 
 import java.util.LinkedList;

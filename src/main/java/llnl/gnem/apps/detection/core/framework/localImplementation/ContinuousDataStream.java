@@ -1,23 +1,28 @@
-//                                                                           ContinuousDataStream.java
-//  Copyright (c) 2009 Lawrence Livermore National Laboratory
-//  All rights reserved
-//
-//  Interface for continuous data stream classes.  Intended to be implemented
-//    for CSS3.0 and SAC continuous data stream access.
-//    These classes return multichannel data in StreamSegment instances.
-//      Behavior:
-//        1.  Channels of final segment to be zero-filled if requested segment 
-//            length is greater than the available amount of data, but a 
-//            non-zero amount of data is available.
-//        2.  getSegment returns null if no data are available.
-
-//  Author:  D. Harris
-//  Creation date:  December 1, 2001  by conversion from C++
-//  Last modified:  November 16, 2009
-//  Dependencies:
 /*
+ * #%L
+ * Detection Framework (Release)
+ * %%
+ * Copyright (C) 2015 - 2020 Lawrence Livermore National Laboratory (LLNL)
+ * %%
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ * #L%
  */
-
 package llnl.gnem.apps.detection.core.framework.localImplementation;
 
 import java.io.IOException;

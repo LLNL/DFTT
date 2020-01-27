@@ -144,31 +144,18 @@
                 <artifactId>license-maven-plugin</artifactId>
                 <version>1.8</version>
                 <configuration>
-                    <!-- There are other options available as this tool can add license headers to your files-->
+                    <licenseName>mit</licenseName>
+                    <licenseResolver>${project.baseUri}/src/license</licenseResolver>
+                    <!-- <descriptionTemplate>${basedir}/src/license/DescriptionTemplate.ftl</descriptionTemplate> -->
                     <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
-                    <failOnMissingHeader>false</failOnMissingHeader>
-                    <failOnNotUptodateHeader>false</failOnNotUptodateHeader>
-                    <inceptionYear>2016</inceptionYear>
-                    <organizationName>Lawrence Livermore National Laboratory</organizationName>
+                    <failOnMissingHeader>true</failOnMissingHeader>
+                    <failOnNotUptodateHeader>true</failOnNotUptodateHeader>
+                    <inceptionYear>2015</inceptionYear>
+                    <roots>
+                        <root>src/main/java</root>
+                    </roots>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>default-cli</id>
-                        <configuration>
-                            <licenseMerges>
-                                <licenseMerge>The Apache Software License, Version 2.0|Apache Public License 2.0</licenseMerge>
-                                <licenseMerge>The Apache Software License, Version 2.0|Apache-2.0</licenseMerge>
-                                <licenseMerge>The Apache Software License, Version 2.0|Apache 2</licenseMerge>
-                                <licenseMerge>The Apache Software License, Version 2.0|Apache v2</licenseMerge>
-                                <licenseMerge>The Apache Software License, Version 2.0|Apache 2.0 License</licenseMerge>
-                                <licenseMerge>The Apache Software License, Version 2.0|Apache License Version 2.0</licenseMerge>
-                                <licenseMerge>The Apache Software License, Version 2.0|Apache License 2.0</licenseMerge>
-                                <licenseMerge>The Apache Software License, Version 2.0|Apache License, Version 2.0</licenseMerge>
-                            </licenseMerges>
-                        </configuration>
-                    </execution>
-                </executions>                    
-            </plugin>
+             </plugin>             
             
             
         </plugins>

@@ -1,3 +1,28 @@
+/*
+ * #%L
+ * Detection Framework (Release)
+ * %%
+ * Copyright (C) 2015 - 2020 Lawrence Livermore National Laboratory (LLNL)
+ * %%
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ * #L%
+ */
 package llnl.gnem.apps.detection.triggerProcessing;
 
 import java.sql.SQLException;
@@ -21,7 +46,7 @@ import llnl.gnem.core.util.Epoch;
  */
 public class TriggerManager {
 
-    public Collection<Detection> processTriggersIntoDetections(Map<DetectorType, List<Trigger>> triggerMap) throws SQLException {
+    public Collection<Detection> processTriggersIntoDetections(Map<DetectorType, List<Trigger>> triggerMap, double blackoutSeconds) throws SQLException {
         Collection<Detection> result = new ArrayList<>();
         removeOverlappedSpawningDetections(triggerMap);
         for (int priority : DetectorType.getRanks()) {
@@ -29,36 +54,36 @@ public class TriggerManager {
             Collection<Trigger> triggers = triggerMap.get(type);
             triggerMap.remove(type); // leave only triggers from lower-ranked detectors in map.
             if (triggers != null && !triggers.isEmpty()) {
-                result.addAll(processThisRank(triggers, triggerMap));
+                result.addAll(processThisRank(triggers, triggerMap, blackoutSeconds));
             }
         }
         return result;
     }
 
-    private static Collection<Detection> processThisRank(Collection<Trigger> triggers, Map<DetectorType, List<Trigger>> triggerMap) throws SQLException {
+    private static Collection<Detection> processThisRank(Collection<Trigger> triggers, Map<DetectorType, List<Trigger>> triggerMap, double blackoutSeconds) throws SQLException {
         Collection<Detection> result = new ArrayList<>();
         while (!triggers.isEmpty()) {
             Trigger highestStatTrigger = getHighestStatTrigger(triggers);
             triggers.remove(highestStatTrigger);
             Detection detection = convertToDetection(highestStatTrigger);
             result.add(detection);
-            removeCoincidentTriggers(highestStatTrigger, triggers);
+            removeCoincidentTriggers(highestStatTrigger, triggers, blackoutSeconds);
 
             for (DetectorType type : triggerMap.keySet()) {
                 Collection<Trigger> lowerRankedTriggers = triggerMap.get(type);
-                removeCoincidentTriggers(highestStatTrigger, lowerRankedTriggers);
+                removeCoincidentTriggers(highestStatTrigger, lowerRankedTriggers, blackoutSeconds);
             }
         }
         return result;
     }
 
-    public static Collection<Trigger> getCancellationTriggers(Collection<Trigger> triggers) throws SQLException {
+    public static Collection<Trigger> getCancellationTriggers(Collection<Trigger> triggers, double blackoutSeconds) throws SQLException {
         Collection<Trigger> result = new ArrayList<>();
         while (!triggers.isEmpty()) {
             Trigger highestStatTrigger = getHighestStatTrigger(triggers);
             result.add(highestStatTrigger);
             triggers.remove(highestStatTrigger);
-            removeCoincidentTriggers(highestStatTrigger, triggers);
+            removeCoincidentTriggers(highestStatTrigger, triggers, blackoutSeconds);
         }
         return result;
     }
@@ -80,13 +105,13 @@ public class TriggerManager {
         return best;
     }
 
-    private static void removeCoincidentTriggers(Trigger highestStatTrigger, Collection<Trigger> triggers) throws SQLException {
+    private static void removeCoincidentTriggers(Trigger highestStatTrigger, Collection<Trigger> triggers, double blackoutSeconds) throws SQLException {
 
         Iterator<Trigger> it = triggers.iterator();
         while (it.hasNext()) {
             Trigger trigger = it.next();
 
-            if (isCoincident(highestStatTrigger, trigger)) {
+            if (isCoincident(highestStatTrigger, trigger, blackoutSeconds)) {
                 if (trigger.getTriggerid() != highestStatTrigger.getTriggerid()) {
                     it.remove();
                     TriggerDAO.getInstance().markAsCoincident(trigger);
@@ -97,13 +122,13 @@ public class TriggerManager {
         }
     }
 
-    private static boolean isCoincident(Trigger trigger1, Trigger trigger2) {
+    private static boolean isCoincident(Trigger trigger1, Trigger trigger2, double blackoutSeconds) {
         Epoch epoch1 = trigger1.getEpoch();
         double t1 = epoch1.getStart();
         Epoch epoch2 = trigger2.getEpoch();
         double t2 = epoch2.getStart();
         if (trigger1.getDetectorType() == DetectorType.SUBSPACE) {
-            return Math.abs(t1 - t2) < 2.5;
+            return Math.abs(t1 - t2) < blackoutSeconds;
         } else {
             return epoch1.intersects(epoch2);
         }

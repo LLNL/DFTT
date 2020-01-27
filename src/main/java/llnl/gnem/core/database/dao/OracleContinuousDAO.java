@@ -1,3 +1,28 @@
+/*
+ * #%L
+ * Detection Framework (Release)
+ * %%
+ * Copyright (C) 2015 - 2020 Lawrence Livermore National Laboratory (LLNL)
+ * %%
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ * #L%
+ */
 package llnl.gnem.core.database.dao;
 
 import java.sql.Connection;
@@ -5,6 +30,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import llnl.gnem.core.util.Epoch;
 import llnl.gnem.core.util.PairT;
 import llnl.gnem.core.util.StreamKey;
 import llnl.gnem.core.util.TimeT;
@@ -58,7 +84,6 @@ public class OracleContinuousDAO implements ContinuousWaveformDAO {
         List<Integer> wfids = getWfids(stachan, start, end);
 
         TimeSeries series = null;
-        System.out.println("wfids: " + wfids.size());
         for (int wfid : wfids) {
             TimeSeries block = OracleWaveformDAO.getInstance().getSingleSeismogram(wfid, table, conn);
             block.decimate(decimation);
@@ -70,6 +95,9 @@ public class OracleContinuousDAO implements ContinuousWaveformDAO {
             }
         }
 
+        if(series != null){
+            series.trimTo(new Epoch(start,end));
+        }
         return series;
     }
 
@@ -77,7 +105,7 @@ public class OracleContinuousDAO implements ContinuousWaveformDAO {
         ResultSet rs = null;
         PreparedStatement stmt = null;
 
-        String sql = String.format("select wfid from %s where sta=? and chan=? and time >= ? and endtime <= ?", table);
+        String sql = String.format("select wfid from %s where sta=? and chan=? and endtime >= ? and time <= ?", table);
         try {
             int i = 1;
             stmt = conn.prepareStatement(sql);
@@ -88,7 +116,7 @@ public class OracleContinuousDAO implements ContinuousWaveformDAO {
 
             rs = stmt.executeQuery();
 
-            List<Integer> results = new ArrayList<Integer>();
+            List<Integer> results = new ArrayList<>();
             while (rs.next()) {
                 int wfid = rs.getInt(1);
                 results.add(wfid);

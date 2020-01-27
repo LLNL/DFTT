@@ -1,15 +1,38 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * #%L
+ * Detection Framework (Release)
+ * %%
+ * Copyright (C) 2015 - 2020 Lawrence Livermore National Laboratory (LLNL)
+ * %%
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ * #L%
  */
 package llnl.gnem.apps.detection.sdBuilder.histogramDisplay;
 
 import java.util.logging.Level;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceDetector;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.statistics.DistributionFitter;
 import llnl.gnem.apps.detection.statistics.HistogramData;
+import llnl.gnem.core.dataAccess.DataAccessException;
 import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.core.util.TimeT;
 import org.apache.commons.math3.distribution.BetaDistribution;
 
 /**
@@ -125,7 +148,7 @@ public class HistogramModel {
         return mid;
     }
 
-    public static void updateSingleDetectorThreshold(SubspaceDetector sd) {
+    public  void updateSingleDetectorThreshold(SubspaceDetector sd, TimeT streamTime,int runid) {
         double threshold = sd.getSpecification().getThreshold();
         long[] binVals = sd.getHistogramValues();
 
@@ -163,9 +186,13 @@ public class HistogramModel {
                 sd.getSpecification().setThreshold((float) newThreshold);
                 ApplicationLogger.getInstance().log(Level.FINE,
                         String.format("Detector %d threshold changed from %f to %f", sd.getdetectorid(), threshold, newThreshold));
+                double percentChange = Math.abs(newThreshold - threshold)/threshold * 100;
+                if( percentChange >= 1){
+                    DetectionDAOFactory.getInstance().getDetectorDAO().writeChangedThreshold(runid,sd.getdetectorid(),  streamTime , newThreshold );
+                }
 
-            } catch (Exception ex) {
-                System.out.println("still have not fixed problem!");
+            } catch (DataAccessException ex) {
+                ApplicationLogger.getInstance().log(Level.SEVERE, "Failed updating threshold history table!", ex);
             }
         }
     }

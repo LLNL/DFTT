@@ -1,3 +1,28 @@
+/*
+ * #%L
+ * Detection Framework (Release)
+ * %%
+ * Copyright (C) 2015 - 2020 Lawrence Livermore National Laboratory (LLNL)
+ * %%
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ * #L%
+ */
 package llnl.gnem.apps.detection.streams;
 
 import com.oregondsp.util.TimeStamp;
@@ -15,11 +40,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -60,6 +83,7 @@ import llnl.gnem.core.util.TimeT;
 import llnl.gnem.apps.detection.core.dataObjects.StreamSegment;
 import llnl.gnem.apps.detection.core.dataObjects.WaveformSegment;
 import llnl.gnem.apps.detection.sdBuilder.histogramDisplay.HistogramModel;
+import llnl.gnem.apps.detection.util.RunInfo;
 import llnl.gnem.apps.detection.util.SubspaceUpdateParams;
 
 /**
@@ -68,7 +92,7 @@ import llnl.gnem.apps.detection.util.SubspaceUpdateParams;
  */
 public class ConcreteStreamProcessor implements StreamProcessor {
 
-    protected final Set<StreamKey> processorChannels;
+    protected final ArrayList<StreamKey> processorChannels;
     protected final Map<StreamKey, WaveformSegment> accumulator;
     private final int streamid;
     private final Map<Integer, Detector> detectors;
@@ -85,16 +109,16 @@ public class ConcreteStreamProcessor implements StreamProcessor {
 
     private long blocksProcessedCount = 0;
     Collection<Detector> mfDetectors;
+    private final double blackoutSeconds;
 
     public ConcreteStreamProcessor(PreprocessorParams params,
             int streamid,
-            Collection<StreamKey> channels,
+            ArrayList<StreamKey> channels,
             String streamName,
             double samplerate,
             int maxTemplateLength,
             boolean triggerOnlyOnCorrelators) {
-        processorChannels = new HashSet<>();
-        processorChannels.addAll(channels);
+        processorChannels = new ArrayList<>(channels);
         accumulator = new TreeMap<>();
         this.streamid = streamid;
         detectors = new ConcurrentHashMap<>();
@@ -112,6 +136,7 @@ public class ConcreteStreamProcessor implements StreamProcessor {
                 ProcessingPrescription.getInstance().getModifiedTraceChannels());
 
         mfDetectors = new ArrayList<>();
+        blackoutSeconds = StreamsConfig.getInstance().getSubspaceBlackoutPeriod(streamName);
     }
 
     public ConcreteStreamProcessor changeBlockSize(double blockSizeSeconds) {
@@ -161,7 +186,9 @@ public class ConcreteStreamProcessor implements StreamProcessor {
             ApplicationLogger.getInstance().log(Level.INFO, "Done writing detection histogram data.");
             if (StreamsConfig.getInstance().isUseDynamicThresholds(streamName)) {
                 ApplicationLogger.getInstance().log(Level.INFO, "Updating subspace detector thresholds...");
-                updateSubspaceDetectorThresholds(getSubspaceDetectors());
+                TimeT blockStart = block.getStartTime();
+                int runid = RunInfo.getInstance().getRunid();
+                updateSubspaceDetectorThresholds(getSubspaceDetectors(), blockStart,runid);
                 ApplicationLogger.getInstance().log(Level.INFO, "Done updating subspace detector thresholds.");
             }
         }
@@ -249,7 +276,7 @@ public class ConcreteStreamProcessor implements StreamProcessor {
     private void processDetections(Map<DetectorType, List<Trigger>> triggerMap, StreamSegment compatibleStream) {
         try {
             if (!triggerMap.isEmpty()) {
-                Collection<Detection> detections = TriggerManager.getInstance().processTriggersIntoDetections(triggerMap);
+                Collection<Detection> detections = TriggerManager.getInstance().processTriggersIntoDetections(triggerMap, blackoutSeconds);
                 detections.stream().forEach((detection) -> {
                     ApplicationLogger.getInstance().log(Level.INFO, detection.toString());
                 });
@@ -389,7 +416,7 @@ public class ConcreteStreamProcessor implements StreamProcessor {
     }
 
     @Override
-    public Collection<StreamKey> getChannels() {
+    public ArrayList<StreamKey> getChannels() {
         return new ArrayList<>(processorChannels);
     }
 
@@ -551,8 +578,9 @@ public class ConcreteStreamProcessor implements StreamProcessor {
         return spec;
     }
 
-    private void updateSubspaceDetectorThresholds(Collection<SubspaceDetector> subspaceDetectors) {
-        subspaceDetectors.parallelStream().forEach(t -> HistogramModel.updateSingleDetectorThreshold(t));
+    private void updateSubspaceDetectorThresholds(Collection<SubspaceDetector> subspaceDetectors,final TimeT blockStart, final int runid) {
+        final HistogramModel hm = HistogramModel.getInstance();
+        subspaceDetectors.parallelStream().forEach(t -> hm.updateSingleDetectorThreshold(t, blockStart,runid));
     }
 
 }
