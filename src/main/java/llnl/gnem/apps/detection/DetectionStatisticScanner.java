@@ -25,19 +25,19 @@
  */
 package llnl.gnem.apps.detection;
 
-import com.oregondsp.util.TimeStamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.core.dataObjects.TriggerPositionType;
 import llnl.gnem.apps.detection.core.framework.DetectionStatistic;
 import llnl.gnem.apps.detection.core.framework.detectors.DetectorInfo;
 import llnl.gnem.apps.detection.triggerProcessing.TriggerData;
 import llnl.gnem.apps.detection.util.SubspaceThreshold;
+import llnl.gnem.apps.detection.util.TimeStamp;
 
 /**
  *
@@ -127,7 +127,8 @@ public class DetectionStatisticScanner {
 
                         int correctedIndex = triggerPositionType == TriggerPositionType.STATISTIC_MAX ? maxIndex : initialTriggerIndex;
                         TimeStamp triggerTime = getCorrectedTriggerTime(combined, correctedIndex);
-                        TriggerData trigger = new TriggerData(detectorInfo, correctedIndex, triggerTime, maxDetStat);
+                        int finalIndex = (int) Math.round((triggerTime.epochAsDouble() - combined.getTime().getEpochTime()) * combined.getSampleRate());
+                        TriggerData trigger = new TriggerData(detectorInfo, finalIndex, triggerTime, maxDetStat);
                         result.add(trigger);
                     } else {
                         ++index;
@@ -141,6 +142,11 @@ public class DetectionStatisticScanner {
     private TimeStamp getCorrectedTriggerTime(DetectionStatistic combined, int index) {
         double uncorrectedTriggerTime = combined.getTime().getEpochTime() + index / combined.getSampleRate();
         return new TimeStamp(uncorrectedTriggerTime - combined.getDetectorInfo().getDetectorDelayInSeconds());
+    }
+
+    public void removeDetector(Integer detectorid) {
+        detectorStatisticMap.remove(detectorid);
+        detectorOverRunMap.remove(detectorid);
     }
 
 }

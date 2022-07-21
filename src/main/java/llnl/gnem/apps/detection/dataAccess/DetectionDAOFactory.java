@@ -28,13 +28,30 @@ package llnl.gnem.apps.detection.dataAccess;
 import llnl.gnem.apps.detection.dataAccess.database.SequenceNames;
 import llnl.gnem.apps.detection.dataAccess.database.TableNames;
 import llnl.gnem.apps.detection.dataAccess.database.oracle.OracleFactoryHelper;
+import llnl.gnem.apps.detection.dataAccess.interfaces.ArrayConfigurationDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.ArrayCorrelationDetectorDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.ArrayDetectorDAO;
+
+import llnl.gnem.apps.detection.dataAccess.interfaces.BulletinDetectorDAO;
+
+import llnl.gnem.apps.detection.dataAccess.interfaces.ConfigurationDAO;
+
 import llnl.gnem.apps.detection.dataAccess.interfaces.DetectionDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.DetectorDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.EventDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.FeatureDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.FrameworkRunDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.OriginDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.PickDAO;
-import llnl.gnem.apps.detection.dataAccess.interfaces.SeismogramDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.PredictedPhasePickDAO;
+
+import llnl.gnem.apps.detection.dataAccess.interfaces.StaLtaDetectorDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.StationDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.StreamDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.StreamProcessorDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.SubspaceDetectorDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.SubspaceTemplateDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.TriggerDAO;
 import llnl.gnem.core.dataAccess.DAOFactory;
 
 import llnl.gnem.core.database.Connections;
@@ -52,16 +69,17 @@ public class DetectionDAOFactory {
 
         switch (DAOFactory.getDataSource()) {
             case ORACLE:
-                TableNames.setSchemaFromConnectedUser();
-                SequenceNames.setSchemaFromConnectedUser();
-                coreDAOFactory.getFilterDAO().setStoredFilterTable(TableNames.getStoredFilterTable());
-                coreDAOFactory.getFilterDAO().setSequenceName(SequenceNames.getFilterdSequenceName());
-                break;
+//                TableNames.setSchemaFromConnectedUser();
+//                SequenceNames.setSchemaFromConnectedUser();
+                 break;
             case DERBY:
             default:
                 throw new IllegalStateException("DATA_SOURCE_NOT_SET_IN_FACTORY");
         }
+        
+         
     }
+
 
     /**
      * This is a convenience method that will perform the connection to the
@@ -102,15 +120,6 @@ public class DetectionDAOFactory {
         }
     }
 
-    public synchronized SeismogramDAO getSeismogramDAO() {
-        switch (DAOFactory.getDataSource()) {
-            case ORACLE:
-                return OracleFactoryHelper.getSeismogramDAO();
-            case DERBY:
-            default:
-                throw new IllegalStateException("DATA_SOURCE_NOT_SET_IN_FACTORY");
-        }
-    }
 
     public synchronized DetectionDAO getDetectionDAO() {
         switch (DAOFactory.getDataSource()) {
@@ -151,5 +160,148 @@ public class DetectionDAOFactory {
                 throw new IllegalStateException("DATA_SOURCE_NOT_SET_IN_FACTORY");
         }
     }
+
+    public synchronized TriggerDAO getTriggerDAO() {
+        switch (DAOFactory.getDataSource()) {
+            case ORACLE:
+                return OracleFactoryHelper.getTriggerDAO();
+            case DERBY:
+            default:
+                throw new IllegalStateException("DATA_SOURCE_NOT_SET_IN_FACTORY");
+        }
+    }
+
+    public synchronized ConfigurationDAO getConfigurationDAO() {
+        switch (DAOFactory.getDataSource()) {
+            case ORACLE:
+                return OracleFactoryHelper.getConfigurationDAO();
+            case DERBY:
+            default:
+                throw new IllegalStateException("DATA_SOURCE_NOT_SET_IN_FACTORY");
+        }
+    }
+
+    public synchronized StreamDAO getStreamDAO() {
+        switch (DAOFactory.getDataSource()) {
+            case ORACLE:
+                return OracleFactoryHelper.getStreamDAO();
+            case DERBY:
+            default:
+                throw new IllegalStateException("DATA_SOURCE_NOT_SET_IN_FACTORY");
+        }
+    }
+
+    public synchronized SubspaceDetectorDAO getSubspaceDetectorDAO() {
+        switch (DAOFactory.getDataSource()) {
+            case ORACLE:
+                return OracleFactoryHelper.getSubspaceDetectorDAO();
+            case DERBY:
+            default:
+                throw new IllegalStateException("DATA_SOURCE_NOT_SET_IN_FACTORY");
+        }
+    }
+
+    public synchronized SubspaceTemplateDAO getSubspaceTemplateDAO() {
+        switch (DAOFactory.getDataSource()) {
+            case ORACLE:
+                return OracleFactoryHelper.getSubspaceTemplateDAO();
+            case DERBY:
+            default:
+                throw new IllegalStateException("DATA_SOURCE_NOT_SET_IN_FACTORY");
+        }
+    }
+
+    public synchronized ArrayCorrelationDetectorDAO getArrayCorrelationDetectorDAO() {
+        switch (DAOFactory.getDataSource()) {
+            case ORACLE:
+                return OracleFactoryHelper.getArrayCorrelationDetectorDAO();
+            case DERBY:
+            default:
+                throw new IllegalStateException("DATA_SOURCE_NOT_SET_IN_FACTORY");
+        }
+    }
+
+    public synchronized ArrayDetectorDAO getArrayDetectorDAO() {
+        switch (DAOFactory.getDataSource()) {
+            case ORACLE:
+                return OracleFactoryHelper.getArrayDetectorDAO();
+            case DERBY:
+            default:
+                throw new IllegalStateException("DATA_SOURCE_NOT_SET_IN_FACTORY");
+        }
+    }
+
+    public synchronized BulletinDetectorDAO getBulletinDetectorDAO() {
+        switch (DAOFactory.getDataSource()) {
+            case ORACLE:
+                return OracleFactoryHelper.getBulletinDetectorDAO();
+            case DERBY:
+            default:
+                throw new IllegalStateException("DATA_SOURCE_NOT_SET_IN_FACTORY");
+        }
+    }
+
+    public synchronized StaLtaDetectorDAO getStaLtaDetectorDAO() {
+        switch (DAOFactory.getDataSource()) {
+            case ORACLE:
+                return OracleFactoryHelper.getStaLtaDetectorDAO();
+            case DERBY:
+            default:
+                throw new IllegalStateException("DATA_SOURCE_NOT_SET_IN_FACTORY");
+        }
+    }
+
+    public synchronized PredictedPhasePickDAO getPredictedPhasePickDAO() {
+        switch (DAOFactory.getDataSource()) {
+            case ORACLE:
+                return OracleFactoryHelper.getPredictedPhasePickDAO();
+            case DERBY:
+            default:
+                throw new IllegalStateException("DATA_SOURCE_NOT_SET_IN_FACTORY");
+        }
+    }
+
+    public synchronized StreamProcessorDAO getStreamProcessorDAO() {
+        switch (DAOFactory.getDataSource()) {
+            case ORACLE:
+                return OracleFactoryHelper.getStreamProcessorDAO();
+            case DERBY:
+            default:
+                throw new IllegalStateException("DATA_SOURCE_NOT_SET_IN_FACTORY");
+        }
+    }
+
+    public synchronized FrameworkRunDAO getFrameworkRunDAO() {
+        switch (DAOFactory.getDataSource()) {
+            case ORACLE:
+                return OracleFactoryHelper.getFrameworkRunDAO();
+            case DERBY:
+            default:
+                throw new IllegalStateException("DATA_SOURCE_NOT_SET_IN_FACTORY");
+        }
+    }
+
+    
+    public synchronized FeatureDAO getFeatureDAO(){
+       switch (DAOFactory.getDataSource()) {
+            case ORACLE:
+                return OracleFactoryHelper.getFeatureDAO();
+            case DERBY:
+            default:
+                throw new IllegalStateException("DATA_SOURCE_NOT_SET_IN_FACTORY");
+        }
+    }
+    
+    public synchronized ArrayConfigurationDAO getArrayConfigurationDAO(){
+       switch (DAOFactory.getDataSource()) {
+            case ORACLE:
+                return OracleFactoryHelper.getArrayConfigurationDAO();
+            case DERBY:
+            default:
+                throw new IllegalStateException("DATA_SOURCE_NOT_SET_IN_FACTORY");
+        }
+    }
+
+    
 
 }

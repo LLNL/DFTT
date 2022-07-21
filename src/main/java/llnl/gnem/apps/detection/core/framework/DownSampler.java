@@ -93,8 +93,7 @@ public class DownSampler {
             filters[ich].filter(tmp);
             float[] decimated = new float[decimatedBlockSize];
             Sequence.decimate(tmp, decimated, decimationRate);
-            WaveformSegment wsd = new WaveformSegment(ws.getSta(),
-                    ws.getChan(),
+            WaveformSegment wsd = new WaveformSegment(ws.getStreamKey(),
                     ws.getTimeAsDouble(),
                     ws.getSamprate() / decimationRate,
                     decimated,

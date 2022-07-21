@@ -25,7 +25,7 @@
  */
 package llnl.gnem.apps.detection.core.dataObjects;
 
-import com.oregondsp.util.DirectoryListing;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +33,8 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.logging.Level;
+
+import llnl.gnem.apps.detection.util.DirectoryListing;
 import llnl.gnem.core.util.ApplicationLogger;
 import llnl.gnem.core.util.StreamKey;
 

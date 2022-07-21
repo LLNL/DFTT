@@ -25,6 +25,7 @@
  */
 package llnl.gnem.apps.detection.core.dataObjects;
 
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -55,9 +56,9 @@ public abstract class AbstractSpecification implements DetectorSpecification, Se
     private final byte[] freeformBytes;
 
     static final long serialVersionUID = 1573775494678462610L;
-    
+
     @Override
-    public void setThreshold( float value){
+    public void setThreshold(float value) {
         this.threshold = value;
     }
 
@@ -66,47 +67,38 @@ public abstract class AbstractSpecification implements DetectorSpecification, Se
      */
     public AbstractSpecification(InputStream stream) throws IOException {
 
-        InputStreamReader isr = null;
-        BufferedReader br = null;
-
         staChanList = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
         StringBuilder sb2 = new StringBuilder();
-        try {
-            isr = new InputStreamReader(stream);
-            br = new BufferedReader(isr);
-            while (true) {
-                String line = br.readLine();
-                if (line == null) {
-                    break;
-                }
-                line = removeComments(line);
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-                if (line.indexOf("=") > 0) {
-                    sb.append(line);
-                    sb.append("\n");
-                } else {
-                    sb2.append(line);
-                    sb2.append("\n");
 
-                }
-            }
-            byte[] bytes = sb.toString().getBytes();
-            ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-            parameterList = new Properties();
-            parameterList.load(bais);
-            freeformBytes = sb2.toString().getBytes();
-        } finally {
-            if (br != null) {
-                br.close();
+        try (InputStreamReader isr = new InputStreamReader(stream)) {
+            try (BufferedReader br = new BufferedReader(isr)) {
+                while (true) {
+                    String line = br.readLine();
+                    if (line == null) {
+                        break;
+                    }
+                    line = removeComments(line);
+                    if (line.trim().isEmpty()) {
+                        continue;
+                    }
+                    if (line.indexOf("=") > 0) {
+                        sb.append(line);
+                        sb.append("\n");
+                    } else {
+                        sb2.append(line);
+                        sb2.append("\n");
 
-            }
-            if (isr != null) {
-                isr.close();
+                    }
+                }
+                byte[] bytes = sb.toString().getBytes();
+                ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+                parameterList = new Properties();
+                parameterList.load(bais);
+                freeformBytes = sb2.toString().getBytes();
             }
         }
+
         staChanList.addAll(parseStaChanList());
         if (staChanList.isEmpty()) {
             throw new IllegalStateException("No stations specified in specification file");
@@ -121,12 +113,30 @@ public abstract class AbstractSpecification implements DetectorSpecification, Se
         ArrayList<String> lines = this.getStringsForBlock(".StaChanList", ".EndList");
         ArrayList< StreamKey> result = new ArrayList<>();
         for (String line : lines) {
-            StringTokenizer st = new StringTokenizer(line);
-            int tokenCount = st.countTokens();
-            if (tokenCount >= 2) {
-                String sta = st.nextToken();
-                String chan = st.nextToken();
-               result.add(new StreamKey(sta, chan ));
+            String[] tokens = line.trim().split("\\s+");
+            int numTokens = tokens.length;
+            if (numTokens > 0 && tokens[numTokens - 1].equals("1")) { // old-style specification with weight specifier (no longer supported)
+                --numTokens;
+            }
+            switch (numTokens) {
+                case 2:
+                    // Old-style sta-chan description
+                    result.add(new StreamKey(tokens[0], tokens[1]));
+                    break;
+                case 4:
+                    //net-sta-chan-locid
+                    result.add(new StreamKey(tokens[0], tokens[1], tokens[2], tokens[3]));
+                    break;
+                case 5:
+                    //agency-net-sta-chan-locid
+                    result.add(new StreamKey(tokens[0], tokens[1], tokens[2], tokens[3], tokens[4]));
+                    break;
+                case 6:
+                    //agency-net-net_date-sta-chan-locid
+                    result.add(new StreamKey(tokens[0], tokens[1], Integer.parseInt(tokens[2]), tokens[3], tokens[4], tokens[4]));
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -157,7 +167,7 @@ public abstract class AbstractSpecification implements DetectorSpecification, Se
         this.blackoutPeriod = blackoutPeriod;
         this.staChanList = new ArrayList<>();
         for (StreamKey sck : scList) {
-            staChanList.add(new StreamKey(sck.getSta(), sck.getChan() ));
+            staChanList.add(sck);
         }
 
         if (staChanList.isEmpty()) {
@@ -167,7 +177,7 @@ public abstract class AbstractSpecification implements DetectorSpecification, Se
     }
 
     @Override
-    public Collection< ? extends StreamKey> getStaChanList() {
+    public Collection<StreamKey> getStreamKeys() {
         return staChanList;
     }
 

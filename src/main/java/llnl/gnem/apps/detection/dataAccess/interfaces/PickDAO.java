@@ -36,11 +36,14 @@ import llnl.gnem.core.util.Epoch;
  * @author dodge1
  */
 public interface PickDAO {
+
     Collection<PhasePick> getPicksForDetection(int detectionid) throws DataAccessException;
-    
+
     Collection<PhasePick> getDetectionPhasePicks(int runid, int detectorid) throws DataAccessException;
 
     void saveDetectionPhasePicks(ArrayList<PhasePick> picks, ArrayList<Integer> picksToRemove) throws DataAccessException;
 
     Collection<PhasePick> getPicks(int configid, Epoch epoch) throws DataAccessException;
+
+    Collection<PhasePick> getAllPicks(int configid) throws DataAccessException;
 }

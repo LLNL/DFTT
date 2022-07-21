@@ -25,10 +25,10 @@
  */
 package llnl.gnem.apps.detection;
 
-import llnl.gnem.apps.detection.database.StreamProcessorDAO;
+
 
 import llnl.gnem.apps.detection.core.framework.StreamProcessor;
-import llnl.gnem.apps.detection.database.StreamDAO;
+
 import llnl.gnem.apps.detection.source.SourceData;
 import llnl.gnem.apps.detection.streams.StreamServer;
 import llnl.gnem.apps.detection.tasks.ComputationService;
@@ -38,14 +38,16 @@ import llnl.gnem.apps.detection.util.initialization.ProcessingPrescription;
 import llnl.gnem.apps.detection.util.initialization.StreamsConfig;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceDetector;
-import llnl.gnem.apps.detection.database.SubspaceDetectorDAO;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
+import llnl.gnem.core.dataAccess.DataAccessException;
+
+
 import llnl.gnem.core.util.ApplicationLogger;
 
 /**
@@ -69,13 +71,18 @@ public class DetectionFramework {
         double sampleRate = server.getCommonSampleRate();
         
         String configName = ProcessingPrescription.getInstance().getConfigName();
-        processors.addAll(StreamProcessorDAO.getInstance().constructProcessors(configName, sampleRate,streamTriggeringMap));
+         if (!ProcessingPrescription.getInstance().isCreateConfiguration() && ProcessingPrescription.getInstance().isReplaceBulletinDetector()) {
+             int streamid = ProcessingPrescription.getInstance().getTargetBulletinDetectorStreamid();
+             DetectionDAOFactory.getInstance().getBulletinDetectorDAO().maybeReplaceBulletinDetector(streamid);
+         }
+        
+        processors.addAll(DetectionDAOFactory.getInstance().getStreamProcessorDAO().constructProcessors(configName, sampleRate,streamTriggeringMap));
         for (StreamProcessor processor : processors) {
             server.addStreamProcessor(processor);
             if (ProcessingPrescription.getInstance().isCreateConfiguration()) {
                 int streamid = processor.getStreamId();
                 String streamName = processor.getStreamName();
-                StreamDAO.getInstance().writeStreamParamsIntoConfiguration(streamid, streamName, sampleRate);
+                DetectionDAOFactory.getInstance().getStreamDAO().writeStreamParamsIntoConfiguration(streamid, streamName, sampleRate);
             }
         }
     }
@@ -103,7 +110,7 @@ public class DetectionFramework {
         ApplicationLogger.getInstance().log(Level.INFO, String.format("Writing histograms..."));
         for (StreamProcessor processor : processors) {
             Collection<SubspaceDetector> detectors = processor.getSubspaceDetectors();
-            SubspaceDetectorDAO.getInstance().writeHistograms(detectors);
+            DetectionDAOFactory.getInstance().getSubspaceDetectorDAO().writeHistograms(detectors);
         }
 
         RunStatsReporter.reportAllDetections();
@@ -127,8 +134,7 @@ public class DetectionFramework {
     }
 
 
-    public void close() throws IOException, SQLException, InterruptedException {
-        server.close();
+    public void close() throws IOException, DataAccessException, InterruptedException {
         ComputationService service = ComputationService.getInstance();
         service.shutdown();
     }

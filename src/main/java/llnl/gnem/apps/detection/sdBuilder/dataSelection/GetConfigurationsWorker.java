@@ -31,7 +31,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
-import llnl.gnem.apps.detection.database.ConfigurationDAO;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.util.Configuration;
 import llnl.gnem.core.util.ApplicationLogger;
 
@@ -51,7 +51,7 @@ public class GetConfigurationsWorker extends SwingWorker<Void, Void> {
     @Override
     protected Void doInBackground() throws Exception {
        
-        result.addAll(ConfigurationDAO.getInstance().getAllConfigurations());
+        result.addAll(DetectionDAOFactory.getInstance().getConfigurationDAO().getAllConfigurations());
         return null;
 
     }

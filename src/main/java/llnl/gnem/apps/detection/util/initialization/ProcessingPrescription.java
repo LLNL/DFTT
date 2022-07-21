@@ -30,15 +30,22 @@ import llnl.gnem.apps.detection.core.FileUtil;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import llnl.gnem.apps.detection.core.dataObjects.ChannelSubstitution;
-import llnl.gnem.apps.detection.database.ChannelSubstitutionDAO;
+import llnl.gnem.apps.detection.dataAccess.Util;
+import llnl.gnem.core.dataAccess.SeismogramSourceInfo;
+
 import llnl.gnem.core.util.FileInputArrayLoader;
+import llnl.gnem.core.util.FileUtil.DriveMapper;
 import llnl.gnem.core.util.StreamKey;
 
 /**
@@ -66,10 +73,20 @@ public class ProcessingPrescription {
     private static final String MODIFIED_TRACE_DIRECTORY_PROP = "ModifiedTraceDirectory";
     private static final String RUNID_FOR_DETECTOR_RETRIEVAL_PROP = "RunidForDetectorRetrieval";
     private static final String STREAMS_FILE_PROP = "StreamsFile";
-
     private static final String MIN_TEMPLATE_LENGTH_PROP = "MinTemplateLength";
     private static final String FORCE_FIXED_TEMPLATE_LENGTHS_PROP = "ForceFixedTemplateLengths";
     private static final String FIXED_RAW_SAMPLERATE = "SetRawSampRateTo";
+    private static final String REPLACE_BULLETIN_DETECTOR_PROP = "ReplaceBulletinDetector";
+    private static final String TARGET_BULLETIN_DETECTOR_STREAMID_PROP = "targetBulletinDetectorStreamid";
+    private static final String SOURCE_IDENTIFIER = "SourceIdentifier";
+    private static final String SOURCE_TYPE = "SourceType";
+    private static final String RE_WINDOW_DETECTORS = "RewindowDetectors";
+    private static final String RE_WINDOW_DETECTION_COUNT_THRESHOLD = "RewindowDetectionCountThreshold";
+    private static final String RE_WINDOW_SLIDING_WINDOW_LENGTH_SECONDS = "RewindowSlidingWindowLengthSeconds";
+    private static final String RE_WINDOW_PRE_TRIGGER_SECONDS = "RewindowPreTriggerSeconds";
+    private static final String RE_WINDOW_MIN_WINDOW_LENGTH_SECONDS = "ReWindowMinWindowLengthSeconds";
+    private static final String RE_WINDOW_MAX_WINDOW_LENGTH_SECONDS = "ReWindowMaxWindowLengthSeconds";
+    private static final String RE_WINDOW_ANALYSIS_WINDOW_LENGTH_SECONDS = "RewindowAnalysisWindowLengthSeconds";
 
     private final Properties propertyList;
     private String configName;
@@ -93,8 +110,131 @@ public class ProcessingPrescription {
     private boolean forceFixedTemplateLengths;
     private boolean writeModifiedTraces;
     private File modifiedTraceDirectory;
-    private double fixedRawSampleRate;
-    private Map<String, ChannelSubstitution> substitutionMap;
+
+    private boolean replaceBulletinDetector = false;
+    private int targetBulletinDetectorStreamid = -1;
+    private SeismogramSourceInfo sourceInfo = null;
+    private boolean rewindowDetectors = false;
+    private int rewindowDetectionCountThreshold = 10;
+    private double rewindowSlidingWindowLengthSeconds = 10.0;
+    private double rewindowPreTriggerSeconds = 50.0;
+    private double reWindowMinWindowLengthSeconds = 20.0;
+    private double reWindowMaxWindowLengthSeconds = 50.0;
+    private double rewindowAnalysisWindowLengthSeconds = 400.0;
+
+    private ProcessingPrescription() {
+        propertyList = new Properties();
+        propertyList.setProperty(WRITE_RAW_TRACES_PROP, "false");
+        propertyList.setProperty(WRITE_MODIFIED_TRACES_PROP, "false");
+        propertyList.setProperty(RAW_TRACE_CHANNEL_FILE_PROP, SET_IF_REQUIRED_VALUE);
+        propertyList.setProperty(MODIFIED_TRACE_CHANNEL_FILE_PROP, SET_IF_REQUIRED_VALUE);
+
+        propertyList.setProperty(NUMBER_OF_THREADS_PROP, "1");
+        propertyList.setProperty(WRITE_DETECTION_STATISTICS_PROP, "true");
+        propertyList.setProperty(DETECTION_STATISTIC_DIRECTORY_PROP, SET_IF_REQUIRED_VALUE);
+        propertyList.setProperty(RAW_TRACE_DIRECTORY_PROP, SET_IF_REQUIRED_VALUE);
+        propertyList.setProperty(MODIFIED_TRACE_DIRECTORY_PROP, SET_IF_REQUIRED_VALUE);
+
+        propertyList.setProperty(MAX_TEMPLATE_LENGTH_PROP, "200");
+        propertyList.setProperty(LOAD_ONLY_DETECTORS_FROM_SPECIFIED_RUNID_PROP, "false");
+        propertyList.setProperty(RUNID_FOR_DETECTOR_RETRIEVAL_PROP, "-1");
+        propertyList.setProperty(MIN_JDATE_TO_PROCESS_PROP, "-1");
+        propertyList.setProperty(MAX_JDATE_TO_PROCESS_PROP, "2286324");
+        propertyList.setProperty(STREAMS_FILE_PROP, MUST_BE_SET);
+        propertyList.setProperty(CREATE_CONFIGURATION_PROP, "false");
+        propertyList.setProperty(REPLACE_BULLETIN_DETECTOR_PROP, "false");
+        propertyList.setProperty(CONFIG_NAME_PROP, MUST_BE_SET);
+        propertyList.setProperty(MIN_TEMPLATE_LENGTH_PROP, "10");
+        propertyList.setProperty(FORCE_FIXED_TEMPLATE_LENGTHS_PROP, "false");
+        propertyList.setProperty(FIXED_RAW_SAMPLERATE, "-1");
+        propertyList.setProperty(TARGET_BULLETIN_DETECTOR_STREAMID_PROP, "-1");
+        propertyList.setProperty(SOURCE_TYPE, "CssDatabase");
+        propertyList.setProperty(SOURCE_IDENTIFIER, "llnl.continuous_wfdisc");
+        propertyList.setProperty(RE_WINDOW_DETECTORS, "false");
+        propertyList.setProperty(RE_WINDOW_DETECTION_COUNT_THRESHOLD, "10");
+        propertyList.setProperty(RE_WINDOW_SLIDING_WINDOW_LENGTH_SECONDS, "10");
+        propertyList.setProperty(RE_WINDOW_PRE_TRIGGER_SECONDS, "50");
+        propertyList.setProperty(RE_WINDOW_MIN_WINDOW_LENGTH_SECONDS, "20");
+        propertyList.setProperty(RE_WINDOW_MAX_WINDOW_LENGTH_SECONDS, "50");
+        propertyList.setProperty(RE_WINDOW_ANALYSIS_WINDOW_LENGTH_SECONDS, "400");
+    }
+
+    public void initialize(String parfile) throws Exception {
+        this.parfile = parfile;
+        configFileBytes = FileUtil.readBytesFromFile(parfile);
+        String propertyFileContents = readPropertyFileContents(parfile);
+
+        propertyList.load(new StringReader(propertyFileContents.replace("\\", "\\\\")));
+
+        File file = new File(parfile);
+        configFileDirectory = file.getAbsoluteFile().getParentFile();
+        if (configFileDirectory == null) {
+            file = new File(".");
+            configFileDirectory = file.getAbsoluteFile();
+        }
+
+        retrieveConfigName(propertyList);
+        numberOfThreads = Integer.parseInt(propertyList.getProperty(NUMBER_OF_THREADS_PROP).trim());
+
+        writeDetectionStatistics = Boolean.parseBoolean(propertyList.getProperty(WRITE_DETECTION_STATISTICS_PROP).trim());
+        String tmp = propertyList.getProperty(DETECTION_STATISTIC_DIRECTORY_PROP);
+        if (tmp == null || tmp.trim().isEmpty() || tmp.equals(SET_IF_REQUIRED_VALUE)) {
+            tmp = new File(".").getAbsolutePath();
+        }
+        String mapped = DriveMapper.getInstance().maybeMapPath(tmp);
+        detectionStatisticDirectory = new File(mapped);
+
+        tmp = propertyList.getProperty(RAW_TRACE_DIRECTORY_PROP);
+        if (tmp == null || tmp.trim().isEmpty() || tmp.equals(SET_IF_REQUIRED_VALUE)) {
+            tmp = new File(".").getAbsolutePath();
+        }
+        mapped = DriveMapper.getInstance().maybeMapPath(tmp);
+        rawTraceDirectory = new File(mapped);
+
+        tmp = propertyList.getProperty(MODIFIED_TRACE_DIRECTORY_PROP);
+        if (tmp == null || tmp.trim().isEmpty() || tmp.equals(SET_IF_REQUIRED_VALUE)) {
+            tmp = new File(".").getAbsolutePath();
+        }
+        mapped = DriveMapper.getInstance().maybeMapPath(tmp);
+        modifiedTraceDirectory = new File(mapped);
+
+        tmp = propertyList.getProperty(SOURCE_TYPE);
+        SeismogramSourceInfo.SourceType type = SeismogramSourceInfo.SourceType.valueOf(tmp);
+        tmp = propertyList.getProperty(SOURCE_IDENTIFIER);
+        sourceInfo = new SeismogramSourceInfo(type, tmp);
+
+        loadOnlyDetectorsFromSpecifiedRunid = Boolean.parseBoolean(propertyList.getProperty(LOAD_ONLY_DETECTORS_FROM_SPECIFIED_RUNID_PROP).trim());
+        rewindowDetectors = Boolean.parseBoolean(propertyList.getProperty(RE_WINDOW_DETECTORS).trim());
+
+        runidForDetectorRetrieval = Integer.parseInt(propertyList.getProperty(RUNID_FOR_DETECTOR_RETRIEVAL_PROP).trim());
+        minJdateToProcess = Integer.parseInt(propertyList.getProperty(MIN_JDATE_TO_PROCESS_PROP).trim());
+        maxJdateToProcess = Integer.parseInt(propertyList.getProperty(MAX_JDATE_TO_PROCESS_PROP).trim());
+        rewindowDetectionCountThreshold = Integer.parseInt(propertyList.getProperty(RE_WINDOW_DETECTION_COUNT_THRESHOLD).trim());
+
+        maxTemplateLength = Double.parseDouble(propertyList.getProperty(MAX_TEMPLATE_LENGTH_PROP).trim());
+        rewindowSlidingWindowLengthSeconds = Double.parseDouble(propertyList.getProperty(RE_WINDOW_SLIDING_WINDOW_LENGTH_SECONDS).trim());
+        rewindowPreTriggerSeconds = Double.parseDouble(propertyList.getProperty(RE_WINDOW_PRE_TRIGGER_SECONDS).trim());
+        reWindowMinWindowLengthSeconds = Double.parseDouble(propertyList.getProperty(RE_WINDOW_MIN_WINDOW_LENGTH_SECONDS).trim());
+        reWindowMaxWindowLengthSeconds = Double.parseDouble(propertyList.getProperty(RE_WINDOW_MAX_WINDOW_LENGTH_SECONDS).trim());
+        rewindowAnalysisWindowLengthSeconds = Double.parseDouble(propertyList.getProperty(RE_WINDOW_ANALYSIS_WINDOW_LENGTH_SECONDS).trim());
+
+        Util.populateArrayInfoModel(minJdateToProcess);
+
+        tmp = propertyList.getProperty(STREAMS_FILE_PROP).trim();
+        if (tmp != null) {
+            getStreamInfo(DriveMapper.getInstance().maybeMapPath(tmp));
+        }
+
+        createConfiguration = Boolean.parseBoolean(propertyList.getProperty(CREATE_CONFIGURATION_PROP).trim());
+        getRawTraceSpecs(propertyList);
+        getProcessedTraceSpecs(propertyList);
+        minTemplateLength = Double.parseDouble(propertyList.getProperty(MIN_TEMPLATE_LENGTH_PROP).trim());
+        forceFixedTemplateLengths = Boolean.parseBoolean(propertyList.getProperty(FORCE_FIXED_TEMPLATE_LENGTHS_PROP).trim());
+
+        replaceBulletinDetector = Boolean.parseBoolean(propertyList.getProperty(REPLACE_BULLETIN_DETECTOR_PROP).trim());
+        targetBulletinDetectorStreamid = Integer.parseInt(propertyList.getProperty(TARGET_BULLETIN_DETECTOR_STREAMID_PROP).trim());
+
+    }
 
     public double getMaxTemplateLength() {
         return maxTemplateLength;
@@ -128,51 +268,12 @@ public class ProcessingPrescription {
         return runidForDetectorRetrieval;
     }
 
-    /**
-     * @return the minJdateToProcess
-     */
     public int getMinJdateToProcess() {
         return minJdateToProcess;
     }
 
-    /**
-     * @return the maxJdateToProcess
-     */
     public int getMaxJdateToProcess() {
         return maxJdateToProcess;
-    }
-
-    public boolean isCreateBootDetectorsIfNeeded() {
-        System.out.println("fill  in code for setting whether boot detectors are auto-created (ProcessingPrescription)!");
-        return true;
-    }
-
-    private void getRawTraceSpecs(Properties propertyList) throws IOException, IllegalStateException {
-        writeRawTraces = Boolean.parseBoolean(propertyList.getProperty(WRITE_RAW_TRACES_PROP).trim());
-
-        if (writeRawTraces) {
-            String rawTraceChannelFile = propertyList.getProperty(RAW_TRACE_CHANNEL_FILE_PROP);
-            if (rawTraceChannelFile == null || rawTraceChannelFile.equals(SET_IF_REQUIRED_VALUE)) {
-                throw new IllegalStateException("No raw trace channel file was specified, but writeRawTraces is true!");
-            }
-            String[] lines = FileInputArrayLoader.fillStrings(rawTraceChannelFile);
-            for (String line : lines) {
-                String[] tokens = line.split("\\s+");
-                if (tokens.length == 2) {
-                    channels.add(new StreamKey(tokens[0], tokens[1]));
-                }
-            }
-        }
-    }
-
-    private void getStreamInfo(String streamsFileName) throws Exception {
-        String[] filenames = FileInputArrayLoader.fillStrings(streamsFileName);
-        Map<String, StreamInfo> streams = new HashMap<>();
-        for (String file : filenames) {
-            StreamInfo info = new StreamInfo(file);
-            streams.put(info.getStreamName(), info);
-        }
-        StreamsConfig.getInstance().populateMap(streams);
     }
 
     public boolean isCreateConfiguration() {
@@ -191,9 +292,6 @@ public class ProcessingPrescription {
         return channels;
     }
 
-    /**
-     * @return the configFileDirectory
-     */
     public File getConfigFileDirectory() {
         return configFileDirectory;
     }
@@ -202,9 +300,6 @@ public class ProcessingPrescription {
         return parfile;
     }
 
-    /**
-     * @return the configFileBytes
-     */
     public byte[] getConfigFileBytes() {
         return configFileBytes;
     }
@@ -235,6 +330,97 @@ public class ProcessingPrescription {
         return writeModifiedTraces;
     }
 
+    public boolean isReplaceBulletinDetector() {
+        return replaceBulletinDetector;
+    }
+
+    public int getTargetBulletinDetectorStreamid() {
+        return targetBulletinDetectorStreamid;
+    }
+
+    public void setReplaceBulletinDetector(boolean value) {
+        replaceBulletinDetector = value;
+    }
+
+    public void setTargetBulletinDetectorStreamid(int value) {
+        targetBulletinDetectorStreamid = value;
+    }
+
+    public void setSeismogramSourceInfo(SeismogramSourceInfo ssi) {
+        sourceInfo = ssi;
+    }
+
+    private String readPropertyFileContents(String parfile) throws IOException {
+        return new String(Files.readAllBytes(Paths.get(parfile)));
+    }
+
+    public boolean isRewindowDetectors() {
+        return rewindowDetectors;
+    }
+
+    public int getRewindowDetectionCountThreshold() {
+        return rewindowDetectionCountThreshold;
+    }
+
+    public double getRewindowSlidingWindowLengthSeconds() {
+        return rewindowSlidingWindowLengthSeconds;
+    }
+
+    public double getRewindowPreTriggerSeconds() {
+        return rewindowPreTriggerSeconds;
+    }
+
+    public double getReWindowMinWindowLengthSeconds() {
+        return reWindowMinWindowLengthSeconds;
+    }
+
+    public double getReWindowMaxWindowLengthSeconds() {
+        return reWindowMaxWindowLengthSeconds;
+    }
+
+    public double getRewindowAnalysisWindowLengthSeconds() {
+        return rewindowAnalysisWindowLengthSeconds;
+    }
+
+    public SeismogramSourceInfo getSeismogramSourceInfo() {
+        if (sourceInfo == null) {
+            return new SeismogramSourceInfo(SeismogramSourceInfo.SourceType.CssDatabase, "llnl.continuous_wfdisc");
+        } else {
+            return sourceInfo;
+        }
+    }
+
+    private void getRawTraceSpecs(Properties propertyList) throws IOException, IllegalStateException {
+        writeRawTraces = Boolean.parseBoolean(propertyList.getProperty(WRITE_RAW_TRACES_PROP).trim());
+
+        if (writeRawTraces) {
+            String rawTraceChannelFile = propertyList.getProperty(RAW_TRACE_CHANNEL_FILE_PROP);
+            if (rawTraceChannelFile == null || rawTraceChannelFile.equals(SET_IF_REQUIRED_VALUE)) {
+                throw new IllegalStateException("No raw trace channel file was specified, but writeRawTraces is true!");
+            }
+            String[] lines = FileInputArrayLoader.fillStrings(rawTraceChannelFile);
+            for (String line : lines) {
+                String[] tokens = line.trim().split("\\s+");
+                if (tokens.length == 2) { // Old-style sta-chan description
+                    channels.add(new StreamKey(tokens[0], tokens[1]));
+                } else if (tokens.length == 4) { //net-sta-chan-locid
+                    channels.add(new StreamKey(tokens[0], tokens[1], tokens[2], tokens[3]));
+                }
+            }
+        }
+    }
+
+    private void getStreamInfo(String streamsFileName) throws Exception {
+        Path tmp = Paths.get(streamsFileName);
+        List<String> lines = Files.readAllLines(tmp.normalize());
+        Map<String, StreamInfo> streams = new HashMap<>();
+        for (String file : lines) {
+            StreamInfo info = new StreamInfo(DriveMapper.getInstance().maybeMapPath(file));
+            streams.put(info.getStreamName(), info);
+        }
+        StreamsConfig.getInstance().populateMap(streams);
+    }
+
     private void getProcessedTraceSpecs(Properties propertyList) throws IOException {
         writeModifiedTraces = Boolean.parseBoolean(propertyList.getProperty(WRITE_MODIFIED_TRACES_PROP).trim());
 
@@ -245,9 +431,11 @@ public class ProcessingPrescription {
             }
             String[] lines = FileInputArrayLoader.fillStrings(deimatedTraceChannelFile);
             for (String line : lines) {
-                String[] tokens = line.split("\\s+");
-                if (tokens.length == 2) {
+                String[] tokens = line.trim().split("\\s+");
+                if (tokens.length == 2) { // Old-style sta-chan description
                     modifiedChannels.add(new StreamKey(tokens[0], tokens[1]));
+                } else if (tokens.length == 4) { //net-sta-chan-locid
+                    modifiedChannels.add(new StreamKey(tokens[0], tokens[1], tokens[2], tokens[3]));
                 }
             }
         }
@@ -262,120 +450,11 @@ public class ProcessingPrescription {
         return ProcessingPrescriptionHolder.INSTANCE;
     }
 
-    private ProcessingPrescription() {
-        propertyList = new Properties();
-        propertyList.setProperty(WRITE_RAW_TRACES_PROP, "false");
-        propertyList.setProperty(WRITE_MODIFIED_TRACES_PROP, "false");
-        propertyList.setProperty(RAW_TRACE_CHANNEL_FILE_PROP, SET_IF_REQUIRED_VALUE);
-        propertyList.setProperty(MODIFIED_TRACE_CHANNEL_FILE_PROP, SET_IF_REQUIRED_VALUE);
-
-        propertyList.setProperty(NUMBER_OF_THREADS_PROP, "1");
-        propertyList.setProperty(WRITE_DETECTION_STATISTICS_PROP, "true");
-        propertyList.setProperty(DETECTION_STATISTIC_DIRECTORY_PROP, SET_IF_REQUIRED_VALUE);
-        propertyList.setProperty(RAW_TRACE_DIRECTORY_PROP, SET_IF_REQUIRED_VALUE);
-        propertyList.setProperty(MODIFIED_TRACE_DIRECTORY_PROP, SET_IF_REQUIRED_VALUE);
-
-        propertyList.setProperty(MAX_TEMPLATE_LENGTH_PROP, "200");
-        propertyList.setProperty(LOAD_ONLY_DETECTORS_FROM_SPECIFIED_RUNID_PROP, "false");
-        propertyList.setProperty(RUNID_FOR_DETECTOR_RETRIEVAL_PROP, "-1");
-        propertyList.setProperty(MIN_JDATE_TO_PROCESS_PROP, "-1");
-        propertyList.setProperty(MAX_JDATE_TO_PROCESS_PROP, "2286324");
-        propertyList.setProperty(STREAMS_FILE_PROP, MUST_BE_SET);
-        propertyList.setProperty(CREATE_CONFIGURATION_PROP, "false");
-        propertyList.setProperty(CONFIG_NAME_PROP, MUST_BE_SET);
-        propertyList.setProperty(MIN_TEMPLATE_LENGTH_PROP, "10");
-        propertyList.setProperty(FORCE_FIXED_TEMPLATE_LENGTHS_PROP, "false");
-        propertyList.setProperty(FIXED_RAW_SAMPLERATE, "-1");
-
-    }
-
-    public void initialize(String parfile) throws Exception {
-        this.parfile = parfile;
-        configFileBytes = FileUtil.readBytesFromFile(parfile);
-        try (FileInputStream infile = new FileInputStream(parfile)) {
-            propertyList.load(infile);
-
-            File file = new File(parfile);
-            configFileDirectory = file.getAbsoluteFile().getParentFile();
-            if (configFileDirectory == null) {
-                file = new File(".");
-                configFileDirectory = file.getAbsoluteFile();
-            }
-        }
-
-        retrieveConfigName(propertyList);
-        numberOfThreads = Integer.parseInt(propertyList.getProperty(NUMBER_OF_THREADS_PROP).trim());
-
-        writeDetectionStatistics = Boolean.parseBoolean(propertyList.getProperty(WRITE_DETECTION_STATISTICS_PROP).trim());
-        String tmp = propertyList.getProperty(DETECTION_STATISTIC_DIRECTORY_PROP);
-        if (tmp == null || tmp.trim().isEmpty() || tmp.equals(SET_IF_REQUIRED_VALUE)) {
-            tmp = new File(".").getAbsolutePath();
-        }
-        detectionStatisticDirectory = new File(tmp);
-
-        tmp = propertyList.getProperty(RAW_TRACE_DIRECTORY_PROP);
-        if (tmp == null || tmp.trim().isEmpty() || tmp.equals(SET_IF_REQUIRED_VALUE)) {
-            tmp = new File(".").getAbsolutePath();
-        }
-        rawTraceDirectory = new File(tmp);
-
-        tmp = propertyList.getProperty(MODIFIED_TRACE_DIRECTORY_PROP);
-        if (tmp == null || tmp.trim().isEmpty() || tmp.equals(SET_IF_REQUIRED_VALUE)) {
-            tmp = new File(".").getAbsolutePath();
-        }
-        modifiedTraceDirectory = new File(tmp);
-
-        maxTemplateLength = Double.parseDouble(propertyList.getProperty(MAX_TEMPLATE_LENGTH_PROP).trim());
-        loadOnlyDetectorsFromSpecifiedRunid = Boolean.parseBoolean(propertyList.getProperty(LOAD_ONLY_DETECTORS_FROM_SPECIFIED_RUNID_PROP).trim());
-        runidForDetectorRetrieval = Integer.parseInt(propertyList.getProperty(RUNID_FOR_DETECTOR_RETRIEVAL_PROP).trim());
-
-        minJdateToProcess = Integer.parseInt(propertyList.getProperty(MIN_JDATE_TO_PROCESS_PROP).trim());
-        maxJdateToProcess = Integer.parseInt(propertyList.getProperty(MAX_JDATE_TO_PROCESS_PROP).trim());
-        tmp = propertyList.getProperty(STREAMS_FILE_PROP).trim();
-        if (tmp != null) {
-            getStreamInfo(tmp);
-        }
-
-        fixedRawSampleRate = Double.parseDouble(propertyList.getProperty(FIXED_RAW_SAMPLERATE).trim());
-
-        createConfiguration = Boolean.parseBoolean(propertyList.getProperty(CREATE_CONFIGURATION_PROP).trim());
-        getRawTraceSpecs(propertyList);
-        getProcessedTraceSpecs(propertyList);
-        minTemplateLength = Double.parseDouble(propertyList.getProperty(MIN_TEMPLATE_LENGTH_PROP).trim());
-        forceFixedTemplateLengths = Boolean.parseBoolean(propertyList.getProperty(FORCE_FIXED_TEMPLATE_LENGTHS_PROP).trim());
-
-        String channelSubstitutionFile = propertyList.getProperty("ChannelSubstitutionFile");
-        if (channelSubstitutionFile != null) {
-            substitutionMap = ChannelSubstitutionDAO.getInstance().getChannelSubstitutions(channelSubstitutionFile);
-        } else {
-            substitutionMap = new HashMap<>();
-        }
-
-    }
-
     private void retrieveConfigName(Properties propertyList) {
         configName = propertyList.getProperty(CONFIG_NAME_PROP).trim();
         if (configName.isEmpty() || configName.equals(MUST_BE_SET)) {
             throw new IllegalStateException("No Valid ConfigurationName was set!");
         }
-    }
-
-    /**
-     * @return the fixedRawSampleRate
-     */
-    public double getFixedRawSampleRate() {
-        return fixedRawSampleRate;
-    }
-
-    public boolean isFixRawSampleRate() {
-        return fixedRawSampleRate > 0;
-    }
-
-    /**
-     * @return the substitutionMap
-     */
-    public Map<String, ChannelSubstitution> getSubstitutionMap() {
-        return substitutionMap;
     }
 
 }

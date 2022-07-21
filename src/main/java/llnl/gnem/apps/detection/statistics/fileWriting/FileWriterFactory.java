@@ -25,7 +25,7 @@
  */
 package llnl.gnem.apps.detection.statistics.fileWriting;
 
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 
 import llnl.gnem.apps.detection.util.RunInfo;
 

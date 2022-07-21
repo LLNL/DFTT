@@ -173,6 +173,9 @@ public class JMultiAxisPlot extends JPlotContainer {
      * @param newMode The new mouseMode value
      */
     public void setMouseMode(MouseMode newMode) {
+        if (newMode == mouseMode) {
+            return;
+        }
         mouseModes.push(mouseMode);
         mouseMode = newMode;
         setCursorForMouseModeChange();
@@ -192,22 +195,24 @@ public class JMultiAxisPlot extends JPlotContainer {
     }
 
     private void setCursorForMouseModeChange() {
-        if (null != mouseMode) switch (mouseMode) {
-            case PAN:
-                setCursor(handCursor);
-                break;
-            case PAN2:
-                setCursor(moveCursor);
-                break;
-            case SELECT_REGION:
-                setCursor(crossCursor);
-                break;
-            case CREATE_PICK:
-                setCursor(crossCursor);
-                break;
-            default:
-                setCursor(defaultCursor);
-                break;
+        if (null != mouseMode) {
+            switch (mouseMode) {
+                case PAN:
+                    setCursor(handCursor);
+                    break;
+                case PAN2:
+                    setCursor(moveCursor);
+                    break;
+                case SELECT_REGION:
+                    setCursor(crossCursor);
+                    break;
+                case CREATE_PICK:
+                    setCursor(crossCursor);
+                    break;
+                default:
+                    setCursor(defaultCursor);
+                    break;
+            }
         }
     }
 
@@ -557,6 +562,7 @@ public class JMultiAxisPlot extends JPlotContainer {
     public void zoomToBox(ZoomInStateChange zisc) {
         this.handleZoomIn(zisc);
     }
+
     public void zoomToNewLimits(ZoomLimits newLimits) {
         subplots.zoomToNewLimits(newLimits);
     }
@@ -568,7 +574,7 @@ public class JMultiAxisPlot extends JPlotContainer {
     public void zoomToNewXLimits(double xmin, double xmax) {
         subplots.zoomToNewXLimits(xmin, xmax);
     }
-    
+
     public Stack<ZoomLimits> getZoomLimits(JSubplot p) {
         return subplots.getZoomLimits(p);
     }
@@ -767,11 +773,11 @@ public class JMultiAxisPlot extends JPlotContainer {
         repaint();
         activePlot = sp;
     }
+
     public void handleZoomIn(ZoomInStateChange zisc) {
         zoomToBox(zisc.getZoomBounds());
         repaint();
     }
-    
 
     public void handleZoomOut() {
         zoomOut();
@@ -901,6 +907,29 @@ public class JMultiAxisPlot extends JPlotContainer {
             line.setColor(prefs.getTraceColor());
         }
 
+    }
+
+    public void zoomInAroundMouse(JPlotKeyMessage msg) {
+        Coordinate coord = msg.getCurrentCoord();
+        JSubplot plot = msg.getSubplot();
+        if (plot != null) {
+            YAxis yaxis = plot.getYaxis();
+            if (yaxis != null) {
+                double ymin = yaxis.getMin();
+                double ymax = yaxis.getMax();
+                double yrange4 = (ymax - ymin) / 4;
+                XAxis xaxis = plot.getXaxis();
+                if (xaxis != null) {
+                    double xmin = xaxis.getMin();
+                    double xmax = xaxis.getMax();
+                    double xrange4 = (xmax - xmin) / 4;
+                    ZoomLimits zl = new ZoomLimits(coord.getWorldC1() - xrange4, coord.getWorldC1() + xrange4, coord.getWorldC2() - yrange4, coord.getWorldC2() + yrange4);
+
+                    this.zoomToNewLimits(zl);
+                    this.repaint();
+                }
+            }
+        }
     }
 
 }

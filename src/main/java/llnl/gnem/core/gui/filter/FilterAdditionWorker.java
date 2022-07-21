@@ -35,10 +35,8 @@ import llnl.gnem.core.util.ApplicationLogger;
 import llnl.gnem.core.waveform.filter.StoredFilter;
 
 /**
- * Created by dodge1
- * Date: Feb 12, 2012
- * COPYRIGHT NOTICE
- * Copyright (C) 2007 Lawrence Livermore National Laboratory.
+ * Created by dodge1 Date: Feb 12, 2012 COPYRIGHT NOTICE Copyright (C) 2007
+ * Lawrence Livermore National Laboratory.
  */
 public class FilterAdditionWorker extends SwingWorker<Void, Void> {
 
@@ -48,8 +46,6 @@ public class FilterAdditionWorker extends SwingWorker<Void, Void> {
     public FilterAdditionWorker(StoredFilter filter) {
 
         filterToAdd = filter;
-
-
 
     }
 
@@ -66,8 +62,7 @@ public class FilterAdditionWorker extends SwingWorker<Void, Void> {
             get();
             if (addedFilter != null) {
                 FilterModel.getInstance().addNewFilter(addedFilter);
-            }
-            else{
+            } else {
                 FilterModel.getInstance().addFilterFromPool(filterToAdd);
             }
         } catch (InterruptedException | ExecutionException e) {

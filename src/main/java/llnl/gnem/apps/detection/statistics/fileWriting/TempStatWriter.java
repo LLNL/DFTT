@@ -26,7 +26,7 @@
 package llnl.gnem.apps.detection.statistics.fileWriting;
 
 import java.io.File;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 
 import java.io.IOException;
 import java.util.Map;

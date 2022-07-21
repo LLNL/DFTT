@@ -34,7 +34,6 @@ import javax.swing.JFrame;
 import javax.swing.SwingWorker;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.PhasePick;
-import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
 import llnl.gnem.core.gui.util.ProgressDialog;
 import llnl.gnem.core.util.ApplicationLogger;
 

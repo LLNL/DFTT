@@ -27,41 +27,19 @@ package llnl.gnem.core.dataAccess;
 
 import java.util.ArrayList;
 import java.util.StringTokenizer;
-import llnl.gnem.core.dataAccess.database.javadb.DerbyArrivalDAO;
-import llnl.gnem.core.dataAccess.database.javadb.DerbyCorrelationPickDAO;
-import llnl.gnem.core.dataAccess.database.javadb.DerbyEtypeDAO;
-import llnl.gnem.core.dataAccess.database.javadb.DerbyEventDataDAO;
+import llnl.gnem.core.dataAccess.SeismogramSourceInfo.SourceType;
+
+import llnl.gnem.core.dataAccess.database.javadb.DerbyContinuousWaveformDAO;
 import llnl.gnem.core.dataAccess.database.javadb.DerbyFilterDAO;
-import llnl.gnem.core.dataAccess.database.javadb.DerbyOriginDAO;
-import llnl.gnem.core.dataAccess.database.javadb.DerbyPolygonDAO;
-import llnl.gnem.core.dataAccess.database.javadb.DerbySeismicPhaseDAO;
-import llnl.gnem.core.dataAccess.database.javadb.DerbySeismogramDAO;
-import llnl.gnem.core.dataAccess.database.javadb.DerbyStationDAO;
-import llnl.gnem.core.dataAccess.database.javadb.DerbyStreamDAO;
-import llnl.gnem.core.dataAccess.database.javadb.DerbyWSDataSourceDAO;
+
 import llnl.gnem.core.dataAccess.database.javadb.JavaDbConnectionManager;
-import llnl.gnem.core.dataAccess.database.oracle.OracleArrivalDAO;
-import llnl.gnem.core.dataAccess.database.oracle.OracleCorrelationPickDAO;
-import llnl.gnem.core.dataAccess.database.oracle.OracleEtypeDAO;
-import llnl.gnem.core.dataAccess.database.oracle.OracleEventDataDAO;
+
+import llnl.gnem.core.dataAccess.database.oracle.OracleContinuousWaveformDAO;
 import llnl.gnem.core.dataAccess.database.oracle.OracleFilterDAO;
-import llnl.gnem.core.dataAccess.database.oracle.OracleOriginDAO;
-import llnl.gnem.core.dataAccess.database.oracle.OraclePolygonDAO;
-import llnl.gnem.core.dataAccess.database.oracle.OracleSeismicPhaseDAO;
-import llnl.gnem.core.dataAccess.database.oracle.OracleSeismogramDAO;
-import llnl.gnem.core.dataAccess.database.oracle.OracleStationDAO;
-import llnl.gnem.core.dataAccess.database.oracle.OracleStreamDAO;
-import llnl.gnem.core.dataAccess.database.oracle.OracleWSDataSourceDAO;
-import llnl.gnem.core.dataAccess.interfaces.ArrivalDAO;
-import llnl.gnem.core.dataAccess.interfaces.CorrelationPickDAO;
-import llnl.gnem.core.dataAccess.interfaces.EtypeDAO;
+
+import llnl.gnem.core.dataAccess.interfaces.ContinuousWaveformDAO;
 import llnl.gnem.core.dataAccess.interfaces.FilterDAO;
-import llnl.gnem.core.dataAccess.interfaces.OriginDAO;
-import llnl.gnem.core.dataAccess.interfaces.PolygonDAO;
-import llnl.gnem.core.dataAccess.interfaces.SeismicPhaseDAO;
-import llnl.gnem.core.dataAccess.interfaces.SeismogramDAO;
-import llnl.gnem.core.dataAccess.interfaces.StationDAO;
-import llnl.gnem.core.dataAccess.interfaces.StreamDAO;
+
 import llnl.gnem.core.database.ConnectionManager;
 import llnl.gnem.core.database.Connections;
 import llnl.gnem.core.database.GenericAdminValidator;
@@ -69,8 +47,8 @@ import llnl.gnem.core.database.GenericRoleManager;
 import llnl.gnem.core.database.Role;
 import llnl.gnem.core.database.RoleManager;
 import llnl.gnem.core.database.login.LoginManager;
-import llnl.gnem.core.dataAccess.interfaces.EventDataDAO;
-import llnl.gnem.core.dataAccess.interfaces.WSDataSourceDAO;
+
+import llnl.gnem.core.dataAccess.streaming.FDSNContinuousWaveformDAO;
 
 /**
  *
@@ -82,6 +60,7 @@ public class DAOFactory {
     private static final DataSource DATA_SOURCE;
     private static Connections connections;
     private static GenericRoleManager roleManager;
+    private SeismogramSourceInfo seismogramSourceInfo;
 
     static {
         String value = System.getProperty("database_type", "ORACLE");
@@ -155,6 +134,32 @@ public class DAOFactory {
             default:
                 throw new IllegalStateException(DATA_SOURCE_NOT_SET_IN_FACTORY);
         }
+
+        String sourceTypeString = System.getProperty("SOURCE_TYPE");
+        if (sourceTypeString == null) {
+            seismogramSourceInfo = new SeismogramSourceInfo();
+        } else {
+            SeismogramSourceInfo.SourceType sourceType = SeismogramSourceInfo.SourceType.valueOf(sourceTypeString);
+            if (sourceType == SeismogramSourceInfo.SourceType.Type2Database) {
+                seismogramSourceInfo = new SeismogramSourceInfo();
+            } else {
+                String sourceIdentifier = System.getProperty("SOURCE_IDENTIFIER");
+                if (sourceIdentifier == null) {
+                    throw new IllegalStateException("No source identifer specified for non-default source_type!");
+                } else {
+                    seismogramSourceInfo = new SeismogramSourceInfo(sourceType, sourceIdentifier);
+                }
+            }
+        }
+
+    }
+
+    public void setSeismogramSourceInfo(SeismogramSourceInfo seismogramSourceInfo) {
+        this.seismogramSourceInfo = seismogramSourceInfo;
+    }
+
+    public SeismogramSourceInfo getSeismogramSourceInfo() {
+        return seismogramSourceInfo;
     }
 
     public static DAOFactory getInstance() {
@@ -197,136 +202,31 @@ public class DAOFactory {
         private static final DAOFactory INSTANCE = new DAOFactory();
     }
 
-    public synchronized EventDataDAO getEventDataDAO() {
-        switch (DATA_SOURCE) {
-            case ORACLE:
-                return new OracleEventDataDAO();
-            case DERBY:
-                return new DerbyEventDataDAO();
-            default:
-                throw new IllegalStateException(DATA_SOURCE_NOT_SET_IN_FACTORY);
-        }
-    }
-
-    public synchronized PolygonDAO getPolygonDAO() {
-        switch (DATA_SOURCE) {
-            case ORACLE:
-                return new OraclePolygonDAO();
-            case DERBY:
-                return new DerbyPolygonDAO();
-            default:
-                throw new IllegalStateException(DATA_SOURCE_NOT_SET_IN_FACTORY);
-        }
-    }
-
-    public synchronized EtypeDAO getEtypeDAO() {
-        switch (DATA_SOURCE) {
-            case ORACLE:
-                return new OracleEtypeDAO();
-            case DERBY:
-                return new DerbyEtypeDAO();
-            default:
-                throw new IllegalStateException(DATA_SOURCE_NOT_SET_IN_FACTORY);
-        }
-    }
-
-    public synchronized StationDAO getStationDAO() {
-        switch (DATA_SOURCE) {
-            case ORACLE:
-                return new OracleStationDAO();
-            case DERBY:
-                return new DerbyStationDAO();
-            default:
-                throw new IllegalStateException(DATA_SOURCE_NOT_SET_IN_FACTORY);
-        }
-    }
-
-    public synchronized OriginDAO getOriginDAO() {
-        switch (DATA_SOURCE) {
-            case ORACLE:
-                return new OracleOriginDAO();
-            case DERBY:
-                return new DerbyOriginDAO();
-            default:
-                throw new IllegalStateException(DATA_SOURCE_NOT_SET_IN_FACTORY);
-        }
-    }
-
-    public synchronized SeismogramDAO getSeismogramDAO() {
-        switch (DATA_SOURCE) {
-            case ORACLE:
-                return new OracleSeismogramDAO();
-            case DERBY:
-                return new DerbySeismogramDAO();
-            default:
-                throw new IllegalStateException(DATA_SOURCE_NOT_SET_IN_FACTORY);
-        }
-    }
-
-    public synchronized StreamDAO getStreamDAO() {
-        switch (DATA_SOURCE) {
-            case ORACLE:
-                return new OracleStreamDAO();
-            case DERBY:
-                return new DerbyStreamDAO();
-            default:
-                throw new IllegalStateException(DATA_SOURCE_NOT_SET_IN_FACTORY);
-        }
-    }
-
-    public synchronized SeismicPhaseDAO getSeismicPhaseDAO() {
-        switch (DATA_SOURCE) {
-            case ORACLE:
-                return new OracleSeismicPhaseDAO();
-            case DERBY:
-                return new DerbySeismicPhaseDAO();
-            default:
-                throw new IllegalStateException(DATA_SOURCE_NOT_SET_IN_FACTORY);
+    public synchronized ContinuousWaveformDAO getContinuousWaveformDAO() {
+        SourceType type = seismogramSourceInfo.getSourceType();
+        if (type == SourceType.FDSN) {
+            FDSNContinuousWaveformDAO.getInstance().setAgency(seismogramSourceInfo.getAgency());
+            return FDSNContinuousWaveformDAO.getInstance();
+        } else {
+            switch (DATA_SOURCE) {
+                case ORACLE:
+                    return new OracleContinuousWaveformDAO();
+                case DERBY:
+                    return new DerbyContinuousWaveformDAO();
+                default:
+                    throw new IllegalStateException(DATA_SOURCE_NOT_SET_IN_FACTORY);
+            }
         }
     }
 
     public synchronized FilterDAO getFilterDAO() {
         switch (DATA_SOURCE) {
             case ORACLE:
-                return  OracleFilterDAO.getInstance();
+                return OracleFilterDAO.getInstance();
             case DERBY:
                 return new DerbyFilterDAO();
             default:
                 throw new IllegalStateException(DATA_SOURCE_NOT_SET_IN_FACTORY);
         }
     }
-
-    public synchronized ArrivalDAO getArrivalDAO() {
-        switch (DATA_SOURCE) {
-            case ORACLE:
-                return new OracleArrivalDAO();
-            case DERBY:
-                return new DerbyArrivalDAO();
-            default:
-                throw new IllegalStateException(DATA_SOURCE_NOT_SET_IN_FACTORY);
-        }
-    }
-
-    public synchronized CorrelationPickDAO getCorrelationPickDAO() {
-        switch (DATA_SOURCE) {
-            case ORACLE:
-                return new OracleCorrelationPickDAO();
-            case DERBY:
-                return new DerbyCorrelationPickDAO();
-            default:
-                throw new IllegalStateException(DATA_SOURCE_NOT_SET_IN_FACTORY);
-        }
-    }
-
-    public synchronized WSDataSourceDAO getWSDataSourceDAO() {
-        switch (DATA_SOURCE) {
-            case ORACLE:
-                return new OracleWSDataSourceDAO();
-            case DERBY:
-                return new DerbyWSDataSourceDAO();
-            default:
-                throw new IllegalStateException(DATA_SOURCE_NOT_SET_IN_FACTORY);
-        }
-    }
-
 }

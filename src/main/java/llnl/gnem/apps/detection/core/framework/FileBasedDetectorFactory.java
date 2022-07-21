@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,8 +25,8 @@
  */
 package llnl.gnem.apps.detection.core.framework;
 
-import Jampack.JampackException;
 import java.io.IOException;
+
 import llnl.gnem.apps.detection.core.dataObjects.DetectorSpecification;
 import llnl.gnem.apps.detection.core.dataObjects.PreprocessorParams;
 import llnl.gnem.apps.detection.core.framework.detectors.Detector;
@@ -46,34 +46,32 @@ import llnl.gnem.apps.detection.streams.ConcreteStreamProcessor;
  */
 public class FileBasedDetectorFactory {
 
-    public static Detector createDetectorFromFiles( DetectorSpecification   spec,
-                                                    int                     detectorid,
-                                                    ConcreteStreamProcessor processor,
-                                                    int                     decimatedBlockSize    ) throws IOException, UnsupportedOperationException, JampackException {
-        PreprocessorParams params              = processor.getParams();
-        String             streamName          = processor.getStreamName();
-        double             decimatedSampleRate = params.getPreprocessorParams().getDecimatedSampleRate();
-        
+    public static Detector createDetectorFromFiles(DetectorSpecification spec, int detectorid, ConcreteStreamProcessor processor, int decimatedBlockSize)
+            throws IOException, UnsupportedOperationException {
+        PreprocessorParams params = processor.getParams();
+        String streamName = processor.getStreamName();
+        double decimatedSampleRate = params.getPreprocessorParams().getDecimatedSampleRate();
+
         Detector detector = null;
-        switch ( spec.getDetectorType() ) {
-            case SUBSPACE:
-                detector = new SubspaceDetector( detectorid, (SubspaceSpecification) spec, params, decimatedSampleRate, streamName, processor.getFFTSize(), decimatedBlockSize );
-                break;
-            case ARRAY_CORRELATION:
-                detector = new ArrayCorrelationDetector(detectorid, (ArrayCorrelationSpecification) spec, params, decimatedSampleRate, streamName, decimatedBlockSize);
-                break;
-            case STALTA:
-                detector = new STALTADetector( detectorid, (STALTASpecification) spec,  decimatedSampleRate, streamName, decimatedBlockSize );
-                break;
-            case ARRAYPOWER:
-                detector = new ArrayPowerDetector( detectorid, (ArrayDetectorSpecification) spec, decimatedSampleRate, streamName, decimatedBlockSize );
-                break;
-            case FSTATISTIC:
-                throw new UnsupportedOperationException( "FStatistic not implemented" );
-            default:
-                throw new UnsupportedOperationException( "Detector type unspecified" );
+        switch (spec.getDetectorType()) {
+        case SUBSPACE:
+            detector = new SubspaceDetector(detectorid, (SubspaceSpecification) spec, params, decimatedSampleRate, streamName, processor.getFFTSize(), decimatedBlockSize);
+            break;
+        case ARRAY_CORRELATION:
+            detector = new ArrayCorrelationDetector(detectorid, (ArrayCorrelationSpecification) spec, params, decimatedSampleRate, streamName, decimatedBlockSize);
+            break;
+        case STALTA:
+            detector = new STALTADetector(detectorid, (STALTASpecification) spec, decimatedSampleRate, streamName, decimatedBlockSize);
+            break;
+        case ARRAYPOWER:
+            detector = new ArrayPowerDetector(detectorid, (ArrayDetectorSpecification) spec, decimatedSampleRate, streamName, decimatedBlockSize);
+            break;
+        case FSTATISTIC:
+            throw new UnsupportedOperationException("FStatistic not implemented");
+        default:
+            throw new UnsupportedOperationException("Detector type unspecified");
         }
         return detector;
     }
-    
+
 }

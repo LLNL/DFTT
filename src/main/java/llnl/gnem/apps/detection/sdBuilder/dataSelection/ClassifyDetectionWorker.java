@@ -29,7 +29,9 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
-import llnl.gnem.apps.detection.database.FeatureDAO;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
+
+import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
 import llnl.gnem.core.util.ApplicationLogger;
 
 /**
@@ -48,7 +50,7 @@ public class ClassifyDetectionWorker extends SwingWorker<Void, Void> {
 
     @Override
     protected Void doInBackground() throws Exception {
-        FeatureDAO.getInstance().writeDetectorTrainingDataRow(detectorid, status);
+        DetectionDAOFactory.getInstance().getFeatureDAO().writeDetectorTrainingDataRow(detectorid, status);
         return null;
 
     }
@@ -57,6 +59,7 @@ public class ClassifyDetectionWorker extends SwingWorker<Void, Void> {
     public void done() {
         try {
             get();
+            ClusterBuilderFrame.getInstance().updateTraceColors();
         } catch (InterruptedException | ExecutionException e) {
             if (!(e instanceof CancellationException)) {
                 ApplicationLogger.getInstance().log(Level.WARNING, "Error classifying detections.", e);

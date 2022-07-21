@@ -30,7 +30,7 @@ import llnl.gnem.apps.detection.dataAccess.interfaces.DetectorDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.EventDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.OriginDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.PickDAO;
-import llnl.gnem.apps.detection.dataAccess.interfaces.SeismogramDAO;
+
 import llnl.gnem.apps.detection.dataAccess.interfaces.StationDAO;
 
 
@@ -48,10 +48,6 @@ public class DerbyFactoryHelper {
 
     public static OriginDAO getOriginDAO() {
         return DerbyOriginDAO.getInstance();
-    }
-
-    public static SeismogramDAO getSeismogramDAO() {
-        return DerbySeismogramDAO.getInstance();
     }
 
     public static DetectionDAO getDetectionDAO() {

@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,9 +33,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.StringTokenizer;
+
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -48,38 +49,48 @@ public class DbCredentials {
     public final String instance;
 
     public DbCredentials(String login) throws ParseException {
-        String[] credentials = StringUtils.splitPreserveAllTokens(login, "/");
-        username = credentials[0];
+        String user = "";
+        String passwdx = "";
+        String[] tmp = StringUtils.splitPreserveAllTokens(login, "@");
+        String inputInstance = tmp.length > 1 ? tmp[1] : "";
 
-        String inputPassword = "";
-        String inputInstance = "";
-        if (credentials.length != 2) {
-            if (inputPassword.isEmpty()) {
-                Console cons;
-                char[] passwd;
-                if ((cons = System.console()) != null && (passwd = cons.readPassword("%s ", "Password:")) != null) {
-                    inputPassword = new String(passwd);
-                    java.util.Arrays.fill(passwd, ' ');
-                }
-            }
+        if (inputInstance.contains("/")) { // user@sid/passwd
+            String[] tmp2 = StringUtils.splitPreserveAllTokens(inputInstance, "/");
+            inputInstance = tmp2[0];
+            passwdx = tmp2.length > 1 ? tmp2[1] : "";
+        }
+        String test = tmp[0];
+        if (test.contains("/")) { //user/passwd@sid
+            String[] tmp2 = StringUtils.splitPreserveAllTokens(test, "/");
+            user = tmp2[0];
+            passwdx = tmp2.length > 1 ? tmp2[1] : "";
+            inputInstance = tmp.length > 1 ? tmp[1] : "";
         } else {
-            credentials = StringUtils.splitPreserveAllTokens(credentials[1], "@");
-            inputPassword = credentials[0];
-            inputInstance = credentials.length > 1 ? credentials[1] : "";
+            user = test;
+        }
 
-            // Special escape character indicating to use password file
-            if (inputPassword.equals("-")) {
-                inputPassword = readPasswordFile(username);
-                if (inputPassword.isEmpty()) {
-                    inputPassword = "-";
-                }
-            } else if (inputPassword.isEmpty()) {
-                Console cons;
-                char[] passwd;
-                if ((cons = System.console()) != null && (passwd = cons.readPassword("%s ", "Password:")) != null) {
+        username = user;
+        String inputPassword = passwdx;
+
+        // Special escape character indicating to use password file
+        if (inputPassword.equals("-")) {
+            inputPassword = readPasswordFile(username);
+            if (inputPassword.isEmpty()) {
+                inputPassword = "-";
+            }
+        } else if (inputPassword.isEmpty()) {
+            Console cons = System.console();
+            char[] passwd;
+            if (cons != null) {
+                passwd = cons.readPassword("%s ", "Password:");
+                if (passwd != null) {
                     inputPassword = new String(passwd);
                     java.util.Arrays.fill(passwd, ' ');
                 }
+            } else {
+                System.out.println("Enter password: ");
+                Scanner scanner = new Scanner(System.in);
+                inputPassword = scanner.next();
             }
         }
 
@@ -133,7 +144,7 @@ public class DbCredentials {
     // TODO make this platform independent, as it does not currently provide any security on Windows
     private static void writePassword(String username, String password) {
         if (!System.getProperty("os.name").startsWith("Windows")) {
-            List<String> lines = new ArrayList<String>();
+            List<String> lines = new ArrayList<>();
             boolean exists = false;
 
             File passwordFile = new File(getPasswordFilename());

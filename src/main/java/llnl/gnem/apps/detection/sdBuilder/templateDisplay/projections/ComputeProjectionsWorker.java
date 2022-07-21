@@ -34,12 +34,9 @@ import java.util.stream.Collectors;
 import javax.swing.SwingWorker;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.Projection;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceTemplate;
-import llnl.gnem.apps.detection.database.DetectorDAO;
-import llnl.gnem.apps.detection.database.SubspaceTemplateDAO;
-import llnl.gnem.core.correlation.RealSequenceCorrelator;
-import llnl.gnem.core.correlation.util.CorrelationMax;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
+
 import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.SeriesMath;
 
 /**
  *
@@ -60,8 +57,8 @@ public class ComputeProjectionsWorker extends SwingWorker<Void, Void> {
     @Override
     protected Void doInBackground() throws Exception {
 
-        currentTemplate = SubspaceTemplateDAO.getInstance().getSubspaceTemplate(detectorid);
-        ArrayList<Integer> detectorids = DetectorDAO.getInstance().getSubspaceDetectorIDsWithDetections(runid);
+        currentTemplate = DetectionDAOFactory.getInstance().getSubspaceTemplateDAO().getSubspaceTemplate(detectorid);
+        ArrayList<Integer> detectorids = DetectionDAOFactory.getInstance().getDetectorDAO().getSubspaceDetectorIDsWithDetections(runid);
 
         List<DetectorProjection> projections = detectorids.parallelStream()
                 .filter(t -> isNewDetector(t))
@@ -77,7 +74,7 @@ public class ComputeProjectionsWorker extends SwingWorker<Void, Void> {
 
     private DetectorProjection produceProjection(int adetectorid) {
         try {
-            SubspaceTemplate thatTemplate = SubspaceTemplateDAO.getInstance().getSubspaceTemplate(adetectorid);
+            SubspaceTemplate thatTemplate = DetectionDAOFactory.getInstance().getSubspaceTemplateDAO().getSubspaceTemplate(adetectorid);
             Projection p = new Projection(currentTemplate, thatTemplate);
             int delay = p.getDecimatedDelay();
             double projection = p.getProjectionValue();

@@ -60,12 +60,6 @@ public class DefaultTransferFunctionServiceProvider implements TransferFunctionS
     @Override
     public TransferData preprocessWaveformData(CssSeismogram seis, ResponseType toType, ResponseMetaData metadata)
                     throws IOException {
-
-        /*
-         * - Set up scratch space for TRANSFER subroutine. It needs four DOUBLE PRECISION arrays,two for the ffts that
-         * must be sized to the next power of two above the maximum number of dat(nfft) and two that are half that size
-         * plus 1(nfreq.)
-         */
         int nfft = TransferFunctionUtils.next2(seis.getNsamp());
         int nfreq = nfft / 2 + 1;
 
@@ -74,57 +68,22 @@ public class DefaultTransferFunctionServiceProvider implements TransferFunctionS
 
         double delta = 1.0 / seis.getSamprate();
         double delfrq = 1.0 / (nfft * delta);
-
-        /*
-         * EXECUTION PHASE:
-         */
-
-        /*
-         * - Deconvolve seismometer.
-         */
         ResponseType fromType = metadata.getRsptype();
         float nmScale = getNmScale(fromType, toType);
 
         dseis(nfreq, delfrq, seis.getTime().getEpochTime(), xre, xim, fromType, metadata.getFilename(), seis.getSta(),
                         seis.getChan());
 
-        /**
-         * @param seis - passed in
-         * @param toType - passed in
-         * @param metadata - passed in
-         * @param limits - passed in - not used until now!
-         * 
-         * @param nfreq - created above, used in dseis as a counter (in both calls)
-         * 
-         * @param sre - created above, but not used until now
-         * @param sim - created above, but not used until now
-         * 
-         * @param xre - created above and changed in dseis (could be part of Complex?)
-         * @param xim - created above and changed in dseis (could be part of Complex?)
-         * 
-         * @param delfrq - created above, used in getran as a constant (think we can recreate)
-         * 
-         * @param frequencies - created above and initilized; only used if !inverse (so far this appears never to happen)
-         * @param nmScale - created above and initilized; only used if !inverse (so far this appears never to happen) needs both types to be calculated
-         * @param inverse - passed in, not used until now!
-         * @return
-         * @throws IOException
-         */
-        
-        // return:
-        // nmScale
-        // xre xim
-        
-        //stop passing in above:
-        // limits
+        return packageTransferFunctionSamples(nfreq, xre, xim, nmScale);
+    }
+
+    private TransferData packageTransferFunctionSamples(int nfreq, double[] xre, double[] xim, float nmScale) {
         Complex[] data = new Complex[nfreq];
         for(int i=0; i < nfreq; i++) {
             data[i] = new Complex(xre[i], xim[i]);
         }
-        
         TransferData transferData = new TransferData(nmScale, data);
         return transferData;
-       // return build(seis, toType, metadata, limits, inverse, transferData);
     }
 
   

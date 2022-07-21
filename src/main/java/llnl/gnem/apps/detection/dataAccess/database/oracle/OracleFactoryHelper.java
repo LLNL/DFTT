@@ -25,13 +25,36 @@
  */
 package llnl.gnem.apps.detection.dataAccess.database.oracle;
 
+import llnl.gnem.core.dataAccess.SeismogramSourceInfo;
+import llnl.gnem.core.dataAccess.SeismogramSourceInfo.SourceType;
+import llnl.gnem.apps.detection.dataAccess.interfaces.ArrayConfigurationDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.ArrayCorrelationDetectorDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.ArrayDetectorDAO;
+
+import llnl.gnem.apps.detection.dataAccess.interfaces.BulletinDetectorDAO;
+
+import llnl.gnem.apps.detection.dataAccess.interfaces.ConfigurationDAO;
+
 import llnl.gnem.apps.detection.dataAccess.interfaces.DetectionDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.DetectorDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.EventDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.FeatureDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.FrameworkRunDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.OriginDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.PickDAO;
-import llnl.gnem.apps.detection.dataAccess.interfaces.SeismogramDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.PredictedPhasePickDAO;
+
+import llnl.gnem.apps.detection.dataAccess.interfaces.StaLtaDetectorDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.StationDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.StreamDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.StreamProcessorDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.SubspaceDetectorDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.SubspaceTemplateDAO;
+import llnl.gnem.apps.detection.dataAccess.interfaces.TriggerDAO;
+import llnl.gnem.core.dataAccess.streaming.FDSNContinuousWaveformDAO;
+import llnl.gnem.core.dataAccess.DAOFactory;
+import llnl.gnem.core.dataAccess.database.oracle.OracleContinuousWaveformDAO;
+import llnl.gnem.core.dataAccess.interfaces.ContinuousWaveformDAO;
 
 
 /**
@@ -39,9 +62,8 @@ import llnl.gnem.apps.detection.dataAccess.interfaces.StationDAO;
  * @author dodge1
  */
 public class OracleFactoryHelper {
-    
-    public static EventDAO getEventDAO()
-    {
+
+    public static EventDAO getEventDAO() {
         return OracleEventDAO.getInstance();
     }
 
@@ -49,8 +71,14 @@ public class OracleFactoryHelper {
         return OracleOriginDAO.getInstance();
     }
 
-    public static SeismogramDAO getSeismogramDAO() {
-        return OracleSeismogramDAO.getInstance();
+    public static ContinuousWaveformDAO getContinuousWaveformDAO() {
+        SeismogramSourceInfo info = DAOFactory.getInstance().getSeismogramSourceInfo();
+        if (info.getSourceType() == SourceType.FDSN) {
+            FDSNContinuousWaveformDAO dao = FDSNContinuousWaveformDAO.getInstance();
+             return dao;
+        } else {
+            return new OracleContinuousWaveformDAO();
+        }
     }
 
     public static DetectionDAO getDetectionDAO() {
@@ -68,5 +96,61 @@ public class OracleFactoryHelper {
     public static DetectorDAO getDetectorDAO() {
         return OracleDetectorDAO.getInstance();
     }
-    
+
+    public static TriggerDAO getTriggerDAO() {
+        return OracleTriggerDAO.getInstance();
+    }
+
+    public static StreamDAO getStreamDAO() {
+        return OracleStreamDAO.getInstance();
+    }
+
+    public static SubspaceDetectorDAO getSubspaceDetectorDAO() {
+        return OracleSubspaceDetectorDAO.getInstance();
+    }
+
+    public static SubspaceTemplateDAO getSubspaceTemplateDAO() {
+        return OracleSubspaceTemplateDAO.getInstance();
+    }
+
+    public static ArrayCorrelationDetectorDAO getArrayCorrelationDetectorDAO() {
+        return OracleArrayCorrelationDetectorDAO.getInstance();
+    }
+
+    public static ArrayDetectorDAO getArrayDetectorDAO() {
+        return OracleArrayDetectorDAO.getInstance();
+    }
+
+    public static BulletinDetectorDAO getBulletinDetectorDAO() {
+        return OracleBulletinDetectorDAO.getInstance();
+    }
+
+    public static StaLtaDetectorDAO getStaLtaDetectorDAO() {
+        return OracleStaLtaDetectorDAO.getInstance();
+    }
+
+    public static PredictedPhasePickDAO getPredictedPhasePickDAO() {
+        return OraclePredictedPhasePickDAO.getInstance();
+    }
+
+    public static StreamProcessorDAO getStreamProcessorDAO() {
+        return OracleStreamProcessorDAO.getInstance();
+    }
+
+    public static FrameworkRunDAO getFrameworkRunDAO() {
+        return OracleFrameworkRunDAO.getInstance();
+    }
+
+    public static FeatureDAO getFeatureDAO() {
+        return OracleFeatureDAO.getInstance();
+    }
+
+    public static ArrayConfigurationDAO getArrayConfigurationDAO() {
+        return OracleArrayConfigurationDAO.getInstance();
+    }
+
+
+    public static ConfigurationDAO getConfigurationDAO() {
+        return OracleConfigurationDAO.getInstance();
+    }
 }

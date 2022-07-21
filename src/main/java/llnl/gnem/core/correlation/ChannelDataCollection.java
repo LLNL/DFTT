@@ -54,7 +54,7 @@ public class ChannelDataCollection {
         if( data == null || data.isEmpty()){
             throw new IllegalStateException( "Attempt to construct ChannelDataCollection with null or empty input data!");
         }
-        this.data = new ArrayList(data);
+        this.data = new ArrayList<>(data);
        
         window = data.iterator().next().getWindow();
         delta = data.iterator().next().getDelta();
@@ -72,7 +72,7 @@ public class ChannelDataCollection {
         if (data == null || data.isEmpty()) {
             throw new IllegalStateException("Attempt to construct ChannelDataCollection with null or empty input data!");
         }
-        this.data = new ArrayList(data);
+        this.data = new ArrayList<>(data);
         window = data.iterator().next().getWindow();
         delta = data.iterator().next().getDelta();
         commonRate = maybeResampleData();

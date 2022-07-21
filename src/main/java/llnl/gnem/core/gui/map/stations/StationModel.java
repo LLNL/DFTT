@@ -89,7 +89,7 @@ public class StationModel<T extends StationInfo> extends LocationModel<T> {
         addColumn(new LocationColumn<T>("SOURCE", String.class, false, -1) {
             @Override
             public Object getValue(T data) {
-                return data.getStation().getSource();
+                return data.getStation().getAgency();
             }
         });
         addColumn(new LocationColumn<T>("NETWORK", String.class, false, -1) {

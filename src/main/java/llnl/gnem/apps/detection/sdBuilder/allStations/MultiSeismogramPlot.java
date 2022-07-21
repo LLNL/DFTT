@@ -31,7 +31,6 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,6 +50,8 @@ import llnl.gnem.apps.detection.sdBuilder.allStations.actions.HideTraceAction;
 import llnl.gnem.apps.detection.sdBuilder.allStations.actions.MagnifyAction;
 import llnl.gnem.apps.detection.sdBuilder.allStations.actions.ReduceAction;
 import llnl.gnem.apps.detection.sdBuilder.allStations.actions.RemoveSinglePickAction;
+import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
+import llnl.gnem.apps.detection.util.KeyPhaseMapper;
 
 import llnl.gnem.core.gui.plotting.MouseMode;
 import llnl.gnem.core.gui.plotting.MouseOverPlotObject;
@@ -58,13 +59,13 @@ import llnl.gnem.core.gui.plotting.PickCreationInfo;
 import llnl.gnem.core.gui.plotting.PlotObjectClicked;
 import llnl.gnem.core.gui.plotting.VertAlignment;
 import llnl.gnem.core.gui.plotting.jmultiaxisplot.JMultiAxisPlot;
+import llnl.gnem.core.gui.plotting.jmultiaxisplot.JPlotKeyMessage;
 import llnl.gnem.core.gui.plotting.jmultiaxisplot.JSubplot;
 import llnl.gnem.core.gui.plotting.jmultiaxisplot.PickMovedState;
 import llnl.gnem.core.gui.plotting.jmultiaxisplot.PickTextPosition;
 import llnl.gnem.core.gui.plotting.jmultiaxisplot.VPickLine;
 import llnl.gnem.core.gui.plotting.jmultiaxisplot.WindowDurationChangedState;
 import llnl.gnem.core.gui.plotting.plotobject.Line;
-import llnl.gnem.core.gui.plotting.plotobject.LineBounds;
 import llnl.gnem.core.gui.plotting.plotobject.PlotObject;
 import llnl.gnem.core.gui.plotting.plotobject.XPinnedText;
 import llnl.gnem.core.gui.plotting.transforms.Coordinate;
@@ -123,13 +124,11 @@ public class MultiSeismogramPlot extends JMultiAxisPlot implements Observer {
         subplot = addSubplot();
 
         double centerValue = 0;
-        double overlap = 10.0; // percent overlap
-        double shift = 1 - overlap / 100.0;
         minStart = Double.MAX_VALUE;
         double maxEnd = -minStart;
         getTitle().setText("No current origin solution");
         Collection<EventSeismogramData> data = SeismogramModel.getInstance().getData();
-                    Collection<EventInfo> events = SeismogramModel.getInstance().getEvents();
+        Collection<EventInfo> events = SeismogramModel.getInstance().getEvents();
 
         for (EventSeismogramData esd : data) {
             BaseTraceData traceData = esd.getTraceData();
@@ -138,8 +137,7 @@ public class MultiSeismogramPlot extends JMultiAxisPlot implements Observer {
                 minStart = traceStartTime;
             }
         }
-        
-        
+
         for (EventSeismogramData esd : data) {
             Collection<OriginInfo> origins = esd.getOrigins();
             BaseTraceData traceData = esd.getTraceData();
@@ -166,6 +164,63 @@ public class MultiSeismogramPlot extends JMultiAxisPlot implements Observer {
             }
             plotLeftText(subplot, esd.getTraceData().getStreamKey().toString(), centerValue + 0.3);
 
+            maybeDisplayPredictedPicks(origins, esd, traceStartTime, offsetFromMinStartTime, centerValue);
+            maybeDisplayDetectionMarkers(esd, traceStartTime, offsetFromMinStartTime, centerValue);
+            for (PhasePick pick : esd.getPicks()) {
+                if (traceData.getStreamKey().equals(pick.getKey())) {
+                    Color color = pick.getDetectionid() == null ? Color.BLACK : Color.GREEN;
+                    double std = pick.getStd();
+                    VPickLine vpl = addTimeMarker(pick.getTime() - traceStartTime + offsetFromMinStartTime, pick.getPhase(), color, centerValue, 15, PickTextPosition.BOTTOM, std);
+                    if (vpl != null) {
+                        pickLinePickMap.put(vpl, pick);
+                    }
+                }
+            }
+        }
+
+        maybeDisplayEventMarkers(events);
+
+        subplot.setXlimits(0, maxEnd);
+        double minY = 0;
+        double maxY = centerValue + shift;
+        subplot.getYaxis().setMin(minY);
+        subplot.getYaxis().setMax(maxY);
+        subplot.getYaxis().setVisible(false);
+
+        setAllXlimits();
+
+        setMouseMode(MouseMode.SELECT_ZOOM);
+        repaint();
+
+    }
+
+    private void maybeDisplayDetectionMarkers(EventSeismogramData esd, double traceStartTime, double offsetFromMinStartTime, double centerValue) {
+        if (ParameterModel.getInstance().isDisplayAllStationDetectionMarkers()) {
+            for (ShortDetectionSummary sds : esd.getDetections()) {
+                String text = String.format("%d", sds.getDetectionid());
+                addTimeMarker(sds.getTime() - traceStartTime + offsetFromMinStartTime, text, Color.ORANGE, centerValue, 15, PickTextPosition.TOP, null);
+            }
+        }
+    }
+
+    private void maybeDisplayEventMarkers(Collection<EventInfo> events) {
+        if (ParameterModel.getInstance().isDisplayAllStationEventIDs()) {
+            for (EventInfo event : events) {
+                double minTime = event.getMinTime() - minStart;
+                double duration = event.getDuration();
+                VPickLine vpl = new VPickLine(minTime, 0.9, "eventid: " + event.getEventid());
+                vpl.getWindow().setDuration(duration);
+                vpl.getWindow().setRightHandleFractionalWidth(1.0);
+                vpl.getWindowHandle().setWidth(1);
+                vpl.setSelectable(false);
+                vpl.getWindow().setVisible(true);
+                subplot.AddPlotObject(vpl);
+            }
+        }
+    }
+
+    private void maybeDisplayPredictedPicks(Collection<OriginInfo> origins, EventSeismogramData esd, double traceStartTime, double offsetFromMinStartTime, double centerValue) {
+        if (ParameterModel.getInstance().isDisplayAllStationPredictedPicks()) {
             for (OriginInfo origin : origins) {
                 getTitle().setText(origin.toString());
                 StationInfo si = esd.getStationInfo();
@@ -191,45 +246,10 @@ public class MultiSeismogramPlot extends JMultiAxisPlot implements Observer {
                 }
 
             }
-            for (ShortDetectionSummary sds : esd.getDetections()) {
-                String text = String.format("%d", sds.getDetectionid());
-                addTimeMarker(sds.getTime() - traceStartTime + offsetFromMinStartTime, text, Color.ORANGE, centerValue, 15, PickTextPosition.TOP, null);
-            }
-            for (PhasePick pick : esd.getPicks()) {
-                Color color = pick.getDetectionid() == null ? Color.BLACK : Color.GREEN;
-                double std = pick.getStd();
-                VPickLine vpl = addTimeMarker(pick.getTime() - traceStartTime + offsetFromMinStartTime, pick.getPhase(), color, centerValue, 15, PickTextPosition.BOTTOM, std);
-                if (vpl != null) {
-                    pickLinePickMap.put(vpl, pick);
-                }
+            if (origins.size() > 1) {
+                getTitle().setText(" Multiple origins from bulletin in time window");
             }
         }
-
-        for(EventInfo event : events){
-            double minTime = event.getMinTime() - minStart;
-            double duration = event.getDuration();
-            VPickLine vpl = new VPickLine(minTime, 0.9, "eventid: " + event.getEventid());
-            vpl.getWindow().setDuration(duration);
-            vpl.getWindow().setRightHandleFractionalWidth(1.0);
-            vpl.getWindowHandle().setWidth(1);
-            vpl.setSelectable(false);
-            vpl.getWindow().setVisible(true);
-            subplot.AddPlotObject(vpl);
-        }
-        
-
-        subplot.setXlimits(0, maxEnd);
-        double minY = 0;
-        double maxY = centerValue + shift;
-        subplot.getYaxis().setMin(minY);
-        subplot.getYaxis().setMax(maxY);
-        subplot.getYaxis().setVisible(false);
-
-        setAllXlimits();
-
-        setMouseMode(MouseMode.SELECT_ZOOM);
-        repaint();
-
     }
 
     private static void scaleAndShiftTrace(double centerValue, float[] traceToMeasure, float[] traceToModify) {
@@ -334,6 +354,12 @@ public class MultiSeismogramPlot extends JMultiAxisPlot implements Observer {
                         createSinglePick(dpp, timeReference, coord.getWorldC2());
                     }
                 }
+            }
+        } else if (obj instanceof JPlotKeyMessage) {
+            JPlotKeyMessage msg = (JPlotKeyMessage) obj;
+            KeyEvent e = msg.getKeyEvent();
+            if (e.getKeyChar() == '+') {
+                zoomInAroundMouse(msg);
             }
         }
     }
@@ -469,14 +495,13 @@ public class MultiSeismogramPlot extends JMultiAxisPlot implements Observer {
         Collection<Integer> picksToRemove = AllStationsPickModel.getInstance().getPicksToRemove();
         new SavePicksWorker(picks, picksToRemove, AllStationsFrame.getInstance()).execute();
     }
-    
-    public void defineEventWindow()
-    {
+
+    public void defineEventWindow() {
         double minTime = minStart + getXaxis().getMin();
         double maxTime = minStart + getXaxis().getMax();
         Collection<PhasePick> picks = AllStationsPickModel.getInstance().getAllPicks();
         Collection<Integer> picksToRemove = AllStationsPickModel.getInstance().getPicksToRemove();
-        new DefineEventWorker( minTime,  maxTime,picks,picksToRemove).execute();
+        new DefineEventWorker(minTime, maxTime, picks, picksToRemove).execute();
     }
 
     private class PlotKeyListener extends KeyAdapter {
@@ -486,22 +511,10 @@ public class MultiSeismogramPlot extends JMultiAxisPlot implements Observer {
             if ((event.getKeyCode() == KeyEvent.VK_Z) && ((event.getModifiers() & KeyEvent.CTRL_MASK) != 0)) {
                 savePicks();
             }
-
-            switch (event.getKeyChar()) {
-                case 'p':
-                case 'P':
-                    AllStationsPickModel.getInstance().setCurrentPhase("P");
-                    setMouseMode(MouseMode.CREATE_PICK);
-                    break;
-                case 's':
-                case 'S':
-                    AllStationsPickModel.getInstance().setCurrentPhase("S");
-                    setMouseMode(MouseMode.CREATE_PICK);
-                    break;
-                default:
-                    // NOP
-                    break;
-
+            String phase = KeyPhaseMapper.getInstance().getMappedPhase(event.getKeyChar());
+            if (phase != null) {
+                AllStationsPickModel.getInstance().setCurrentPhase(phase);
+                setMouseMode(MouseMode.CREATE_PICK);
             }
 
         }

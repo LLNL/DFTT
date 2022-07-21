@@ -25,6 +25,7 @@
  */
 package llnl.gnem.core.gui.plotting.keymapper;
 
+import java.awt.event.KeyEvent;
 import llnl.gnem.core.gui.plotting.MouseMode;
 
 
@@ -36,7 +37,7 @@ import llnl.gnem.core.gui.plotting.MouseMode;
  * Copyright (C) 2004 Lawrence Livermore National Laboratory.
  */
 public interface ControlKeyMapper {
-    MouseMode getMouseMode( int keyCode );
+    MouseMode getMouseMode( KeyEvent keyEvent );
 
     boolean isDeleteKey( int keyCode );
 

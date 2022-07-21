@@ -42,7 +42,7 @@ import llnl.gnem.core.gui.util.Utility;
 public class CreateTemplateAction extends AbstractAction {
 
     private static CreateTemplateAction ourInstance;
-    private static final long serialVersionUID = 8266219106056871649L;
+    private static final long serialVersioylnUID = 8266219106056871649L;
 
     public static CreateTemplateAction getInstance(Object owner) {
         if (ourInstance == null) {

@@ -30,21 +30,21 @@ import java.util.Objects;
 
 public class StationKey implements Comparable<StationKey>, Serializable {
 
-    private final String source;
+    private final String agency;
     private final String net;
     private final Integer netJdate;
     private final String sta;
     private static final long serialVersionUID = -1711106006337309198L;
 
     public StationKey() {
-        source = null;
+        agency = null;
         net = null;
         netJdate = null;
         sta = null;
     }
 
     public StationKey(StationKey other) {
-        this.source = other.source;
+        this.agency = other.agency;
         this.net = other.net;
         this.netJdate = other.netJdate;
         this.sta = other.sta;
@@ -54,29 +54,29 @@ public class StationKey implements Comparable<StationKey>, Serializable {
         return toString();
     }
 
-    public StationKey(String source, String net, Integer netJdate, String sta) {
-        this.source = source;
+    public StationKey(String agency, String net, Integer netJdate, String sta) {
+        this.agency = agency;
         this.net = net;
         this.netJdate = netJdate;
         this.sta = sta.trim();
     }
 
-    public StationKey(String source, String net, String sta) {
-        this.source = source;
+    public StationKey(String agency, String net, String sta) {
+        this.agency = agency;
         this.net = net;
         this.netJdate = null;
         this.sta = sta.trim();
     }
 
     public StationKey(String sta) {
-        source = null;
+        agency = null;
         net = null;
         netJdate = null;
         this.sta = sta.trim();
     }
 
     public StationKey(String net, String sta) {
-        this.source = null;
+        this.agency = null;
         this.net = net;
         this.netJdate = null;
         this.sta = sta.trim();
@@ -85,13 +85,13 @@ public class StationKey implements Comparable<StationKey>, Serializable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        if (source != null && !source.equals("-")) {
-            sb.append("source = ").append(source);
+        if (agency != null && !agency.equals("-")) {
+            sb.append("source = ").append(agency);
             sb.append(", ");
         }
         if (net != null && !net.equals("-")) {
             sb.append("net = ").append(net);
-            if (netJdate != null && netJdate >= 1900001) {
+            if (netJdate != null && netJdate >= 1000000) {
                 sb.append("(").append(netJdate).append(")");
             }
             sb.append(", ");
@@ -112,8 +112,8 @@ public class StationKey implements Comparable<StationKey>, Serializable {
             return EQUAL;
         }
 
-        if (source != null && other.source != null) {
-            int cmp = source.compareTo(other.source);
+        if (agency != null && other.agency != null) {
+            int cmp = agency.compareTo(other.agency);
             if (cmp != 0) {
                 return cmp;
             }
@@ -138,7 +138,7 @@ public class StationKey implements Comparable<StationKey>, Serializable {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 97 * hash + Objects.hashCode(this.source);
+        hash = 97 * hash + Objects.hashCode(this.agency);
         hash = 97 * hash + Objects.hashCode(this.net);
         hash = 97 * hash + Objects.hashCode(this.netJdate);
         hash = 97 * hash + Objects.hashCode(this.sta);
@@ -157,7 +157,7 @@ public class StationKey implements Comparable<StationKey>, Serializable {
             return false;
         }
         final StationKey other = (StationKey) obj;
-        if (!Objects.equals(this.source, other.source)) {
+        if (!Objects.equals(this.agency, other.agency)) {
             return false;
         }
         if (!Objects.equals(this.net, other.net)) {
@@ -173,10 +173,10 @@ public class StationKey implements Comparable<StationKey>, Serializable {
     }
 
     /**
-     * @return the source
+     * @return the agency
      */
-    public String getSource() {
-        return source;
+    public String getAgency() {
+        return agency;
     }
 
     /**

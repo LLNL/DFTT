@@ -137,7 +137,7 @@ public class TemplateView extends JMultiAxisPlot {
                 currentSingularValue, templateIn.getProcessingParameters().decrate);
         this.getTitle().setText(msg);
         this.getXaxis().setLabelText("seconds");
-
+        repaint();
     }
 
     private String getEntropyLabel(float[] ccf) {

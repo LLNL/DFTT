@@ -26,12 +26,15 @@
 package llnl.gnem.core.waveform.seismogram;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import llnl.gnem.core.util.ApplicationLogger;
 import llnl.gnem.core.util.StreamKey;
 import llnl.gnem.core.util.TimeT;
 import llnl.gnem.core.waveform.Wfdisc;
 import llnl.gnem.core.waveform.io.BinaryData;
+import llnl.gnem.core.waveform.merge.NamedIntWaveform;
+import llnl.gnem.core.waveform.qc.DataDefect;
 
 /*
  * COPYRIGHT NOTICE RBAP Version 1.0 Copyright (C) 2002 Lawrence Livermore
@@ -47,6 +50,7 @@ public class CssSeismogram extends BasicSeismogram implements Serializable {
 
     private final Double calib;
     private final Double calper;
+    private final ArrayList<DataDefect> defects;
     private static final long serialVersionUID = 2137920519754562968L;
 
     /**
@@ -56,10 +60,12 @@ public class CssSeismogram extends BasicSeismogram implements Serializable {
         super();
         calib = null;
         calper = null;
+        defects = new ArrayList<>();
     }
 
     public CssSeismogram(long wfid, String sta, String chan, float[] data, double samprate, TimeT time) {
         this(wfid, sta, chan, data, samprate, time, null, null);
+
     }
 
     public CssSeismogram(Wfdisc metadata, TimeSeries series) {
@@ -74,6 +80,7 @@ public class CssSeismogram extends BasicSeismogram implements Serializable {
         super(metadata.getWfid(), metadata.getStaChan(), data, metadata.getSamprate(), new TimeT(metadata.getTime()));
         this.calib = metadata.getCalib();
         this.calper = metadata.getCalper();
+        defects = new ArrayList<>();
     }
 
     public CssSeismogram(long wfid, String net, String sta,
@@ -101,6 +108,14 @@ public class CssSeismogram extends BasicSeismogram implements Serializable {
         super(wfid, stachan, data, samprate, time);
         this.calib = calib;
         this.calper = calper;
+        defects = new ArrayList<>();
+    }
+
+    public CssSeismogram(NamedIntWaveform wf) {
+        super(wf.getWfid(), wf.getKey(), wf.getDataAsFloatArray(), wf.getRate(), wf.getEpoch().getTime());
+        this.calib = wf.getCalib();
+        this.calper = wf.getCalper();
+        defects = new ArrayList<>(wf.getDefects());
     }
 
     /**
@@ -112,18 +127,21 @@ public class CssSeismogram extends BasicSeismogram implements Serializable {
         super(s);
         this.calib = s.calib;
         this.calper = s.calper;
+        defects = new ArrayList<>(s.getDefects());
     }
 
     public CssSeismogram(BasicSeismogram s, Double calib, Double calper) {
         super(s);
         this.calib = calib;
         this.calper = calper;
+        defects = new ArrayList<>();
     }
 
     public CssSeismogram(CssSeismogram s, TimeSeries data) {
         super(s, data);
         this.calib = s.calib;
         this.calper = s.calper;
+        defects = new ArrayList<>();
     }
 
     /**
@@ -142,6 +160,10 @@ public class CssSeismogram extends BasicSeismogram implements Serializable {
      */
     public Double getCalper() {
         return calper;
+    }
+
+    public ArrayList<DataDefect> getDefects() {
+        return new ArrayList<>(defects);
     }
 
     /**
@@ -253,4 +275,7 @@ public class CssSeismogram extends BasicSeismogram implements Serializable {
         return new CssSeismogram(bs, this.getCalib(), this.getCalper());
     }
 
+    public NamedIntWaveform toNamedIntWaveform() {
+        return new NamedIntWaveform(getStreamKey(), getWaveformID(), getIntData(), getTimeAsDouble(), getSamprate(), calib, calper,getDefects());
+    }
 }

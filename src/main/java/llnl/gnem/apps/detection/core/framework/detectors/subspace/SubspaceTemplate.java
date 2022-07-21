@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,9 +25,6 @@
  */
 package llnl.gnem.apps.detection.core.framework.detectors.subspace;
 
-import Jama.Matrix;
-import Jama.SingularValueDecomposition;
-import com.oregondsp.io.SACFileWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -42,12 +39,25 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
+
+import org.ojalgo.array.Array1D;
+import org.ojalgo.matrix.Primitive32Matrix;
+import org.ojalgo.matrix.Primitive32Matrix.DenseReceiver;
+import org.ojalgo.matrix.decomposition.SingularValue;
+import org.ojalgo.matrix.store.MatrixStore;
+import org.ojalgo.matrix.store.PhysicalStore.Factory;
+import org.ojalgo.matrix.store.Primitive64Store;
+import org.ojalgo.matrix.store.RawStore;
+
 import llnl.gnem.apps.detection.core.dataObjects.PreprocessorParams;
 import llnl.gnem.apps.detection.core.dataObjects.TemplateSerializationType;
 import llnl.gnem.apps.detection.core.framework.detectors.EmpiricalTemplate;
 import llnl.gnem.apps.detection.core.signalProcessing.SVDUpdate;
+import llnl.gnem.apps.detection.util.io.SACFileWriter;
+import llnl.gnem.core.dataAccess.dataObjects.ProgressMonitor;
 import llnl.gnem.core.signalprocessing.statistics.SignalPairStats;
 import llnl.gnem.core.signalprocessing.statistics.TimeBandwidthComponents;
 import llnl.gnem.core.util.ApplicationLogger;
@@ -56,7 +66,9 @@ import llnl.gnem.core.util.StreamKey;
 
 public class SubspaceTemplate extends EmpiricalTemplate implements Serializable {
 
-    private ArrayList< float[]> representation;  // trace sequential multiplexed form
+    private static final Factory<Double, Primitive64Store> MATRIX_FACTORY = Primitive64Store.FACTORY;
+
+    private ArrayList<float[]> representation; // trace sequential multiplexed form
     private double[] singularValues;
     private int templateLength;
 
@@ -73,15 +85,12 @@ public class SubspaceTemplate extends EmpiricalTemplate implements Serializable 
         return windowDurationSeconds;
     }
 
-    public SubspaceTemplate(ArrayList< float[][]> eventData,
-            SubspaceSpecification spec,
-            PreprocessorParams params,
-            boolean fixToSpecifiedDimension,
-            int requiredDimension) {
+    public SubspaceTemplate(ArrayList<float[][]> eventData, SubspaceSpecification spec, PreprocessorParams params, boolean fixToSpecifiedDimension, boolean capToSpecifiedDimension,
+            int requiredDimension, ProgressMonitor monitor) {
 
         super(params, spec, eventData.size());
 
-        createRepresentationFromData(eventData, spec, fixToSpecifiedDimension, requiredDimension);
+        createRepresentationFromData(eventData, spec, fixToSpecifiedDimension, capToSpecifiedDimension, requiredDimension, monitor);
         windowDurationSeconds = spec.getWindowDurationSeconds();
         templateTBP = computeTemplateTBP();
     }
@@ -90,15 +99,16 @@ public class SubspaceTemplate extends EmpiricalTemplate implements Serializable 
 
         super(params, spec, 1);
 
-        ArrayList< float[][]> eventData = readTrainingData(spec.getEventDirectoryList(), spec.getEventFilePattern());
+        ArrayList<float[][]> eventData = readTrainingData(spec.getEventDirectoryList(), spec.getEventFilePattern());
         boolean fixToSpecifiedDimension = false;
+        boolean capToSpecifiedDimension = false;
         int requiredDimension = 0;
-        createRepresentationFromData(eventData, spec, fixToSpecifiedDimension, requiredDimension);
+        createRepresentationFromData(eventData, spec, fixToSpecifiedDimension, capToSpecifiedDimension, requiredDimension, null);
         windowDurationSeconds = spec.getWindowDurationSeconds();
         templateTBP = computeTemplateTBP();
     }
 
-    public SubspaceTemplate(SubspaceSpecification spec, PreprocessorParams params, ArrayList< float[]> representation, double[] singularValues) {
+    public SubspaceTemplate(SubspaceSpecification spec, PreprocessorParams params, ArrayList<float[]> representation, double[] singularValues) {
 
         super(params, spec, representation.size());
 
@@ -113,15 +123,15 @@ public class SubspaceTemplate extends EmpiricalTemplate implements Serializable 
     /**
      * The guts of creating a representation from event data
      *
-     * @param eventData ArrayList< float[][] > containing the trace data of
-     * design events
-     * @param spec Specification object containing parameters required to create
-     * template
+     * @param eventData
+     *            ArrayList< float[][] > containing the trace data of design
+     *            events
+     * @param spec
+     *            Specification object containing parameters required to create
+     *            template
      */
-    private void createRepresentationFromData(ArrayList< float[][]> eventData,
-            SubspaceSpecification spec,
-            boolean fixToSpecifiedDimension,
-            int requiredDimension) {
+    private void createRepresentationFromData(ArrayList<float[][]> eventData, SubspaceSpecification spec, boolean fixToSpecifiedDimension, boolean capToSpecifiedDimension, int requiredDimension,
+            ProgressMonitor monitor) {
 
         int nevents = eventData.size();
         int start = (int) (spec.getOffsetSecondsToWindowStart() * parameters.getPreprocessorParams().samplingRate / parameters.getPreprocessorParams().decrate);
@@ -153,31 +163,52 @@ public class SubspaceTemplate extends EmpiricalTemplate implements Serializable 
                 data[i][ie] *= scale;
             }
         }
-
-        Matrix dataMatrix = new Matrix(data);
-
-        // estimate dimension
-        SingularValueDecomposition svd = new SingularValueDecomposition(dataMatrix);
-        double[] s2 = svd.getSingularValues();
-        double E = 0.0;
-        for (int i = 0; i < s2.length; i++) {
-            s2[i] *= s2[i];
-            E += s2[i];
+        if (monitor != null) {
+            monitor.setText("Computing SVD...");
         }
-        if (fixToSpecifiedDimension && requiredDimension > 0 && requiredDimension <= s2.length) {
+        Primitive64Store data2 = MATRIX_FACTORY.rows(data);
+        SingularValue<Double> svd2 = SingularValue.PRIMITIVE.make(data2);
+        svd2.decompose(data2);
+
+        Array1D<Double> foo = svd2.getSingularValues();
+        double[] s3 = new double[(int) foo.length];
+        for (int i = 0; i < s3.length; ++i) {
+            s3[i] = foo.get(i);
+        }
+
+        MatrixStore<Double> myU = svd2.getU();
+        long rows = myU.countRows();
+        long cols = myU.countColumns();
+        DenseReceiver myMatrix = Primitive32Matrix.FACTORY.makeDense((int) rows, (int) cols);
+        for (int j = 0; j < rows; ++j) {
+            for (int k = 0; k < cols; ++k) {
+                myMatrix.set(j, k, myU.get(j, k));
+            }
+        }
+        double E = 0.0;
+        for (int i = 0; i < s3.length; i++) {
+            s3[i] *= s3[i];
+            E += s3[i];
+        }
+        if (fixToSpecifiedDimension && requiredDimension > 0 && requiredDimension <= s3.length) {
             dimension = requiredDimension;
         } else {
             dimension = 0;
             double sum = 0.0;
             while (sum / E < spec.getEnergyCaptureThreshold()) {
-                sum += s2[dimension++];
+                sum += s3[dimension++];
+                if (capToSpecifiedDimension && requiredDimension > 0 && requiredDimension <= s3.length && dimension == requiredDimension) {
+                    break;
+                }
             }
+
         }
 
         ApplicationLogger.getInstance().log(Level.FINE, "Template dimension = " + dimension);
-
-        // extract template
-        unpackTemplate(svd.getU(), svd.getSingularValues());
+        if (monitor != null) {
+            monitor.setText("Unpacking template...");
+        }
+        unpackTemplate(myMatrix.get(), s3);
     }
 
     public SubspaceTemplate(PreprocessorParams params, float[][] preprocessedDataFromStream, SubspaceSpecification spec) {
@@ -246,11 +277,11 @@ public class SubspaceTemplate extends EmpiricalTemplate implements Serializable 
         return templateLength;
     }
 
-    public ArrayList< float[][]> getRepresentation() {
+    public ArrayList<float[][]> getRepresentation() {
 
         int nchannels = getnchannels();
 
-        ArrayList< float[][]> retval = new ArrayList<>();
+        ArrayList<float[][]> retval = new ArrayList<>();
         for (int id = 0; id < dimension; id++) {
 
             float[] rep = representation.get(id);
@@ -267,42 +298,40 @@ public class SubspaceTemplate extends EmpiricalTemplate implements Serializable 
         return retval;
     }
 
-    public ArrayList< float[]> getMultiplexedRepresentation() {
+    public ArrayList<float[]> getMultiplexedRepresentation() {
         return representation;
     }
 
     public double[] getSingularValues() {
         return singularValues;
     }
-    
-    public void serialize(String directory, int detectorID, TemplateSerializationType type) throws IOException{
-        switch(type){
-            case SACFILE:
-                writeTemplateToSACFiles( directory,  detectorID);
-                return;
-            case JAVA_OBJECT:
-                serialize( directory,  detectorID);
-                return;
-            default:
-                throw new IllegalStateException("Unknown serializationType!");
+
+    public void serialize(String directory, int detectorID, TemplateSerializationType type) throws IOException {
+        switch (type) {
+        case SACFILE:
+            writeTemplateToSACFiles(directory, detectorID);
+            return;
+        case JAVA_OBJECT:
+            serialize(directory, detectorID);
+            return;
+        default:
+            throw new IllegalStateException("Unknown serializationType!");
         }
     }
 
     public void writeTemplateToSACFiles(String directory, int detectorID) throws IOException {
 
-        ArrayList< float[][]> rep = getRepresentation();
+        ArrayList<float[][]> rep = getRepresentation();
 
         String path = directory + File.separator + detectorID;
         File dir = new File(path);
-        if (!dir.exists()) {
-            if (!dir.mkdirs()) {
-                throw new FileSystemException("Failed to create directory: " + dir.getAbsolutePath());
-            }
+        if (!dir.exists() && !dir.mkdirs()) {
+            throw new FileSystemException("Failed to create directory: " + dir.getAbsolutePath());
         }
 
         for (int id = 0; id < rep.size(); id++) {
 
-            String dimName = (new Integer(id)).toString().trim();
+            String dimName = Integer.toString(id).trim();
             float[][] traces = rep.get(id);
 
             for (int ic = 0; ic < getnchannels(); ic++) {
@@ -322,10 +351,8 @@ public class SubspaceTemplate extends EmpiricalTemplate implements Serializable 
 
         String path = directory + File.separator + detectorID;
         File dir = new File(directory);
-        if (!dir.exists()) {
-            if (!dir.mkdirs()) {
-                throw new FileSystemException("Failed to create directory: " + dir.getAbsolutePath());
-            }
+        if (!dir.exists() && !dir.mkdirs()) {
+            throw new FileSystemException("Failed to create directory: " + dir.getAbsolutePath());
         }
         FileOutputStream fos = null;
         ObjectOutputStream oos = null;
@@ -387,19 +414,20 @@ public class SubspaceTemplate extends EmpiricalTemplate implements Serializable 
      * ArrayList< float[] > with one data channel per ArrayList element. The
      * elements are in standard real format.
      *
-     * @param preprocessedDataFromStream ArrayList< float[] > containing new
-     * event data
-     * @param energyCaptureThreshold double containing the
-     * energyCaptureThreshold, for future development
-     * @param alpha double parameter used to scale the new data in the update 0
-     * < alpha < 1
-     * @param lambda double parameter age-weighting factor for existing template
-     * 0 < lambda < 1
+     * @param preprocessedDataFromStream
+     *            ArrayList< float[] > containing new event data
+     * @param energyCaptureThreshold
+     *            double containing the energyCaptureThreshold, for future
+     *            development
+     * @param alpha
+     *            double parameter used to scale the new data in the update 0 <
+     *            alpha < 1
+     * @param lambda
+     *            double parameter age-weighting factor for existing template 0
+     *            < lambda < 1
      * @throws JampackException
      */
-    public void update(ArrayList< float[]> preprocessedDataFromStream,
-            double energyCaptureThreshold,
-            double lambda) {
+    public void update(ArrayList<float[]> preprocessedDataFromStream, double energyCaptureThreshold, double lambda) {
 
         int nch = preprocessedDataFromStream.size();
         int n = preprocessedDataFromStream.get(0).length;
@@ -424,33 +452,31 @@ public class SubspaceTemplate extends EmpiricalTemplate implements Serializable 
             data[i][0] *= sc;
         }
 
-        Matrix Y = new Matrix(data);
+        DenseReceiver Y = Primitive32Matrix.FACTORY.makeWrapper(RawStore.wrap(data)).copy();
 
         // construct projection matrix from template
-        Matrix U = new Matrix(nrows, dimension);
-        double[][] Ua = U.getArray();
+        DenseReceiver Ua = Primitive32Matrix.FACTORY.makeDense(nrows, dimension);
         for (int id = 0; id < dimension; id++) {
             float[] tmp = representation.get(id);
             for (int i = 0; i < nrows; i++) {
-                Ua[i][id] = tmp[i];
+                Ua.set(i, id, tmp[i]);
             }
         }
 
         // construct matrix of singular values
-        double[][] Sa = new double[dimension][dimension];
+        DenseReceiver Sa = Primitive32Matrix.FACTORY.makeDense(dimension, dimension);
         for (int id = 0; id < dimension; id++) {
-            Sa[id][id] = singularValues[id];
+            Sa.set(id, id, singularValues[id]);
         }
-        Matrix S = new Matrix(Sa);
 
         // update matrices
-        ArrayList< Object> updates = SVDUpdate.evaluate(U, S, Y, lambda);
+        List<Primitive32Matrix> updates = SVDUpdate.evaluate(Ua.get(), Sa.get(), Y.get(), lambda);
 
-        U = (Matrix) updates.get(0);
-        S = (Matrix) updates.get(1);
+        Primitive32Matrix U = updates.get(0);
+        Primitive32Matrix S = updates.get(1);
 
-        // logic to set new dimension     
-        int Sdim = S.getColumnDimension();
+        // logic to set new dimension
+        int Sdim = S.getColDim();
         double Etot = 0.0;
         for (int id = 0; id < Sdim; id++) {
             double tmp = S.get(id, id);
@@ -479,11 +505,12 @@ public class SubspaceTemplate extends EmpiricalTemplate implements Serializable 
     /**
      * Utility to pack preprocessed data into trace sequential order and scale
      *
-     * @param preprocessedData ArrayList< float[] > containing preprocessed
-     * data, one channel per ArrayList element
+     * @param preprocessedData
+     *            ArrayList< float[] > containing preprocessed data, one channel
+     *            per ArrayList element
      * @return float[] Contains packed and scaled data
      */
-    private static float[] repackPreprocessedData(ArrayList< float[]> preprocessedData) {
+    private static float[] repackPreprocessedData(ArrayList<float[]> preprocessedData) {
 
         int nch = preprocessedData.size();
         int n = preprocessedData.get(0).length;
@@ -497,8 +524,8 @@ public class SubspaceTemplate extends EmpiricalTemplate implements Serializable 
 
         // normalize
         double scale = 0.0;
-        for (int i = 0; i < result.length; i++) {
-            scale += result[i] * result[i];
+        for (float element : result) {
+            scale += element * element;
         }
         scale = Math.sqrt(scale);
         for (int i = 0; i < result.length; i++) {
@@ -508,7 +535,7 @@ public class SubspaceTemplate extends EmpiricalTemplate implements Serializable 
         return result;
     }
 
-    private void unpackTemplate(Matrix U, double[] s) {
+    private void unpackTemplate(Primitive32Matrix U, double[] s) {
 
         int nrows = getnchannels() * templateLength;
 
@@ -517,7 +544,7 @@ public class SubspaceTemplate extends EmpiricalTemplate implements Serializable 
         for (int id = 0; id < dimension; id++) {
             float[] tmp = new float[nrows];
             for (int i = 0; i < nrows; i++) {
-                tmp[i] = (float) U.get(i, id);
+                tmp[i] = U.get(i, id).floatValue();
             }
             representation.add(tmp);
         }
@@ -528,21 +555,20 @@ public class SubspaceTemplate extends EmpiricalTemplate implements Serializable 
 
     }
 
-    public Matrix getU() {
+    public Primitive32Matrix getU() {
 
         int nrows = representation.get(0).length;
         int ncols = representation.size();
-        Matrix U = new Matrix(nrows, ncols);
-        double[][] Ua = U.getArray();
+        DenseReceiver U = Primitive32Matrix.FACTORY.makeDense(nrows, ncols);
 
         for (int ic = 0; ic < ncols; ic++) {
             float[] u = representation.get(ic);
             for (int ir = 0; ir < nrows; ir++) {
-                Ua[ir][ic] = u[ir];
+                U.set(ir, ic, u[ir]);
             }
         }
 
-        return U;
+        return U.get();
     }
 
     @Override
@@ -597,8 +623,8 @@ public class SubspaceTemplate extends EmpiricalTemplate implements Serializable 
         double rate = getProcessingParameters().samplingRate / getProcessingParameters().decrate;
         float[][] data = getRepresentation().get(0);
         double tbpSum = 0;
-        for (int j = 0; j < data.length; ++j) {
-            TimeBandwidthComponents tbc1 = SignalPairStats.computeTimeBandwidthProduct(data[j], 1 / rate);
+        for (float[] element : data) {
+            TimeBandwidthComponents tbc1 = SignalPairStats.computeTimeBandwidthProduct(element, 1 / rate);
             tbpSum += tbc1.getTBP();
         }
         return tbpSum;

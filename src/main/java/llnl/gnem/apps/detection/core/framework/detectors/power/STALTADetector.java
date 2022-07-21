@@ -89,7 +89,7 @@ public class STALTADetector extends AbstractSimpleDetector {
         shortTermAverage.initialize( 0.0 );
         longTermAverage.initialize( INITIAL_VALUE );
 
-        detectorDelayInSeconds = specification.getSTADuration() / 2.0;
+        detectorDelayInSeconds = 0.0;//specification.getSTADuration() / 2.0;
         
         w = new float[ specification.getNumChannels() ];
         w[0] = 1.0f;

@@ -71,10 +71,11 @@ public class FKCartesian {
 
     private final float[] xn;          // parameters defining the FK spectrum calculation, grid etc.
     private final float[] xe;
-    private final float smax;
-    private final int ns;
-    private final float ds;
-    private final int nc;
+    private final float   smax;
+    private final int     ns;
+    private final float   ds;
+    private final int     nc;
+    private final boolean backAzimuthSpectrum;
 
     private final float[] C;          // complex exponential factors for the upper left corner of the FK spectrum
     private final float[] S;
@@ -96,7 +97,7 @@ public class FKCartesian {
     private final float[] fks;
 
 
-    public FKCartesian( float smax, int ns, float[] xnorth, float[] xeast )
+    public FKCartesian( float smax, int ns, float[] xnorth, float[] xeast, boolean backAzimuthSpectrum )
     {
 
         xn = xnorth;
@@ -122,6 +123,8 @@ public class FKCartesian {
         Wi = new float[nc];
 
         fks = new float[ ns * ns ];
+	
+	this.backAzimuthSpectrum = backAzimuthSpectrum;
     }
 
 
@@ -129,19 +132,25 @@ public class FKCartesian {
     {
 
         double arg;
-        for ( int i = 0; i < nc; i++ ){
-            arg = -( xn[i] - xe[i] ) * smax * omega;
-            C[i] = (float) Math.cos( arg );
-            S[i] = (float) Math.sin( arg );
+	double sign = 1.0;
+	if ( backAzimuthSpectrum ) 
+		sign = -1.0;
+	else 
+		sign = 1.0;
 
-            arg = xn[i] * ds * omega;
-            dCn[i] = (float) Math.cos( arg );
-            dSn[i] = (float) Math.sin( arg );
+	for ( int i = 0; i < nc; i++ ){
+		arg = -sign * ( xn[i] - xe[i] ) * smax * omega;
+		C[i] = (float) Math.cos( arg );
+		S[i] = (float) Math.sin( arg );
 
-            arg = -xe[i] * ds * omega;
-            dCe[i] = (float) Math.cos( arg );
-            dSe[i] = (float) Math.sin( arg );
-        }
+		arg = sign * xn[i] * ds * omega;
+		dCn[i] = (float) Math.cos( arg );
+		dSn[i] = (float) Math.sin( arg );
+
+		arg = -sign * xe[i] * ds * omega;
+		dCe[i] = (float) Math.cos( arg );
+		dSe[i] = (float) Math.sin( arg );
+	}
 
     }
 

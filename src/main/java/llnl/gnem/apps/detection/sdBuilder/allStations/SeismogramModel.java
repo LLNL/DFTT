@@ -27,6 +27,8 @@ package llnl.gnem.apps.detection.sdBuilder.allStations;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.EventInfo;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.OriginInfo;
 import llnl.gnem.core.waveform.BaseTraceData;
@@ -37,19 +39,19 @@ import llnl.gnem.core.waveform.filter.StoredFilter;
  *
  * @author dodge1
  */
-public class SeismogramModel implements FilterClient{
+public class SeismogramModel implements FilterClient {
 
     private final Collection<SeismogramView> views;
-    private final Collection<EventSeismogramData> data;
-    private final Collection<EventSeismogramData> displayableData;
+    private final Map<String, Collection<EventSeismogramData>> data;
+    private final Map<String, Collection<EventSeismogramData>> displayableData;
     private OriginInfo currentOrigin;
     private final ArrayList<EventInfo> events;
 
     private SeismogramModel() {
         views = new ArrayList<>();
-        data = new ArrayList<>();
+        data = new HashMap<>();
         events = new ArrayList<>();
-        displayableData = new ArrayList<>();
+        displayableData = new HashMap<>();
     }
 
     public void clear() {
@@ -57,6 +59,7 @@ public class SeismogramModel implements FilterClient{
         displayableData.clear();
         events.clear();
         notifyViewsDataChanged();
+        AllStationChannelCombo.getInstance().removeAllItems();
     }
 
     public static SeismogramModel getInstance() {
@@ -70,11 +73,38 @@ public class SeismogramModel implements FilterClient{
     void setSeismograms(Collection<EventSeismogramData> results,
             Collection<EventInfo> events) {
         clear();
-        data.addAll(results);
+        populateMap(results, data);
         this.events.addAll(events);
         AllStationsPickModel.getInstance().setEventSeismogramData(results);
-        displayableData.addAll(data);
+        populateMap(results, displayableData);
+        populateChannelCombo();
         notifyViewsDataChanged();
+    }
+
+    private void populateMap(Collection<EventSeismogramData> source, Map<String, Collection<EventSeismogramData>> target) {
+        for (EventSeismogramData esd : source) {
+            String chan = esd.getTraceData().getChan();
+            Collection<EventSeismogramData> tmp = target.get(chan);
+            if (tmp == null) {
+                tmp = new ArrayList<>();
+                target.put(chan, tmp);
+            }
+            tmp.add(esd);
+        }
+    }
+
+    private void populateChannelCombo() {
+        Collection<String> channels = data.keySet();
+        AllStationChannelCombo.getInstance().enableActionListener(false);
+        AllStationChannelCombo.getInstance().removeAllItems();
+        for (String chan : channels) {
+            AllStationChannelCombo.getInstance().addItem(chan);
+        }
+        if (!channels.isEmpty()) {
+            AllStationChannelCombo.getInstance().setSelectedIndex(0);
+        }
+        AllStationChannelCombo.getInstance().revalidate();
+        AllStationChannelCombo.getInstance().enableActionListener(true);
     }
 
     private void notifyViewsDataChanged() {
@@ -88,7 +118,15 @@ public class SeismogramModel implements FilterClient{
     }
 
     public Collection<EventSeismogramData> getData() {
-        return new ArrayList<>(displayableData);
+
+        String key = (String) AllStationChannelCombo.getInstance().getSelectedItem();
+        if (key != null) {
+            Collection<EventSeismogramData> tmp = displayableData.get(key);
+            if (tmp != null) {
+                return new ArrayList<>(tmp);
+            }
+        }
+        return new ArrayList<>();
     }
 
     void setCurrentOrigin(OriginInfo origin) {
@@ -96,9 +134,11 @@ public class SeismogramModel implements FilterClient{
     }
 
     public void hideTrace(BaseTraceData selectedTrace) {
-        for (EventSeismogramData esd : displayableData) {
+        String key = selectedTrace.getChan();
+        Collection<EventSeismogramData> tmp = displayableData.get(key);
+        for (EventSeismogramData esd : tmp) {
             if (esd.getTraceData().equals(selectedTrace)) {
-                displayableData.remove(esd);
+                tmp.remove(esd);
                 break;
             }
         }
@@ -107,17 +147,25 @@ public class SeismogramModel implements FilterClient{
 
     @Override
     public void applyFilter(StoredFilter filter) {
-        for(EventSeismogramData esd : data){
-            esd.getTraceData().applyFilter(filter);
+        for (Collection<EventSeismogramData> tmp : data.values()) {
+            for (EventSeismogramData esd : tmp) {
+                esd.getTraceData().applyFilter(filter);
+            }
         }
         notifyViewsDataChanged();
     }
 
     @Override
     public void unApplyFilter() {
-        for(EventSeismogramData esd : data){
-            esd.getTraceData().unApplyFilter();
+        for (Collection<EventSeismogramData> tmp : data.values()) {
+            for (EventSeismogramData esd : tmp) {
+                esd.getTraceData().unApplyFilter();
+            }
         }
+        notifyViewsDataChanged();
+    }
+
+    void channelWasChanged() {
         notifyViewsDataChanged();
     }
 

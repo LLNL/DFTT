@@ -26,15 +26,12 @@
 package llnl.gnem.apps.detection.sdBuilder.dataSelection;
 
 import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
 import javax.swing.tree.DefaultMutableTreeNode;
-import llnl.gnem.apps.detection.database.ConfigurationDAO;
-import llnl.gnem.apps.detection.database.FrameworkRunDAO;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.core.database.ConnectionManager;
 import llnl.gnem.core.util.ApplicationLogger;
 
@@ -57,7 +54,7 @@ public class DeleteConfigurationWorker extends SwingWorker<Void, Void> {
         Connection conn = null;
         try {
             conn = ConnectionManager.getInstance().checkOut();
-            ConfigurationDAO.getInstance().removeConfiguration(conn, configid);
+            DetectionDAOFactory.getInstance().getConfigurationDAO().removeConfiguration(configid);
             return null;
         } finally {
             if (conn != null) {

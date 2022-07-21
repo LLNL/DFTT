@@ -37,16 +37,14 @@ import java.util.concurrent.Callable;
  */
 public class RetrieveAllBlocksTask implements Callable<Void> {
    private final SourceData sourceData;
-   private final boolean exitOnFileEnd;
 
-    public RetrieveAllBlocksTask(SourceData processor, boolean exitOnFileEnd) {
+    public RetrieveAllBlocksTask(SourceData processor) {
         this.sourceData = processor;
-        this.exitOnFileEnd = exitOnFileEnd;
-    }
+     }
 
     @Override
     public Void call() throws Exception {
-        sourceData.retrieveAllBlocks(exitOnFileEnd);
+        sourceData.retrieveAllBlocks();
         return null;
     }
 }

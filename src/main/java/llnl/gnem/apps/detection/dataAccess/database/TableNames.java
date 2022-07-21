@@ -25,19 +25,14 @@
  */
 package llnl.gnem.apps.detection.dataAccess.database;
 
-import llnl.gnem.core.database.ConnectedUser;
-
 /**
  *
  * @author dodge1
  */
 public class TableNames {
 
-    private static final String TMP_SCHEMA = System.getProperty("schema_name");
-    private static String SCHEMA = TMP_SCHEMA != null && !TMP_SCHEMA.isEmpty() ? TMP_SCHEMA : "detector";
-    private static final String SOCORRO_ORIGIN_TABLE = "SOCORRO_ORIGIN";
+    private static final String ORIGIN_TABLE = "ORIGIN";
     private static final String EVENT_STATION_TIMES_TABLE = "EVENT_STATION_TIMES";
-    private static final String CONTINUOUS_WFDISC_TABLE = "LLNL.CONTINUOUS_WFDISC";
     private static final String FRAMEWORK_RUN_TABLE = "FRAMEWORK_RUN";
     private static final String DETECTION_TABLE = "DETECTION";
     private static final String TRIGGER_RECORD_TABLE = "TRIGGER_RECORD";
@@ -51,74 +46,142 @@ public class TableNames {
     private static final String EVENT_TABLE = "EVENT";
     private static final String EVENT_PICK_ASSOC_TABLE = "EVENT_PICK_ASSOC";
     private static final String DETECTOR_THRESHOLD_HISTORY_TABLE = "DETECTOR_THRESHOLD_HISTORY";
+    private static final String SUBSPACE_TEMPLATE_TABLE = "SUBSPACE_TEMPLATE";
+    private static final String SUBSPACE_DETECTOR_PARAMS_TABLE = "SUBSPACE_DETECTOR_PARAMS";
+    private static final String DETECTOR_TABLE = "DETECTOR";
+    private static final String DETECTOR_TRAINING_DATA_TABLE = "DETECTOR_TRAINING_DATA";
+    private static final String TRIGGER_CLASSIFICATION_TABLE = "TRIGGER_CLASSIFICATION";
+    private static final String TRIGGER_DATA_FEATURE_TABLE = "TRIGGER_DATA_FEATURE";
+    private static final String TRIGGER_FK_DATA_TABLE = "TRIGGER_FK_DATA";
+    private static final String CONFIGURATION_TABLE = "CONFIGURATION";
+    private static final String STREAM_FK_PARAM_TABLE = "STREAM_FK_PARAM";
+    private static final String DET_STAT_HISTOGRAM_TABLE = "DET_STAT_HISTOGRAM";
+    private static final String ARRAY_DETECTOR_PARAMS_TABLE = "ARRAY_DETECTOR_PARAMS";
+    private static final String BULLETIN_DETECTOR_SPEC_TABLE = "BULLETIN_DETECTOR_SPEC";
+    private static final String STALTA_DETECTOR_PARAMS_TABLE = "STALTA_DETECTOR_PARAMS";
+    private static final String BEAM_RECIPE_TABLE = "BEAM_RECIPE";
+    private static final String  ARRAY_INFO_TABLE = "ARRAY_INFO";
 
-    public static void setSchemaFromConnectedUser() {
-        SCHEMA = ConnectedUser.getInstance().getUser();
-    }
 
-     public static String getOriginTable() {
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + SOCORRO_ORIGIN_TABLE : SOCORRO_ORIGIN_TABLE;
+    public static String getOriginTable() {
+        return  ORIGIN_TABLE;
     }
 
     public static String getEventStationTimesTable() {
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + EVENT_STATION_TIMES_TABLE : EVENT_STATION_TIMES_TABLE;
-    }
-
-    public static String getContinuousWfdiscTable() {
-        return CONTINUOUS_WFDISC_TABLE;
+        return EVENT_STATION_TIMES_TABLE;
     }
 
     public static String getFrameworkRunTable() {
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + FRAMEWORK_RUN_TABLE : FRAMEWORK_RUN_TABLE;
+        return  FRAMEWORK_RUN_TABLE;
     }
 
     public static String getDetectionTable() {
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + DETECTION_TABLE : DETECTION_TABLE;
+        return DETECTION_TABLE;
     }
 
     public static String getTriggerRecordTable() {
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + TRIGGER_RECORD_TABLE : TRIGGER_RECORD_TABLE;
+        return  TRIGGER_RECORD_TABLE;
     }
 
     public static String getPhasePickTable() {
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + PHASE_PICK_TABLE : PHASE_PICK_TABLE;
+        return  PHASE_PICK_TABLE;
     }
 
     public static String getGroupStationDataTable() {
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + GROUP_STATION_DATA_TABLE : GROUP_STATION_DATA_TABLE;
+        return  GROUP_STATION_DATA_TABLE;
     }
 
     public static String getConfigurationGroupTable() {
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + CONFIGURATION_GROUP_TABLE : CONFIGURATION_GROUP_TABLE;
+        return  CONFIGURATION_GROUP_TABLE;
     }
 
     public static String getDetectorChannelTable() {
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + DETECTOR_CHANNEL_TABLE : DETECTOR_CHANNEL_TABLE;
+        return  DETECTOR_CHANNEL_TABLE;
     }
-    
-    public static String getStreamChannelTable(){
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + STREAM_CHANNEL_TABLE : STREAM_CHANNEL_TABLE;
+
+    public static String getStreamChannelTable() {
+        return STREAM_CHANNEL_TABLE;
     }
-    
-    public static String getStreamTable(){
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + STREAM_TABLE : STREAM_TABLE;
+
+    public static String getStreamTable() {
+        return  STREAM_TABLE;
     }
-    
-    public static String getStoredFilterTable(){
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + STORED_FILTER_TABLE : STORED_FILTER_TABLE;
+
+    public static String getStoredFilterTable() {
+        return  STORED_FILTER_TABLE;
     }
-    
-    public static String getEventTable(){
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + EVENT_TABLE : EVENT_TABLE;
+
+    public static String getEventTable() {
+        return EVENT_TABLE;
     }
-   
-    public static String getEventPickAssocTable(){
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + EVENT_PICK_ASSOC_TABLE : EVENT_PICK_ASSOC_TABLE;
+
+    public static String getEventPickAssocTable() {
+        return EVENT_PICK_ASSOC_TABLE;
     }
 
     public static String getDetectorThresholdHistoryTable() {
-        
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + DETECTOR_THRESHOLD_HISTORY_TABLE : DETECTOR_THRESHOLD_HISTORY_TABLE;
+
+        return DETECTOR_THRESHOLD_HISTORY_TABLE;
+    }
+
+    public static String getSubspaceTemplateTable() {
+        return SUBSPACE_TEMPLATE_TABLE;
+    }
+
+    public static String getSubspaceDetectorParamsTable() {
+        return SUBSPACE_DETECTOR_PARAMS_TABLE;
+    }
+
+    public static String getDetectorTable() {
+        return  DETECTOR_TABLE;
+    }
+
+    public static String getDetectorTrainingDataTable() {
+        return  DETECTOR_TRAINING_DATA_TABLE;
+    }
+
+    public static String getTriggerClassificationTable() {
+        return TRIGGER_CLASSIFICATION_TABLE;
+    }
+
+    public static String getTriggerDataFeatureTable() {
+        return  TRIGGER_DATA_FEATURE_TABLE;
+    }
+
+    public static String getTriggerFkDataTable() {
+        return  TRIGGER_FK_DATA_TABLE;
+    }
+
+    public static String getConfigurationTable() {
+        return  CONFIGURATION_TABLE;
+    }
+
+    public static String getStreamFKParamTableName() {
+        return STREAM_FK_PARAM_TABLE;
+    }
+
+    public static String getDetStatHistogramTable() {
+        return DET_STAT_HISTOGRAM_TABLE;
+    }
+
+    public static String getArrayDetectorParamsTable() {
+        return  ARRAY_DETECTOR_PARAMS_TABLE;
     }
     
+    public static String getBulletinDetectorSpecTable(){
+        return BULLETIN_DETECTOR_SPEC_TABLE;
+    }
+    
+    public static String getSTALTADetectorParamsTable(){
+         return STALTA_DETECTOR_PARAMS_TABLE;
+    }
+
+    public static String getBeamRecipeTable() {
+        return  BEAM_RECIPE_TABLE;
+    }
+ 
+    public static String getArrayInfoTable() {
+        return  ARRAY_INFO_TABLE;
+    }
+
 }

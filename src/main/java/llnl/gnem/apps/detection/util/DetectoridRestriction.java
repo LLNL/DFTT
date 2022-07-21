@@ -42,6 +42,8 @@ import llnl.gnem.core.util.ApplicationLogger;
  */
 public class DetectoridRestriction {
 
+    private boolean ignoreDetectorClassification = false;
+
     /**
      * @return the detectoridSet
      */
@@ -75,6 +77,15 @@ public class DetectoridRestriction {
             }
         }
     }
+
+    public void setIgnoreClassificationStatus(boolean ignoreDetectorClassification) {
+        this.ignoreDetectorClassification = ignoreDetectorClassification;
+    }
+
+    public boolean isIgnoreDetectorClassification() {
+        return ignoreDetectorClassification;
+    }
+    
 
     private static class DetectoridRestrictionHolder {
 

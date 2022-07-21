@@ -26,8 +26,8 @@
 package llnl.gnem.apps.detection.util;
 
 
+import llnl.gnem.apps.detection.dataAccess.dataobjects.SubstitutionReason;
 import llnl.gnem.apps.detection.core.framework.detectors.Detector;
-import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceDetector;
 import net.jcip.annotations.ThreadSafe;
 
 /**

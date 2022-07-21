@@ -31,26 +31,20 @@ import java.awt.Color;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.ToolTipManager;
-import llnl.gnem.apps.detection.dataAccess.dataobjects.OriginInfo;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.PhasePick;
-import llnl.gnem.apps.detection.dataAccess.dataobjects.ShortDetectionSummary;
-import llnl.gnem.apps.detection.dataAccess.dataobjects.StationInfo;
 import llnl.gnem.apps.detection.sdBuilder.allStations.actions.HideTraceAction;
 import llnl.gnem.apps.detection.sdBuilder.allStations.actions.MagnifyAction;
 import llnl.gnem.apps.detection.sdBuilder.allStations.actions.ReduceAction;
 import llnl.gnem.apps.detection.sdBuilder.allStations.actions.RemoveSinglePickAction;
+import llnl.gnem.apps.detection.util.KeyPhaseMapper;
 
 import llnl.gnem.core.gui.plotting.MouseMode;
 import llnl.gnem.core.gui.plotting.MouseOverPlotObject;
@@ -58,6 +52,7 @@ import llnl.gnem.core.gui.plotting.PickCreationInfo;
 import llnl.gnem.core.gui.plotting.PlotObjectClicked;
 import llnl.gnem.core.gui.plotting.VertAlignment;
 import llnl.gnem.core.gui.plotting.jmultiaxisplot.JMultiAxisPlot;
+import llnl.gnem.core.gui.plotting.jmultiaxisplot.JPlotKeyMessage;
 import llnl.gnem.core.gui.plotting.jmultiaxisplot.JSubplot;
 import llnl.gnem.core.gui.plotting.jmultiaxisplot.PickMovedState;
 import llnl.gnem.core.gui.plotting.jmultiaxisplot.PickTextPosition;
@@ -67,11 +62,7 @@ import llnl.gnem.core.gui.plotting.plotobject.Line;
 import llnl.gnem.core.gui.plotting.plotobject.PlotObject;
 import llnl.gnem.core.gui.plotting.plotobject.XPinnedText;
 import llnl.gnem.core.gui.plotting.transforms.Coordinate;
-import llnl.gnem.core.traveltime.Ak135.TraveltimeCalculatorProducer;
-import llnl.gnem.core.traveltime.SinglePhaseTraveltimeCalculator;
-import llnl.gnem.core.util.Geometry.EModel;
 import llnl.gnem.core.util.SeriesMath;
-import llnl.gnem.core.waveform.BaseTraceData;
 
 /**
  *
@@ -133,7 +124,7 @@ public class MultiStationStackPlot extends JMultiAxisPlot implements Observer {
             double traceStartTime = 0;
 
             double delta = esd.getDelta();
-            double endTime = (plotData.length-1)*delta;
+            double endTime = (plotData.length - 1) * delta;
             centerValue += shift;
             scaleAndShiftTrace(centerValue, plotData, plotData);
             Line line = new Line(traceStartTime, delta, plotData);
@@ -237,7 +228,7 @@ public class MultiStationStackPlot extends JMultiAxisPlot implements Observer {
             PhasePick dpp = pickLinePickMap.get(vpl);
 
             if (dpp != null) {
-           //     AllStationsPickModel.getInstance().moveSinglePick(dpp, deltaT);
+                //     AllStationsPickModel.getInstance().moveSinglePick(dpp, deltaT);
             }
 
         } else if (obj instanceof PickCreationInfo) {
@@ -262,7 +253,14 @@ public class MultiStationStackPlot extends JMultiAxisPlot implements Observer {
 //                    }
                 }
             }
+        } else if (obj instanceof JPlotKeyMessage) {
+            JPlotKeyMessage msg = (JPlotKeyMessage) obj;
+            KeyEvent e = msg.getKeyEvent();
+            if (e.getKeyChar() == '+') {
+                zoomInAroundMouse(msg);
+            }
         }
+
     }
 
     private void createSinglePick(PhasePick dpp, double referenceTime, double yValue) {
@@ -400,24 +398,11 @@ public class MultiStationStackPlot extends JMultiAxisPlot implements Observer {
                 Collection<Integer> picksToRemove = AllStationsPickModel.getInstance().getPicksToRemove();
                 new SavePicksWorker(picks, picksToRemove, AllStationsFrame.getInstance()).execute();
             }
-
-            switch (event.getKeyChar()) {
-                case 'p':
-                case 'P':
-                    AllStationsPickModel.getInstance().setCurrentPhase("P");
-                    setMouseMode(MouseMode.CREATE_PICK);
-                    break;
-                case 's':
-                case 'S':
-                    AllStationsPickModel.getInstance().setCurrentPhase("S");
-                    setMouseMode(MouseMode.CREATE_PICK);
-                    break;
-                default:
-                    // NOP
-                    break;
-
+            String phase = KeyPhaseMapper.getInstance().getMappedPhase(event.getKeyChar());
+            if (phase != null) {
+                AllStationsPickModel.getInstance().setCurrentPhase(phase);
+                setMouseMode(MouseMode.CREATE_PICK);
             }
-
         }
 
         @Override

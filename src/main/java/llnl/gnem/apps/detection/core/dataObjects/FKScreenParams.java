@@ -25,6 +25,7 @@
  */
 package llnl.gnem.apps.detection.core.dataObjects;
 
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import java.io.PrintWriter;
 import java.io.Serializable;
 
@@ -114,12 +115,14 @@ public class FKScreenParams implements Serializable {
         return isScreenPowerTriggers();
     }
 
-    public static void writeDefaultConfigInfo(PrintWriter writer, String sep) {
+    public static void writeDefaultConfigInfo(PrintWriter writer, DetectorType bootDetectorType, String sep) {
 
         writer.print(String.format("#------------------------ FK Trigger screening ----------------------%s", sep));
         writer.print(String.format("# The framework can calculate and store FK statistics in TRIGGER_FK_STATS for all triggers on an array stream.%s", sep));
         writer.print(String.format("# To turn this behavior on set the next parameter to true.%s", sep));
-        writer.print(String.format("ComputeAndSaveFKParams = false%s", sep));
+        boolean saveFKParams = bootDetectorType == DetectorType.ARRAYPOWER;
+        String fmt = saveFKParams ? "ComputeAndSaveFKParams = true%s" : "ComputeAndSaveFKParams = false%s";
+        writer.print(String.format(fmt, sep));
 
         writer.print(String.format("# If the next parameter is set to true, power triggers will be screened by FK results.%s", sep));
         writer.print(String.format("FKScreenPowerTriggers = false%s", sep));
@@ -152,8 +155,8 @@ public class FKScreenParams implements Serializable {
 
 
         writer.print(String.format("# If the next parameter is set to true, power triggers will be required to be less than a maximum velocity.%s", sep));
-        writer.print(String.format("RequireMaximumVelocity = false%s", sep));
-        writer.print(String.format("MaximumVelocity = 25.0%s", sep));
+        writer.print(String.format("RequireMaximumVelocity = true%s", sep));
+        writer.print(String.format("MaximumVelocity = 10.0%s", sep));
         
         
         writer.print(String.format("# ------------------------- End FK Trigger screening ----------------------%s", sep));

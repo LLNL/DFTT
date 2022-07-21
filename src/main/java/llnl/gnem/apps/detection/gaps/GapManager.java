@@ -134,7 +134,7 @@ public class GapManager {
         int[] data = waveform.getData();
         double samprate = waveform.getRate();
         TimeT start = new TimeT(waveform.getStart());
-        StreamKey staChan = new StreamKey(waveform.getSta(), waveform.getChan());
+        StreamKey staChan = waveform.getKey();
         Collection<GapFillData> gaps = findDataGaps(staChan, data);
         boolean hasGaps = !gaps.isEmpty();
         Collection<DataDefect> dataGaps = new ArrayList<>();
@@ -154,7 +154,7 @@ public class GapManager {
             }
         }
         if (hasGaps) {
-            return new NamedIntWaveform(waveform.getWfid(), waveform.getSta(), waveform.getChan(), start.getEpochTime(), samprate, data, dataGaps);
+            return new NamedIntWaveform(waveform.getKey(), waveform.getWfid(), data, start.getEpochTime(), samprate, waveform.getCalib(), waveform.getCalper(), dataGaps);
         } else {
             return waveform;
         }

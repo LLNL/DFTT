@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,25 +25,28 @@
  */
 package llnl.gnem.core.waveform.components;
 
-import llnl.gnem.core.waveform.seismogram.CssSeismogram;
-import llnl.gnem.core.waveform.responseProcessing.TransferStatus;
-import Jama.Matrix;
 import java.io.IOException;
 import java.sql.SQLException;
+
+import org.ojalgo.matrix.Primitive32Matrix;
+import org.ojalgo.matrix.Primitive32Matrix.DenseReceiver;
+
 import llnl.gnem.core.dataAccess.dataObjects.ApplicationStationInfo;
 import llnl.gnem.core.dataAccess.dataObjects.ComponentKey;
 import llnl.gnem.core.dataAccess.dataObjects.StreamEpochInfo;
-import llnl.gnem.core.seismicData.AbstractEventInfo;
 import llnl.gnem.core.gui.map.stations.StationInfo;
+import llnl.gnem.core.seismicData.AbstractEventInfo;
 import llnl.gnem.core.traveltime.Point3D;
-import llnl.gnem.core.util.Geometry.EModel;
 import llnl.gnem.core.util.Epoch;
 import llnl.gnem.core.util.PairT;
 import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.core.util.Geometry.EModel;
 import llnl.gnem.core.waveform.BaseTraceData;
 import llnl.gnem.core.waveform.filter.StoredFilter;
+import llnl.gnem.core.waveform.responseProcessing.TransferStatus;
 import llnl.gnem.core.waveform.responseProcessing.WaveformDataType;
 import llnl.gnem.core.waveform.responseProcessing.WaveformDataUnits;
+import llnl.gnem.core.waveform.seismogram.CssSeismogram;
 
 /**
  * Created by dodge1 Date: Mar 12, 2010 COPYRIGHT NOTICE Copyright (C) 2007
@@ -72,9 +75,9 @@ public class BaseSingleComponent {
         traceData = new BaseTraceData(seis, dataType, dataUnits);
         station = asi;
         identifier = new ComponentIdentifier(info.getStreamInfo().getBand(),
-                info.getStreamInfo().getInstrumentCode(),
-                info.getStreamInfo().getOrientation(),
-                info.getStreamInfo().getStreamKey().getLocationCode());
+                                             info.getStreamInfo().getInstrumentCode(),
+                                             info.getStreamInfo().getOrientation(),
+                                             info.getStreamInfo().getStreamKey().getLocationCode());
         this.streamEpochInfo = info;
         transferStatus = TransferStatus.UNTRANSFERRED;
         rotationStatus = RotationStatus.UNROTATED;
@@ -82,21 +85,16 @@ public class BaseSingleComponent {
 
     public ComponentKey getComponentKey() {
         return new ComponentKey(station.getStationId(),
-                streamEpochInfo.getStreamInfo().getBand(),
-                streamEpochInfo.getStreamInfo().getInstrumentCode(),
-                streamEpochInfo.getStreamInfo().getStreamKey().getLocationCode());
+                                streamEpochInfo.getStreamInfo().getBand(),
+                                streamEpochInfo.getStreamInfo().getInstrumentCode(),
+                                streamEpochInfo.getStreamInfo().getStreamKey().getLocationCode());
     }
 
     public ComponentType getComponentType() {
-        return new ComponentType(streamEpochInfo.getStreamInfo().getBand().charAt(0),
-                streamEpochInfo.getStreamInfo().getInstrumentCode().charAt(0));
+        return new ComponentType(streamEpochInfo.getStreamInfo().getBand().charAt(0), streamEpochInfo.getStreamInfo().getInstrumentCode().charAt(0));
     }
 
-    public BaseSingleComponent(StationInfo station,
-            ComponentIdentifier identifier,
-            TransferStatus transferStatus,
-            RotationStatus rotationStatus,
-            BaseTraceData traceData,
+    public BaseSingleComponent(StationInfo station, ComponentIdentifier identifier, TransferStatus transferStatus, RotationStatus rotationStatus, BaseTraceData traceData,
             StreamEpochInfo streamEpochInfo) {
 
         this.station = station;
@@ -144,8 +142,7 @@ public class BaseSingleComponent {
     @Override
     public String toString() {
         String objectId = Integer.toHexString(System.identityHashCode(this));
-        return String.format("(BaseSingleComponent(%s): %s (Transfer Status = %s)",
-                objectId, identifier.toString(), transferStatus);
+        return String.format("(BaseSingleComponent(%s): %s (Transfer Status = %s)", objectId, identifier.toString(), transferStatus);
     }
 
     public Epoch getEpoch() {
@@ -211,8 +208,6 @@ public class BaseSingleComponent {
         }
         comp1.rotationStatus = RotationStatus.FAILED_TO_ROTATE;
         comp2.rotationStatus = RotationStatus.FAILED_TO_ROTATE;
-        long wfid1 = comp1.getSeismogram().getWaveformID();
-        long wfid2 = comp2.getSeismogram().getWaveformID();
 
         double counterClockwiseRotationAngle = getRotationAngle(backAzimuth, comp1.getAzimuth());
         verifyComponentsCompatibleForRotation(comp1, comp2);
@@ -221,14 +216,14 @@ public class BaseSingleComponent {
 
         BaseTraceData traceData1 = comp1.getTraceData();
         BaseTraceData traceData2 = comp2.getTraceData();
-        float[] plotData1 = traceData1.getPlotData();  //Usually North
-        float[] plotData2 = traceData2.getPlotData();  // Usually East
-        Matrix rotated = rotate(counterClockwiseRotationAngle, plotData2, plotData1);
+        float[] plotData1 = traceData1.getPlotData(); //Usually North
+        float[] plotData2 = traceData2.getPlotData(); // Usually East
+        Primitive32Matrix rotated = rotate(counterClockwiseRotationAngle, plotData2, plotData1);
         float[] plotRadial = getFloatArray(rotated, 1);
         float[] plotTransverse = getFloatArray(rotated, 0);
 
-        float[] backData1 = traceData1.getPlotData();  //Usually North
-        float[] backData2 = traceData2.getPlotData();  // Usually East
+        float[] backData1 = traceData1.getPlotData(); //Usually North
+        float[] backData2 = traceData2.getPlotData(); // Usually East
         rotated = rotate(counterClockwiseRotationAngle, backData2, backData1);
         float[] backRadial = getFloatArray(rotated, 1);
         float[] backTransverse = getFloatArray(rotated, 0);
@@ -237,61 +232,60 @@ public class BaseSingleComponent {
 
         String radialChan = radialIdentifier.getChan();
         StreamKey radialKey = new StreamKey(key.getStationKey(), radialChan, key.getLocationCode());
-        CssSeismogram radialSeis = new CssSeismogram(traceData1.getIdentifier(), radialKey, plotRadial,
-                traceData1.getSampleRate(), traceData1.getTime(), traceData1.getCalib(), traceData1.getCalper());
+        CssSeismogram radialSeis = new CssSeismogram(traceData1.getIdentifier(),
+                                                     radialKey,
+                                                     plotRadial,
+                                                     traceData1.getSampleRate(),
+                                                     traceData1.getTime(),
+                                                     traceData1.getCalib(),
+                                                     traceData1.getCalper());
 
-        CssSeismogram radialBack = new CssSeismogram(traceData1.getIdentifier(), radialKey, backRadial,
-                traceData1.getSampleRate(), traceData1.getTime(), traceData1.getCalib(), traceData1.getCalper());
+        CssSeismogram radialBack = new CssSeismogram(traceData1.getIdentifier(),
+                                                     radialKey,
+                                                     backRadial,
+                                                     traceData1.getSampleRate(),
+                                                     traceData1.getTime(),
+                                                     traceData1.getCalib(),
+                                                     traceData1.getCalper());
         double orientation = createComponentOrientation(comp1, counterClockwiseRotationAngle);
-        BaseTraceData radialTraceData = new BaseTraceData(radialSeis, radialBack,
-                traceData1.getDataType(),
-                traceData1.getDataUnits(),
-                traceData1.getCurrentFilter());
+        BaseTraceData radialTraceData = new BaseTraceData(radialSeis, radialBack, traceData1.getDataType(), traceData1.getDataUnits(), traceData1.getCurrentFilter());
 
         StreamEpochInfo aInfo = comp1.streamEpochInfo;
         StreamEpochInfo rInfo = new StreamEpochInfo(aInfo.getStreamEpochId(),
-                aInfo.getStreamInfo(),
-                aInfo.getBeginTime(),
-                aInfo.getEndTime(),
-                aInfo.getDepth(),
-                orientation,
-                aInfo.getDip(),
-                aInfo.getSamprate());
-        BaseSingleComponent resultComp1 = new BaseSingleComponent(comp1.getStationInfo(),
-                radialIdentifier,
-                comp1.getTransferStatus(),
-                RotationStatus.ROTATED,
-                radialTraceData, rInfo);
+                                                    aInfo.getStreamInfo(),
+                                                    aInfo.getBeginTime(),
+                                                    aInfo.getEndTime(),
+                                                    aInfo.getDepth(),
+                                                    orientation,
+                                                    aInfo.getDip(),
+                                                    aInfo.getSamprate());
+        BaseSingleComponent resultComp1 = new BaseSingleComponent(comp1.getStationInfo(), radialIdentifier, comp1.getTransferStatus(), RotationStatus.ROTATED, radialTraceData, rInfo);
 
         ComponentIdentifier transverseIdentifier = new ComponentIdentifier(comp1.identifier.getBand(), comp1.identifier.getInstrument(), "T", comp1.identifier.getLocid());
 
         String transChan = transverseIdentifier.getChan();
         StreamKey transKey = new StreamKey(key.getStationKey(), transChan, key.getLocationCode());
-        CssSeismogram transverseSeis = new CssSeismogram(traceData2.getIdentifier(), transKey, plotTransverse,
-                traceData2.getSampleRate(), traceData2.getTime(), traceData2.getCalib(), traceData2.getCalper());
+        CssSeismogram transverseSeis = new CssSeismogram(traceData2.getIdentifier(),
+                                                         transKey,
+                                                         plotTransverse,
+                                                         traceData2.getSampleRate(),
+                                                         traceData2.getTime(),
+                                                         traceData2.getCalib(),
+                                                         traceData2.getCalper());
 
-        CssSeismogram transverseBack = new CssSeismogram(traceData2.getIdentifier(), transKey, backTransverse,
-                traceData2.getSampleRate(), traceData2.getTime(), traceData2.getCalib(), traceData2.getCalper());
+        CssSeismogram transverseBack = new CssSeismogram(traceData2.getIdentifier(),
+                                                         transKey,
+                                                         backTransverse,
+                                                         traceData2.getSampleRate(),
+                                                         traceData2.getTime(),
+                                                         traceData2.getCalib(),
+                                                         traceData2.getCalper());
         orientation = createComponentOrientation(comp2, counterClockwiseRotationAngle);
-        BaseTraceData transverseTraceData = new BaseTraceData(transverseSeis, transverseBack,
-                traceData2.getDataType(),
-                traceData2.getDataUnits(),
-                traceData2.getCurrentFilter());
+        BaseTraceData transverseTraceData = new BaseTraceData(transverseSeis, transverseBack, traceData2.getDataType(), traceData2.getDataUnits(), traceData2.getCurrentFilter());
         aInfo = comp2.streamEpochInfo;
-        rInfo = new StreamEpochInfo(aInfo.getStreamEpochId(),
-                aInfo.getStreamInfo(),
-                aInfo.getBeginTime(),
-                aInfo.getEndTime(),
-                aInfo.getDepth(),
-                orientation,
-                aInfo.getDip(),
-                aInfo.getSamprate());
+        rInfo = new StreamEpochInfo(aInfo.getStreamEpochId(), aInfo.getStreamInfo(), aInfo.getBeginTime(), aInfo.getEndTime(), aInfo.getDepth(), orientation, aInfo.getDip(), aInfo.getSamprate());
 
-        BaseSingleComponent resultComp2 = new BaseSingleComponent(comp2.getStationInfo(),
-                transverseIdentifier,
-                comp2.getTransferStatus(),
-                RotationStatus.ROTATED,
-                transverseTraceData, rInfo);
+        BaseSingleComponent resultComp2 = new BaseSingleComponent(comp2.getStationInfo(), transverseIdentifier, comp2.getTransferStatus(), RotationStatus.ROTATED, transverseTraceData, rInfo);
 
         return new PairT<>(resultComp1, resultComp2);
 
@@ -308,31 +302,31 @@ public class BaseSingleComponent {
         return orientation;
     }
 
-    private static float[] getFloatArray(Matrix rotated, int i) {
-        float[] result = new float[rotated.getColumnDimension()];
+    private static float[] getFloatArray(Primitive32Matrix rotated, int i) {
+        float[] result = new float[rotated.getColDim()];
         for (int j = 0; j < result.length; ++j) {
-            result[j] = (float) rotated.get(i, j);
+            result[j] = rotated.get(i, j).floatValue();
         }
         return result;
     }
 
-    private static Matrix rotate(double rotationAngle, float[] xArray, float[] yArray) {
+    private static Primitive32Matrix rotate(double rotationAngle, float[] xArray, float[] yArray) {
         if (xArray.length != yArray.length) {
             throw new IllegalStateException("Input arrays do not have the same length!");
         }
 
         double theta = Math.toRadians(rotationAngle);
-        Matrix P = new Matrix(2, 2);
+        DenseReceiver P = Primitive32Matrix.FACTORY.makeDense(2, 2);
         P.set(0, 0, Math.cos(theta));
         P.set(0, 1, -Math.sin(theta));
         P.set(1, 0, Math.sin(theta));
         P.set(1, 1, Math.cos(theta));
-        Matrix from = new Matrix(2, xArray.length);
+        DenseReceiver from = Primitive32Matrix.FACTORY.makeDense(2, xArray.length);
         for (int j = 0; j < xArray.length; ++j) {
             from.set(0, j, xArray[j]);
             from.set(1, j, yArray[j]);
         }
-        return P.times(from);
+        return P.get().multiply(from.get());
     }
 
     /**
@@ -340,10 +334,12 @@ public class BaseSingleComponent {
      * component1 to the angle baz. That rotation will make component 1 be a
      * radial component oriented in the direction of travel along the GCP.
      *
-     * @param backazimuth The angle (backAzimuth) to rotate to in degrees
-     * measured from North clockwise.
-     * @param comp1Azimuth The comp1Azimuth angle of the first component
-     * measured in degrees clockwise from North.
+     * @param backazimuth
+     *            The angle (backAzimuth) to rotate to in degrees measured from
+     *            North clockwise.
+     * @param comp1Azimuth
+     *            The comp1Azimuth angle of the first component measured in
+     *            degrees clockwise from North.
      * @return The rotation angle in degrees measured clockwise.
      */
     private static double getRotationAngle(double backazimuth, double comp1Azimuth) {
@@ -366,10 +362,8 @@ public class BaseSingleComponent {
             } else {
                 return ComponentOrientation.UNDEFINED;
             }
-        } else {
-            if (azimuth != null) {
-                return ComponentOrientation.HORIZONTAL;
-            }
+        } else if (azimuth != null) {
+            return ComponentOrientation.HORIZONTAL;
         }
 
         return ComponentOrientation.UNDEFINED;
@@ -512,8 +506,7 @@ public class BaseSingleComponent {
     }
 
     public boolean isMatchingChannel(BaseSingleComponent component) {
-        return this.getStationInfo().equals(component.getStationInfo())
-                && this.getIdentifier().equals(component.getIdentifier());
+        return this.getStationInfo().equals(component.getStationInfo()) && this.getIdentifier().equals(component.getIdentifier());
     }
 
     public String getShortName() {

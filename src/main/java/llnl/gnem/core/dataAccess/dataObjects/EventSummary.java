@@ -26,6 +26,7 @@
 package llnl.gnem.core.dataAccess.dataObjects;
 
 import java.util.Objects;
+import llnl.gnem.core.util.TimeT;
 
 /**
  *
@@ -201,7 +202,7 @@ public class EventSummary {
 
     @Override
     public String toString() {
-        return "EventSummary{" + "eventId=" + eventId + ", originId=" + originId + ", lat=" + lat + ", lon=" + lon + ", depth=" + depth + ", time=" + time + ", etype=" + etype + ", magtype=" + magtype + ", magnitude=" + magnitude + ", hasWaveforms=" + hasWaveforms + '}';
+        return String.format("Event %10d: lat = %9.4f, lon = %10.4f, depth = %5.1f km, time = %5s, %s = %5.2f", eventId,lat,lon, depth,new TimeT(time).toString(), magtype, magnitude);
     }
     
 }

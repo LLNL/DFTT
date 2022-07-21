@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,11 +25,12 @@
  */
 package llnl.gnem.apps.detection.classify;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+
 import weka.core.Attribute;
-import weka.core.FastVector;
 
 /**
  *
@@ -51,27 +52,26 @@ public class LabeledFeature implements LAF {
     private final double rawKurtosis;
     private final double freqCentroid;
 
-    private static final String[] attributes = {"snr", "amplitude", "timeCentroid", "timeSigma",
-        "temporalSkewness", "temporalKurtosis","freqSigma", "tbp", "skewness", "kurtosis", 
-        "rawSkewness", "rawKurtosis", "freqCentroid"};
+    private static final String[] attributes = { "snr", "amplitude", "timeCentroid", "timeSigma", "temporalSkewness", "temporalKurtosis", "freqSigma", "tbp", "skewness", "kurtosis", "rawSkewness",
+            "rawKurtosis", "freqCentroid" };
 
     @Override
     public List<String> getAttributeList() {
         return Arrays.asList(attributes);
     }
 
-    public static FastVector getAttributes() {
+    public static ArrayList<Attribute> getAttributes() {
         int attributeIndex = 0;
-        FastVector attr = new FastVector(attributes.length + 1);
+        ArrayList<Attribute> attr = new ArrayList<>(attributes.length + 1);
         for (String feature : attributes) {
-            attr.addElement(new Attribute(feature, attributeIndex++));
+            attr.add(new Attribute(feature, attributeIndex++));
         }
 
-        FastVector labels = new FastVector(2);
-        labels.addElement("valid");
-        labels.addElement("invalid");
+        List<String> labels = new ArrayList<>(2);
+        labels.add("valid");
+        labels.add("invalid");
         Attribute classAttribute = new Attribute("Class", labels, attributeIndex++);
-        attr.addElement(classAttribute);
+        attr.add(classAttribute);
 
         return attr;
 
@@ -79,20 +79,7 @@ public class LabeledFeature implements LAF {
 
     @Override
     public List<Double> getValues() {
-        return Arrays.asList(snr,
-                amplitude,
-                timeCentroid,
-                timeSigma,
-                temporalSkewness,
-                temporalKurtosis,
-                freqSigma,
-                tbp,
-                skewness,
-                kurtosis,
-                rawSkewness,
-                rawKurtosis,
-                freqCentroid
-        );
+        return Arrays.asList(snr, amplitude, timeCentroid, timeSigma, temporalSkewness, temporalKurtosis, freqSigma, tbp, skewness, kurtosis, rawSkewness, rawKurtosis, freqCentroid);
     }
 
     @Override
@@ -104,20 +91,8 @@ public class LabeledFeature implements LAF {
         }
     }
 
-    public LabeledFeature(Boolean valid, 
-            double snr, 
-            double amplitude,
-            double timeCentroid,
-            double timeSigma,
-            double temporalSkewness,
-            double temporalKurtosis,
-            double freqSigma, 
-            double tbp,
-            double skewness,
-            double kurtosis, 
-            double rawSkewness, 
-            double rawKurtosis, 
-            double freqCentroid) {
+    public LabeledFeature(Boolean valid, double snr, double amplitude, double timeCentroid, double timeSigma, double temporalSkewness, double temporalKurtosis, double freqSigma, double tbp,
+            double skewness, double kurtosis, double rawSkewness, double rawKurtosis, double freqCentroid) {
         this.valid = valid;
         this.snr = snr;
         this.amplitude = amplitude;

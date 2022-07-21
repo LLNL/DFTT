@@ -39,7 +39,11 @@ public interface FilterDAO {
 
     StoredFilter maybeAddFilter(StoredFilter filterToAdd) throws DataAccessException;
 
-    void setStoredFilterTable(String storedFilterTable);
-
-    void setSequenceName(String filterdSequenceName);
+    StoredFilter getSingleFilter(int filterid) throws DataAccessException;
+    
+    Collection<StoredFilter> getUserFilters() throws DataAccessException;
+    
+    void createDefaultUserFilters() throws DataAccessException;
+    
+    void removeUserFilter(int filterid) throws DataAccessException;
 }

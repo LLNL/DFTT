@@ -26,26 +26,28 @@
 package llnl.gnem.apps.detection.util.initialization;
 
 import llnl.gnem.apps.detection.core.dataObjects.DetectorSpecification;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.core.dataObjects.FKScreenParams;
 import llnl.gnem.apps.detection.core.dataObjects.FKScreenRange;
 import llnl.gnem.apps.detection.core.dataObjects.SpecificationFactory;
 import llnl.gnem.apps.detection.core.framework.detectors.array.ArrayDetectorSpecification;
 import llnl.gnem.apps.detection.core.framework.detectors.power.STALTASpecification;
-import llnl.gnem.apps.detection.database.TableNames;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
-import llnl.gnem.apps.detection.cancellation.CancellationTemplateSource;
+
 import llnl.gnem.apps.detection.core.framework.detectors.bulletin.BulletinSpecification;
 import llnl.gnem.core.util.ApplicationLogger;
 import llnl.gnem.core.util.FileInputArrayLoader;
+import llnl.gnem.core.util.FileUtil.DriveMapper;
 import llnl.gnem.core.util.PairT;
 import llnl.gnem.core.util.StreamKey;
 
@@ -82,12 +84,10 @@ public class StreamInfo {
     private final boolean triggerOnlyOnCorrelators;
     private int undecimatedBlockSize;
     private int decimatedBlockSize;
-    private boolean applyStreamCancellation;
-    private String cancellorParamsFile;
+
     private boolean useDynamicThresholds;
     private int statsRefreshIntervalInBlocks;
-    private CancellationTemplateSource cancellationTemplateSource;
-    private String cancellationDetectoridFile;
+
 
     public Collection<StreamKey> getChannels() {
         return new ArrayList<>(channels);
@@ -111,7 +111,7 @@ public class StreamInfo {
             throw new IllegalStateException("StreamChannelFile was not specified for stream " + streamName);
         }
 
-        channels = new ArrayList<>(retrieveStreamChannels(streamChannelFile));
+        channels = new ArrayList<>(retrieveStreamChannels(DriveMapper.getInstance().maybeMapPath(streamChannelFile)));
         if (channels.isEmpty()) {
             throw new IllegalStateException("No channels were specified in " + streamChannelFile);
         }
@@ -121,7 +121,7 @@ public class StreamInfo {
         PairT<Double, Double> band = parsePassband(propertyList);
         passBandLowFrequency = band.getFirst();
         passBandHighFrequency = band.getSecond();
-        preprocessorFilterOrder = 4;
+        preprocessorFilterOrder = Integer.parseInt(propertyList.getProperty("PreprocessorFilterOrder", "6"));
 
         blockSizeSeconds = Double.parseDouble(propertyList.getProperty("BlockSizeSeconds", "300.0").trim());
         decimationRate = Integer.parseInt(propertyList.getProperty("DecimationRate", "1"));
@@ -140,18 +140,9 @@ public class StreamInfo {
         snrThreshold = Double.parseDouble(propertyList.getProperty("SnrThreshold", "2.0").trim());
         minEventDuration = Double.parseDouble(propertyList.getProperty("MinEventDuration", "10.0").trim());
         useConfigFileThreshold = Boolean.parseBoolean(propertyList.getProperty("UseConfigFileThreshold", "true").trim());
-        applyStreamCancellation = Boolean.parseBoolean(propertyList.getProperty("ApplyStreamCancellation", "false").trim());
-        useDynamicThresholds = Boolean.parseBoolean(propertyList.getProperty("UseDynamicThresholds", "false").trim());
+         useDynamicThresholds = Boolean.parseBoolean(propertyList.getProperty("UseDynamicThresholds", "false").trim());
 
-        cancellorParamsFile = propertyList.getProperty("CancellorParamsFile");
-        String tmp = propertyList.getProperty("CancellationTemplateSource");
-        try {
-            cancellationTemplateSource = CancellationTemplateSource.valueOf(tmp);
-        } catch (Exception ex) {
-            cancellationTemplateSource = CancellationTemplateSource.SAC_FILES;
-        }
-         cancellationDetectoridFile = propertyList.getProperty("CancellationTemplateDetectoridFile");
-        boolean screenPowerTriggers = Boolean.parseBoolean(propertyList.getProperty("FKScreenPowerTriggers", "false").trim());
+         boolean screenPowerTriggers = Boolean.parseBoolean(propertyList.getProperty("FKScreenPowerTriggers", "false").trim());
         boolean computeFKParams = Boolean.parseBoolean(propertyList.getProperty("ComputeAndSaveFKParams", "false").trim());
         boolean requireMinimumVelocity = Boolean.parseBoolean(propertyList.getProperty("RequireMinimumVelocity", "false").trim());
         boolean requireMaximumVelocity = Boolean.parseBoolean(propertyList.getProperty("RequireMaximumVelocity", "false").trim());
@@ -218,17 +209,12 @@ public class StreamInfo {
     }
 
     private Properties getPropertyList(String filename) throws IOException {
-        FileInputStream infile = null;
+
         Properties propertyList = new Properties();
-        try {
-            infile = new FileInputStream(filename);
-            propertyList.load(infile);
-        } finally {
-            if (infile != null) {
-                infile.close();
-            }
-        }
+        String tmp = new String(Files.readAllBytes(Paths.get(filename)));
+        propertyList.load(new StringReader(tmp.replace("\\", "\\\\")));
         return propertyList;
+
     }
 
     private PairT<Double, Double> parsePassband(Properties propertyList) {
@@ -252,8 +238,21 @@ public class StreamInfo {
         Collection<StreamKey> result = new ArrayList<>();
         for (String line : lines) {
             String[] tokens = line.trim().split("\\s+");
-            if (tokens.length == 2) {
-                result.add(new StreamKey(tokens[0], tokens[1]));
+            switch (tokens.length) {
+                case 2:
+                    // Old-style sta-chan description
+                    result.add(new StreamKey(tokens[0], tokens[1]));
+                    break;
+                case 4:
+                    //net-sta-chan-locid
+                    result.add(new StreamKey(tokens[0], tokens[1], tokens[2], tokens[3]));
+                    break;
+                case 5:
+                    //AGENCY-net-sta-chan-locid
+                    result.add(new StreamKey(tokens[0], tokens[1], tokens[2], tokens[3],tokens[4]));
+                    break;
+                default:
+                    break;
             }
         }
         return result;
@@ -262,12 +261,19 @@ public class StreamInfo {
     private void retrieveBootDetectorInfo(Properties propertyList) throws Exception {
         String bootDetectorFile = propertyList.getProperty("BootDetectorsFile");
         if (bootDetectorFile != null && !bootDetectorFile.isEmpty()) {
-            String[] lines = FileInputArrayLoader.fillStrings(bootDetectorFile);
+            String[] lines = FileInputArrayLoader.fillStrings(DriveMapper.getInstance().maybeMapPath(bootDetectorFile));
             for (String line : lines) {
+                int cindex = line.indexOf("#");
+                if (cindex >= 0) {
+                    line = line.substring(0, cindex);
+                }
+                if (line.isEmpty()) {
+                    continue;
+                }
                 String[] tokens = line.trim().split("\\s+");
                 if (tokens.length == 2) {
                     DetectorType type = DetectorType.valueOf(tokens[0]);
-                    String filename = tokens[1];
+                    String filename = DriveMapper.getInstance().maybeMapPath(tokens[1]);
                     switch (type) {
                         case STALTA:
                             STALTASpecification params = getStaLtaParams(filename);
@@ -294,8 +300,7 @@ public class StreamInfo {
 
     private ArrayDetectorSpecification getArrayParams(String filename) throws Exception {
         int jdate = ProcessingPrescription.getInstance().getMinJdateToProcess();
-        String tableName = TableNames.getInstance().getSiteTableName();
-        return ArrayDetectorSpecification.createFromFileAndDatabase(filename, tableName, jdate);
+        return ArrayDetectorSpecification.create(filename, jdate);
 
     }
 
@@ -357,9 +362,15 @@ public class StreamInfo {
     public FKScreenParams getfKScreenParams() {
         return fKScreenParams;
     }
-    
-    public boolean isArrayStream()
-    {
+
+    public boolean isArrayStream() {
+        if (this.bootDetectorParams.isHasArrayBootDetector()) {
+            return true;
+        }
+        if (fKScreenParams.isComputeFKOnTriggers()) {
+            return true;
+        }
+
         return detectorSpecifications.stream().anyMatch((spec) -> (spec.isArraySpecification()));
     }
 
@@ -425,16 +436,6 @@ public class StreamInfo {
         return decimatedBlockSize;
     }
 
-    boolean isApplyStreamCancellation() {
-        return applyStreamCancellation;
-    }
-
-    /**
-     * @return the cancellorParamsFile
-     */
-    public String getCancellorParamsFile() {
-        return cancellorParamsFile;
-    }
 
     boolean isUseDynamicThresholds() {
         return useDynamicThresholds;
@@ -443,15 +444,5 @@ public class StreamInfo {
     int getStatsRefreshIntervalInBlocks() {
         return statsRefreshIntervalInBlocks;
     }
-    
-    
-    public CancellationTemplateSource getCancellationTemplateSource() {
-        return cancellationTemplateSource;
-    }
-
-    public String getCancellationDetectoridFile() {
-        return cancellationDetectoridFile;
-    }
-
 
 }

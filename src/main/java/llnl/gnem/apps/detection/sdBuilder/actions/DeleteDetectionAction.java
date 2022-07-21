@@ -29,7 +29,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
-import llnl.gnem.apps.detection.core.dataObjects.Detection;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
 import llnl.gnem.apps.detection.sdBuilder.dataSelection.DeleteDetectionWorker;
 import llnl.gnem.core.gui.util.ExceptionDialog;
 

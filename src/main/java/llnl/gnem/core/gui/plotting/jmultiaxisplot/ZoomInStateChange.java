@@ -34,6 +34,13 @@ import llnl.gnem.core.gui.plotting.ZoomLimits;
  */
 public class ZoomInStateChange {
 
+    private final Rectangle rect;
+    private final double realWorldXMin;
+    private final double realWorldXMax;
+    private final JMultiAxisPlot initiator;
+    private final double realWorldYMin;
+    private final double realWorldYMax;
+
     /**
      * @return the realWorldYMin
      */
@@ -48,14 +55,7 @@ public class ZoomInStateChange {
         return realWorldYMax;
     }
 
-    private final Rectangle rect;
-    private final double realWorldXMin;
-    private final double realWorldXMax;
-    private final JMultiAxisPlot initiator;
-    private final double realWorldYMin;
-    private final double realWorldYMax;
-
-    public ZoomInStateChange(Rectangle rect, double xMin, double xMax, double yMin, double yMax,JMultiAxisPlot initiator) {
+    public ZoomInStateChange(Rectangle rect, double xMin, double xMax, double yMin, double yMax, JMultiAxisPlot initiator) {
         this.rect = rect;
         realWorldXMin = xMin;
         realWorldXMax = xMax;
@@ -90,6 +90,6 @@ public class ZoomInStateChange {
     }
 
     public ZoomLimits getZoomLimits() {
-        return new ZoomLimits(realWorldXMin, realWorldXMax,realWorldYMin, realWorldYMax);
+        return new ZoomLimits(realWorldXMin, realWorldXMax, realWorldYMin, realWorldYMax);
     }
 }

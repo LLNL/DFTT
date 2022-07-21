@@ -44,7 +44,7 @@ public class PersistentPositionContainer extends JFrame implements Observer {
     private static final int CONTROL_LEFT = RIGHT_PANEL_WIDTH;
     @SuppressWarnings({"SuspiciousNameCombination"})
     private static final int CONTROL_TOP = RIGHT_PANEL_WIDTH;
-    private String preferencePath;
+    private final String preferencePath;
     protected String shortTitle = "";
     private static final int LEFT_PANEL_WIDTH = 200;
     private FramePositionManager positionManager;

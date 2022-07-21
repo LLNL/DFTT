@@ -25,7 +25,10 @@
  */
 package llnl.gnem.apps.detection.sdBuilder.dataSelection;
 
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import java.awt.Color;
+import java.util.Objects;
+import llnl.gnem.apps.detection.classify.TriggerClassification;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import net.jcip.annotations.ThreadSafe;
 
 /**
@@ -41,19 +44,30 @@ public class DetectorStats {
     private int detectionCount;
     private final int rank;
     private final String creationType;
+    private  TriggerClassification triggerClassification;
 
-    public DetectorStats(int runid, int detectorid, DetectorType detectorType, String creationType, int rank, int detectionCount) {
+    public DetectorStats(int runid, 
+            int detectorid, 
+            DetectorType detectorType, 
+            String creationType, 
+            int rank, 
+            int detectionCount, 
+            TriggerClassification triggerClassification) {
         this.runid = runid;
         this.detectorid = detectorid;
         this.detectorType = detectorType;
         this.creationType = creationType;
         this.rank = rank;
         this.detectionCount = detectionCount;
+        this.triggerClassification = triggerClassification;
     }
 
     @Override
     public String toString() {
-        return String.format("Rank %d %s(%s) ID = %d (%d)", rank, detectorType.toString(),creationType, detectorid, detectionCount);
+        Color color = triggerClassification.getTraceDisplayColor();
+        String strColor = Integer.toHexString( color.getRGB() & 0x00ffffff );
+        return String.format("<html><font color=%s>Rank %d %s(%s) ID = %d (%d)</font></html>", 
+                strColor,rank, detectorType.toString(),creationType, detectorid, detectionCount);
     }
     
     public void decrementDetectionCount(){
@@ -87,4 +101,70 @@ public class DetectorStats {
     public int getRunid() {
         return runid;
     }
+
+    public int getRank() {
+        return rank;
+    }
+
+    public String getCreationType() {
+        return creationType;
+    }
+
+    public TriggerClassification getTriggerClassification() {
+        return triggerClassification;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 73 * hash + this.runid;
+        hash = 73 * hash + this.detectorid;
+        hash = 73 * hash + Objects.hashCode(this.detectorType);
+        hash = 73 * hash + this.detectionCount;
+        hash = 73 * hash + this.rank;
+        hash = 73 * hash + Objects.hashCode(this.creationType);
+        hash = 73 * hash + Objects.hashCode(this.triggerClassification);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final DetectorStats other = (DetectorStats) obj;
+        if (this.runid != other.runid) {
+            return false;
+        }
+        if (this.detectorid != other.detectorid) {
+            return false;
+        }
+        if (this.detectionCount != other.detectionCount) {
+            return false;
+        }
+        if (this.rank != other.rank) {
+            return false;
+        }
+        if (!Objects.equals(this.creationType, other.creationType)) {
+            return false;
+        }
+        if (this.detectorType != other.detectorType) {
+            return false;
+        }
+        if (this.triggerClassification != other.triggerClassification) {
+            return false;
+        }
+        return true;
+    }
+
+    void updateClassification(TriggerClassification tc) {
+        triggerClassification = tc;
+    }
+    
 }

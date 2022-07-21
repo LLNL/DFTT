@@ -26,6 +26,7 @@
 package llnl.gnem.apps.detection.sdBuilder.stackViewer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
 import llnl.gnem.core.correlation.CorrelationComponent;
@@ -58,14 +59,41 @@ public class SingleComponentStack {
     public void addTrace(CorrelationComponent ctd) {
         data.add(ctd);
     }
+    
+    public Collection<CorrelationComponent> getStackData()
+    {
+        return new ArrayList<>(data);
+    }
+    
+    public Double getDNorth()
+    {
+        Double result = null;
+        for(CorrelationComponent cc : data){
+            Double tmp = cc.getDnorth();
+            if(result == null)result = tmp;
+            
+        }
+        return result;
+    }
+    
+    
+    Double getDeast() {
+        Double result = null;
+        for(CorrelationComponent cc : data){
+            Double tmp = cc.getDeast();
+            if(result == null)result = tmp;
+            
+        }
+        return result;
+    }
 
-    public BaseTraceData produceStack() {
+    public BaseTraceData produceWeightedStack() {
         double earliest = Double.MAX_VALUE;
         double latest = -earliest;
         double maxLengthSeconds = 0;
         int maxNsamps = 0;
         for (CorrelationComponent cc : data) {
-            CorrelationTraceData td = (CorrelationTraceData) cc.getTraceData();
+            CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
             double traceStart = td.getTime().getEpochTime();
             double nominalPickTime = td.getNominalPick().getTime();
             double ccShift = cc.getShift();
@@ -84,7 +112,7 @@ public class SingleComponentStack {
         float[] result = new float[maxNsamps];
         double samprate = -1;
         for (CorrelationComponent cc : data) {
-            CorrelationTraceData td = (CorrelationTraceData) cc.getTraceData();
+            CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
             CssSeismogram filtered = td.getSeismogram();
             NominalArrival na = cc.getNominalPick();
             double medianNoiseVariance = Math.sqrt(getNoiseVariance(filtered, na));
@@ -127,9 +155,65 @@ public class SingleComponentStack {
         return new BaseTraceData(tmpResult, WaveformDataType.unknown, WaveformDataUnits.unknown);
     }
 
+    
+    
+    public BaseTraceData produceStack() {
+        double earliest = Double.MAX_VALUE;
+        double latest = -earliest;
+        double maxLengthSeconds = 0;
+        int maxNsamps = 0;
+        for (CorrelationComponent cc : data) {
+            CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
+            double traceStart = td.getTime().getEpochTime();
+            double nominalPickTime = td.getNominalPick().getTime();
+            double ccShift = cc.getShift();
+            double start = traceStart - nominalPickTime + ccShift;
+            double traceEnd = td.getEpoch().getEnd() - nominalPickTime + ccShift;
+
+            if (start < earliest) {
+                earliest = start;
+            }
+            if (traceEnd > latest) {
+                latest = traceEnd;
+            }
+            maxLengthSeconds = latest - earliest;
+            maxNsamps = (int) (maxLengthSeconds * td.getSampleRate() + 1);
+        }
+        float[] result = new float[maxNsamps];
+        double samprate = -1;
+        for (CorrelationComponent cc : data) {
+            CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
+            CssSeismogram filtered = td.getSeismogram();
+            float[] plotData = filtered.getData();
+            double p2p= SeriesMath.getPeakToPeakAmplitude(plotData);
+            double scale = p2p >0 ? 1/p2p : 1;
+            SeriesMath.MultiplyScalar(plotData, scale);
+
+            double traceStart = td.getTime().getEpochTime();
+            double nominalPickTime = td.getNominalPick().getTime();
+            double ccShift = cc.getShift();
+            double start = traceStart - nominalPickTime + ccShift;
+            double offset = start - earliest;
+            samprate = td.getSampleRate();
+            int intOffset = (int) Math.round(offset * samprate);
+            for (int j = 0; j < plotData.length; ++j) {
+                int idx = intOffset + j;
+                if (idx >= 0 && idx < result.length) {
+                    result[idx] = result[idx] + plotData[j];
+                }
+            }
+        }
+
+        double pToP = SeriesMath.getPeakToPeakAmplitude(result);
+        SeriesMath.MultiplyScalar(result, 1.0 / pToP);
+        double startTime = -ParameterModel.getInstance().getPrepickSeconds();
+        CssSeismogram tmpResult = new CssSeismogram(1L, key, result, samprate, new TimeT(startTime), 1.0, 1.0);
+        return new BaseTraceData(tmpResult, WaveformDataType.unknown, WaveformDataUnits.unknown);
+    }
+
     public double getDelta() {
         for (CorrelationComponent cc : data) {
-            return cc.getTraceData().getDelta();
+            return cc.getCorrelationTraceData().getDelta();
         }
 
         return 0.001;
@@ -162,4 +246,5 @@ public class SingleComponentStack {
             return SeriesMath.getMean(values);
         }
     }
+
 }

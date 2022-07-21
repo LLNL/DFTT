@@ -27,7 +27,7 @@ package llnl.gnem.apps.detection.sdBuilder.singleDetectionDisplay;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import llnl.gnem.apps.detection.core.dataObjects.Detection;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
 import llnl.gnem.apps.detection.core.dataObjects.TriggerDataFeatures;
 import llnl.gnem.core.correlation.CorrelationComponent;
 

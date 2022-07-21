@@ -27,7 +27,7 @@ package llnl.gnem.apps.detection.sdBuilder.singleDetectionDisplay;
 
 import java.awt.Color;
 import java.util.Collection;
-import llnl.gnem.apps.detection.core.dataObjects.Detection;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
 import llnl.gnem.apps.detection.core.dataObjects.TriggerDataFeatures;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
 import llnl.gnem.core.correlation.CorrelationComponent;
@@ -67,7 +67,7 @@ public class SingleDetectionWaveformView extends JMultiAxisPlot implements Singl
         clear();
         subplot = addSubplot();
         CorrelationComponent cc = SingleDetectionModel.getInstance().getCorrelationComponent();
-        CorrelationTraceData td = (CorrelationTraceData) cc.getTraceData();
+        CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
 
         Collection<DataSpike> spikes = new SpikeProcessor(25.0, 6.0, 20).scanForSpikes(td.getBackupSeismogram());
         float[] plotData = td.getPlotData();
@@ -88,7 +88,7 @@ public class SingleDetectionWaveformView extends JMultiAxisPlot implements Singl
     }
 
     private void addNominalPick(CorrelationComponent cc) {
-        CorrelationTraceData td = (CorrelationTraceData) cc.getTraceData();
+        CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
         NominalArrival arrival = td.getNominalPick();
         String phase = arrival.getPhase();
         String auth = arrival.getAuth();

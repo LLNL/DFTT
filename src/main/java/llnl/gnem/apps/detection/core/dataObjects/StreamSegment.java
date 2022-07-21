@@ -115,8 +115,7 @@ public class StreamSegment {
             float[] concatenated = new float[float0.length + float1.length];
             System.arraycopy(float0, 0, concatenated, 0, float0.length);
             System.arraycopy(float1, 0, concatenated, float0.length, float1.length);
-            WaveformSegment nwResult = new WaveformSegment(data0.getSta(),
-                    data0.getChan(),
+            WaveformSegment nwResult = new WaveformSegment(data0.getStreamKey(),
                     data0.getTimeAsDouble(),
                     data0.getSamprate(),
                     concatenated,
@@ -203,7 +202,7 @@ public class StreamSegment {
         for (StreamKey sck : staChanList) {
             WaveformSegment ws = this.getWaveformSegment(sck);
             if (ws == null) {
-                throw new IllegalStateException("Now waveform segment found in stream for " + sck);
+                throw new IllegalStateException("No waveform segment found in stream for " + sck);
             }
             result.add(ws);
         }

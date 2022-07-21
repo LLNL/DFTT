@@ -25,6 +25,7 @@
  */
 package llnl.gnem.apps.detection.core.signalProcessing;
 
+import llnl.gnem.core.signalprocessing.Sequence;
 import java.util.Arrays;
 
 /**

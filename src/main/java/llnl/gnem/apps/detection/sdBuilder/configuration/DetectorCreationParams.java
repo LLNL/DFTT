@@ -25,7 +25,7 @@
  */
 package llnl.gnem.apps.detection.sdBuilder.configuration;
 
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 
 
 /**

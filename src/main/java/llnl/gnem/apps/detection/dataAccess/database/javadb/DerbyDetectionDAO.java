@@ -25,7 +25,13 @@
  */
 package llnl.gnem.apps.detection.dataAccess.database.javadb;
 
+import java.util.Collection;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Trigger;
 import llnl.gnem.apps.detection.dataAccess.database.DbDetectionDAO;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectionSummary;
+import llnl.gnem.apps.detection.util.DetectorSubstitution;
+import llnl.gnem.core.dataAccess.DataAccessException;
 
 
 public class DerbyDetectionDAO extends DbDetectionDAO {
@@ -37,6 +43,21 @@ public class DerbyDetectionDAO extends DbDetectionDAO {
     }
 
     private DerbyDetectionDAO() {
+    }
+
+    @Override
+    public Detection detectionFromTrigger(Trigger trigger) throws DataAccessException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void reassignDetection(Detection detection, DetectorSubstitution substitute) throws DataAccessException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Collection<DetectionSummary> getDetectionSummaries(int runid, int detectorid, double detStatThreshold) throws DataAccessException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

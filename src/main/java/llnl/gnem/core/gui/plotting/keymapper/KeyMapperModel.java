@@ -28,10 +28,10 @@ package llnl.gnem.core.gui.plotting.keymapper;
 import llnl.gnem.core.gui.plotting.MouseMode;
 
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Vector;
 import java.util.prefs.Preferences;
 
 
@@ -39,10 +39,10 @@ public class KeyMapperModel implements ControlKeyMapper {
 
     private static KeyMapperModel instance = null;
 
-    private Vector<KeyMapperView> views;
-    private HashMap<Integer, KeyMap> keyMap;
-    private Vector<Integer> availableCodes;
-    private Preferences prefs;
+    private final ArrayList<KeyMapperView> views;
+    private final HashMap<Integer, KeyMap> keyMap;
+    private final ArrayList<Integer> availableCodes;
+    private final Preferences prefs;
     private final static String PAN_MODE_STRING = "Pan-Mode Key";
     private final static String ZOOM_MODE_STRING = "Zoom-Only Key";
     private final static String CONTROL_SELECT_STRING = "Control-Select Key";
@@ -59,9 +59,9 @@ public class KeyMapperModel implements ControlKeyMapper {
 
     private KeyMapperModel()
     {
-        views = new Vector<KeyMapperView>();
-        keyMap = new HashMap<Integer, KeyMap>();
-        availableCodes = new Vector<Integer>();
+        views = new ArrayList<>();
+        keyMap = new HashMap<>();
+        availableCodes = new ArrayList<>();
         availableCodes.add(KeyEvent.VK_SHIFT );
         availableCodes.add(KeyEvent.VK_ESCAPE );
         availableCodes.add(KeyEvent.VK_CONTROL );
@@ -102,7 +102,7 @@ public class KeyMapperModel implements ControlKeyMapper {
         keyMap.put(key, new KeyMap( key, DELETE_KEY_STRING, null ) );
     }
 
-    public Vector<Integer> getAvailableCodes()
+    public ArrayList<Integer> getAvailableCodes()
     {
         return availableCodes;
     }
@@ -143,24 +143,28 @@ public class KeyMapperModel implements ControlKeyMapper {
     }
 
 
-    public MouseMode getMouseMode( int keyCode )
+    @Override
+    public MouseMode getMouseMode( KeyEvent e )
     {
-        KeyMap map = keyMap.get( new Integer( keyCode ) );
+        int keyCode = e.getKeyCode();
+        KeyMap map = keyMap.get(keyCode);
         if( map != null )
             return map.getMouseMode();
         else
             return null;
     }
 
+    @Override
     public boolean isDeleteKey( int keyCode )
     {
-        KeyMap map = keyMap.get( new Integer( keyCode ) );
+        KeyMap map = keyMap.get(keyCode);
         if( map != null )
             return map.getDescription().equals( DELETE_KEY_STRING );
         else
             return false;
     }
 
+    @Override
     public boolean isControlKey( int keyCode )
     {
         KeyMap map = keyMap.get( keyCode );

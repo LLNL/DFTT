@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,48 +25,44 @@
  */
 package llnl.gnem.core.correlation;
 
-import Jama.Matrix;
-import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.List;
 
+import org.ojalgo.matrix.Primitive32Matrix;
+
+import com.google.common.collect.ImmutableList;
+
 /**
- * Created by dodge1
- * Date: Apr 2, 2009
- * COPYRIGHT NOTICE
- * Copyright (C) 2007 Lawrence Livermore National Laboratory.
+ * Created by dodge1 Date: Apr 2, 2009 COPYRIGHT NOTICE Copyright (C) 2007
+ * Lawrence Livermore National Laboratory.
  */
-public class CorrelationResults implements Serializable{
+public class CorrelationResults implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    private final Matrix shifts;
-    private final Matrix correlations;
+    private final Primitive32Matrix shifts;
+    private final Primitive32Matrix correlations;
     private final List<StationEventChannelData> data;
 
-    public CorrelationResults(Matrix shifts, Matrix correlations, List<StationEventChannelData> data)
-    {
+    public CorrelationResults(Primitive32Matrix shifts, Primitive32Matrix correlations, List<StationEventChannelData> data) {
         this.shifts = shifts;
         this.correlations = correlations;
         this.data = ImmutableList.copyOf(data);
     }
 
-    public Matrix getShifts()
-    {
+    public Primitive32Matrix getShifts() {
         return shifts;
     }
 
-    public Matrix getCorrelations()
-    {
+    public Primitive32Matrix getCorrelations() {
         return correlations;
     }
 
     public List<StationEventChannelData> getData() {
         return data;
     }
-    
-    public int size()
-    {
-        return shifts.getColumnDimension();
+
+    public int size() {
+        return shifts.getColDim();
     }
 }

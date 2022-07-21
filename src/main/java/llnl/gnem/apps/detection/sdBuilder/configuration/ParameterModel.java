@@ -26,7 +26,7 @@
 package llnl.gnem.apps.detection.sdBuilder.configuration;
 
 import java.util.prefs.Preferences;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 
 /**
  *
@@ -66,6 +66,21 @@ public class ParameterModel {
     private boolean showCorrelationWindow;
     private boolean retrieveByBlocks;
     private int blockSize;
+    private boolean capSubspaceDimension;
+    private boolean displayNewTemplates;
+    private DetectorCreationOption detectorCreationOption;
+    private boolean displayAllStationPredictedPicks;
+    private boolean displayAllStationEventIDs;
+    private boolean displayAllStationDetectionMarkers;
+    private double fKMaxSlowness;
+    private int fKNumSlowness;
+    private double fKMinFrequency;
+    private double fKMaxFrequency;
+    private double rWFloorFactor;
+    private double rWSNRThreshold;
+    private boolean refineWindow;
+    private double rWAnalysisWindowLength;
+    private double rWMinimumWindowLength;
 
     private ParameterModel() {
         prefs = Preferences.userNodeForPackage(this.getClass());
@@ -97,12 +112,28 @@ public class ParameterModel {
         suppressBadDetectors = prefs.getBoolean("SUPPRESS_BAD_DETECTORS", true);
         requireCorrelation = prefs.getBoolean("REQUIRE_CORRELATION", false);
         fixSubspaceDimension = prefs.getBoolean("FIX_SUBSPACE_DIMENSION", false);
+        capSubspaceDimension = prefs.getBoolean("CAP_SUBSPACE_DIMENSION", false);
         subspaceDimension = prefs.getInt("SUBSPACE_DIMENSION", 1);
         autoApplyFilter = prefs.getBoolean("AUTO_APPLY_FILTER", false);
         requireWindowPositionConfirmation = prefs.getBoolean("REQUIRE_WINDOW_POSITION_CONFIRMATION", true);
         showCorrelationWindow = prefs.getBoolean("SHOW_CORRELATION_WINDOW", true);
         retrieveByBlocks = prefs.getBoolean("RETRIEVE_BY_BLOCKS", false);
         blockSize = prefs.getInt("BLOCK_SIZE", 100);
+        displayNewTemplates = prefs.getBoolean("DISPLAY_NEW_TEMPLATES", true);
+        detectorCreationOption = DetectorCreationOption.valueOf(prefs.get("DETECTOR_CREATION_OPTION", "PROMPT"));
+        displayAllStationPredictedPicks = prefs.getBoolean("DISPLAY_ALL_STATION_PREDICTED_PICKS", false);
+        displayAllStationEventIDs = prefs.getBoolean("DISPLAY_ALL_STATION_EVENTID_MARKERS", false);
+        displayAllStationDetectionMarkers = prefs.getBoolean("DISPLAY_ALL_STATION_DETECTION_MARKERS", false);
+        fKMaxSlowness = prefs.getDouble("FK_MAX_SLOWNESS", 0.5);
+        fKNumSlowness = prefs.getInt("FK_NUM_SLOWNESS", 100);
+        fKMinFrequency = prefs.getDouble("FK_MIN_FREQUENCY", 0.5);
+        fKMaxFrequency = prefs.getDouble("FK_MAX_FREQUENCY", 8.0);
+
+        rWFloorFactor = prefs.getDouble("REFINE_WINDOW_FLOOR_FACTOR", 2.0);
+        rWSNRThreshold = prefs.getDouble("REFINE_WINDOW_SNR_THRESHOLD", 1.5);
+        refineWindow = prefs.getBoolean("DO_REFINE_WINDOW", true);
+        rWAnalysisWindowLength = prefs.getDouble("REFINE_WINDOW_ANALYSIS_WINDOW_LENGTH", 10.0);
+        rWMinimumWindowLength = prefs.getDouble("REFINE_WINDOW_MIN_WINDOW_LENGTH", 30.0);
 
     }
 
@@ -141,10 +172,64 @@ public class ParameterModel {
     public boolean isShowCorrelationWindow() {
         return showCorrelationWindow;
     }
-    
-    public void setShowCorrelationWindow( boolean value){
+
+    public void setShowCorrelationWindow(boolean value) {
         showCorrelationWindow = value;
         prefs.putBoolean("SHOW_CORRELATION_WINDOW", showCorrelationWindow);
+    }
+
+    public boolean isCapSubspaceDimension() {
+        return capSubspaceDimension;
+    }
+
+    public void setCapSubspaceDimension(boolean value) {
+        this.capSubspaceDimension = value;
+        prefs.putBoolean("CAP_SUBSPACE_DIMENSION", value);
+    }
+
+    public boolean isDisplayNewTemplates() {
+        return displayNewTemplates;
+    }
+
+    public void setDisplayNewTemplates(boolean value) {
+        this.displayNewTemplates = value;
+        prefs.putBoolean("DISPLAY_NEW_TEMPLATES", value);
+    }
+
+    public DetectorCreationOption getDetectorCreationOption() {
+        return detectorCreationOption;
+    }
+
+    public void setDetectorCreationOption(DetectorCreationOption value) {
+        detectorCreationOption = value;
+        prefs.put("DETECTOR_CREATION_OPTION", value.toString());
+    }
+
+    public boolean isDisplayAllStationPredictedPicks() {
+        return displayAllStationPredictedPicks;
+    }
+
+    public void setDisplayAllStationPredictedPicks(boolean value) {
+        displayAllStationPredictedPicks = value;
+        prefs.putBoolean("DISPLAY_ALL_STATION_PREDICTED_PICKS", value);
+    }
+
+    public boolean isDisplayAllStationEventIDs() {
+        return displayAllStationEventIDs;
+    }
+
+    public void setDisplayAllStationEventIDs(boolean value) {
+        displayAllStationEventIDs = value;
+        prefs.putBoolean("DISPLAY_ALL_STATION_EVENTID_MARKERS", value);
+    }
+
+    public boolean isDisplayAllStationDetectionMarkers() {
+        return displayAllStationDetectionMarkers;
+    }
+
+    public void setDisplayAllStationDetectionMarkers(boolean value) {
+        displayAllStationDetectionMarkers = value;
+        prefs.putBoolean("DISPLAY_ALL_STATION_DETECTION_MARKERS", value);
     }
 
     private static class ParameterModelHolder {
@@ -454,23 +539,104 @@ public class ParameterModel {
     public int getSubspaceDimension() {
         return subspaceDimension;
     }
-    
+
     public boolean isRetrieveByBlocks() {
         return retrieveByBlocks;
-    } 
-    
+    }
+
     public int getBlockSize() {
         return blockSize;
     }
-    
+
     public void setRetrieveByBlocks(boolean value) {
         retrieveByBlocks = value;
         prefs.putBoolean("RETRIEVE_BY_BLOCKS", value);
     }
-    
+
     public void setBlockSize(int value) {
         blockSize = value;
         prefs.putInt("BLOCK_SIZE", value);
     }
-   
+
+    public double getFKMaxSlowness() {
+        return fKMaxSlowness;
+    }
+
+    public void setFKMaxSlowness(double value) {
+        this.fKMaxSlowness = value;
+        prefs.putDouble("FK_MAX_SLOWNESS", fKMaxSlowness);
+    }
+
+    public int getFKNumSlowness() {
+        return fKNumSlowness;
+    }
+
+    public void setFKNumSlowness(int value) {
+        fKNumSlowness = value;
+        prefs.putInt("FK_NUM_SLOWNESS", fKNumSlowness);
+    }
+
+    public double getFKMinFrequency() {
+        return fKMinFrequency;
+    }
+
+    public void setFKMinFrequency(double value) {
+        this.fKMinFrequency = value;
+        prefs.putDouble("FK_MIN_FREQUENCY", fKMinFrequency);
+    }
+
+    public double getFKMaxFrequency() {
+        return fKMaxFrequency;
+    }
+
+    public void setKMaxFrequency(double value) {
+        this.fKMaxFrequency = value;
+        prefs.putDouble("FK_MAX_FREQUENCY", fKMaxFrequency);
+    }
+
+    public double getFloorFactor() {
+        return rWFloorFactor;
+    }
+
+    public void setRWFloorFactor(double value) {
+        this.rWFloorFactor = value;
+        prefs.putDouble("REFINE_WINDOW_FLOOR_FACTOR", rWFloorFactor);
+    }
+
+    public double getSNRThreshold() {
+        return rWSNRThreshold;
+    }
+
+    public void setRWSNRThreshold(double value) {
+        this.rWSNRThreshold = value;
+        prefs.putDouble("REFINE_WINDOW_SNR_THRESHOLD", rWSNRThreshold);
+    }
+
+    public boolean isRefineWindow() {
+        return refineWindow;
+    }
+
+    public void setRefineWindow(boolean value) {
+        this.refineWindow = value;
+        prefs.getBoolean("DO_REFINE_WINDOW", value);
+    }
+
+    public double getAnalysisWindowLength() {
+        return rWAnalysisWindowLength;
+    }
+
+    public void setRWAnalysisWindowLength(double value) {
+        this.rWAnalysisWindowLength = value;
+        prefs.putDouble("REFINE_WINDOW_ANALYSIS_WINDOW_LENGTH", rWAnalysisWindowLength);
+    }
+
+    public double getMinimumWindowLength() {
+        return rWMinimumWindowLength;
+    }
+
+    public void setRWMinimumWindowLength(double value) {
+        this.rWMinimumWindowLength = value;
+        prefs.putDouble("REFINE_WINDOW_MIN_WINDOW_LENGTH", rWMinimumWindowLength);
+    }
+
 }

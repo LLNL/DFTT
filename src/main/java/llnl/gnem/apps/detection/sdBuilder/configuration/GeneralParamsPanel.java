@@ -34,7 +34,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.core.gui.util.SpringUtilities;
 
 /**
@@ -54,7 +54,7 @@ public class GeneralParamsPanel extends JPanel {
     private final JCheckBox suppressBadDetectorsChk;
     private final JCheckBox requireCorrelationChk;
 
-    private final JTextField siteTableField;
+
     private final JTextField originTableField;
     private final JFormattedTextField minDetectionCountField;
     private final JFormattedTextField prePickSecondsField;
@@ -68,7 +68,6 @@ public class GeneralParamsPanel extends JPanel {
             DetectorType detectorType,
             double traceLength,
             boolean fixShiftsToZero,
-            String siteTableName,
             String originTableName,
             int minDetectionCount,
             double windowStart,
@@ -81,13 +80,8 @@ public class GeneralParamsPanel extends JPanel {
             int blockSize) {
 
         super(new SpringLayout());
-        JLabel label = new JLabel("SITE Table Name", JLabel.TRAILING);
-        add(label);
-        siteTableField = new JTextField(siteTableName);
-        label.setLabelFor(siteTableField);
-        add(siteTableField);
-
-        label = new JLabel("ORIGIN Table Name", JLabel.TRAILING);
+ 
+        JLabel label = new JLabel("ORIGIN Table Name", JLabel.TRAILING);
         add(label);
         originTableField = new JTextField(originTableName);
         label.setLabelFor(originTableField);
@@ -191,15 +185,12 @@ public class GeneralParamsPanel extends JPanel {
         this.setBorder(BorderFactory.createLineBorder(Color.blue));
 
         SpringUtilities.makeCompactGrid(this,
-                15, 2,
+                14, 2,
                 5, 5, //initX, initY
                 5, 5);
 
     }
 
-    public String getSiteTableName() {
-        return siteTableField.getText();
-    }
 
     public String getOriginTableName() {
         return originTableField.getText();

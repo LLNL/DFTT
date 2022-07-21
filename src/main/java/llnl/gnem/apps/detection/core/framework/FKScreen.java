@@ -27,7 +27,9 @@ package llnl.gnem.apps.detection.core.framework;
 
 import java.util.ArrayList;
 import java.util.logging.Level;
-import llnl.gnem.apps.detection.core.signalProcessing.FKMeasurement;
+import llnl.gnem.core.signalprocessing.arrayProcessing.FKProducer;
+import llnl.gnem.core.signalprocessing.arrayProcessing.FKResult;
+import llnl.gnem.core.signalprocessing.arrayProcessing.SlownessValue;
 import llnl.gnem.core.util.ApplicationLogger;
 
 /**
@@ -49,47 +51,15 @@ public class FKScreen {
             float slownessTolerance,
             float FKQualityThreshold) {
 
-        FKMeasurement measurement = new FKMeasurement(smax, NUM_SLOWNESSES, xnorth, xeast, waveforms, delta, flimits[0], flimits[1]);
-        ApplicationLogger.getInstance().log(Level.FINEST, String.format("FK Quality = %f", measurement.getQuality()));
-        float[] sest = measurement.getSlownessEstimate();
-        float eps = (sest[0] - targetSlowness[0]) * (sest[0] - targetSlowness[0])
-                + (sest[1] - targetSlowness[1]) * (sest[1] - targetSlowness[1]);
-        ApplicationLogger.getInstance().log(Level.FINEST, String.format("FK Error = %f", eps));
-        boolean passed = measurement.getQuality() >= FKQualityThreshold && Math.sqrt(eps) <= slownessTolerance;
-        return new FKScreenResults(passed, sest[0], sest[1], measurement.getQuality());
+        FKResult result = new FKProducer().produce(smax, NUM_SLOWNESSES, xnorth, xeast, waveforms, delta, flimits[0], flimits[1]);
+     
+        ApplicationLogger.getInstance().log(Level.FINE, String.format("FK Quality = %f", result.getQuality()));
+        SlownessValue slow = result.getPeakValue();
+        double eps = (slow.getsNorth() - targetSlowness[0]) * (slow.getsNorth() - targetSlowness[0])
+                + (slow.getsEast() - targetSlowness[1]) * (slow.getsEast() - targetSlowness[1]);
+        ApplicationLogger.getInstance().log(Level.FINE, String.format("FK Error = %f", Math.sqrt(eps)));
+         boolean passed = result.getQuality() >= FKQualityThreshold && Math.sqrt(eps) <= slownessTolerance;
+         return new FKScreenResults(passed, slow.getsNorth(), slow.getsEast(), result.getQuality());
     }
 
-    // screen for use with calibrated FK test
-    public static boolean passesScreen(float smax,
-            float[] xnorth,
-            float[] xeast,
-            ArrayList<float[]> waveforms,
-            float delta,
-            float[] flimits,
-            float correlationWindowLength,
-            ArrayList<float[]> referenceWaveforms,
-            float slownessTolerance,
-            float FKQualityThreshold) {
-
-        boolean retval = true;
-        FKMeasurement measurement = new FKMeasurement(smax, NUM_SLOWNESSES,
-                xnorth,
-                xeast,
-                waveforms,
-                delta,
-                flimits[0],
-                flimits[1],
-                correlationWindowLength,
-                referenceWaveforms);
-        if (measurement.getQuality() < FKQualityThreshold) {
-            retval = false;
-        }
-        float[] sest = measurement.getSlownessEstimate();
-        float eps = sest[0] * sest[0] + sest[1] * sest[1];
-        if (Math.sqrt(eps) > slownessTolerance) {
-            retval = false;
-        }
-
-        return retval;
-    }
 }

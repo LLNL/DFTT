@@ -32,7 +32,8 @@ import java.util.Objects;
  *
  * @author dodge1
  */
-public class SeismicPhase implements Serializable{
+public class SeismicPhase implements Serializable {
+
     private final PhaseType type;
     private final String name;
     private final String description;
@@ -92,15 +93,12 @@ public class SeismicPhase implements Serializable{
         if (!Objects.equals(this.description, other.description)) {
             return false;
         }
-        if (this.type != other.type) {
-            return false;
-        }
-        return true;
+        return this.type == other.type;
     }
 
     @Override
     public String toString() {
-        return  name;
+        return name;
     }
-    
+
 }

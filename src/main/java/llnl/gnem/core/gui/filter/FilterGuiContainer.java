@@ -59,10 +59,8 @@ public class FilterGuiContainer extends PersistentPositionContainer {
         return gui;
     }
 
-
     public FilterToolbarControl getFilterToolbarControl() {
         return gui.getFilterToolbarControl();
     }
-
 
 }

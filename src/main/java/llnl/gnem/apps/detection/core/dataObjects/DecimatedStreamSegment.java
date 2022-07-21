@@ -25,10 +25,10 @@
  */
 package llnl.gnem.apps.detection.core.dataObjects;
 
-import com.oregondsp.util.TimeStamp;
-
 import java.util.ArrayList;
 import java.util.Collection;
+
+import llnl.gnem.apps.detection.util.TimeStamp;
 import llnl.gnem.core.util.StreamKey;
 import llnl.gnem.core.util.TimeT;
 import llnl.gnem.core.waveform.seismogram.BasicSeismogram;

@@ -30,7 +30,7 @@ package llnl.gnem.core.dataAccess.dataObjects;
  *
  */
 public enum SensitivityInfoTypes {
-	UNKNOWN("UNKNOWN", -1), UNSENSITIVE("UNSENSITIVE", 0);
+	UNKNOWN("UNKNOWN", -1), UNSENSITIVE("UNSENSITIVE", 0), MIXED("MIXED_SENSITIVE", 1), SENSITIVE("SENSITIVE", 2);
 
 	private final String type;
 	private final Integer level;
@@ -54,6 +54,18 @@ public enum SensitivityInfoTypes {
 
 	public boolean equals(String potentialType) {
 		return (potentialType == null) ? false : type.equalsIgnoreCase(potentialType);
+	}
+
+	public static SensitivityInfoTypes getSensitivity(String sensitivityType) {
+		if (sensitivityType != null && !sensitivityType.isEmpty()) {
+			sensitivityType = sensitivityType.replaceAll(" ", "_");
+			if (sensitivityType.equalsIgnoreCase(SensitivityInfoTypes.UNSENSITIVE.getType())) {
+				return SensitivityInfoTypes.UNSENSITIVE;
+			} else if (sensitivityType.equalsIgnoreCase(SensitivityInfoTypes.MIXED.getType())) {
+				return SensitivityInfoTypes.MIXED;
+			}
+		}
+		return SensitivityInfoTypes.SENSITIVE;
 	}
 
 }

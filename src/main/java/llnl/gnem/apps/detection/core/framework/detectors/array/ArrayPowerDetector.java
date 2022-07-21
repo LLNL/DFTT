@@ -26,8 +26,8 @@
 package llnl.gnem.apps.detection.core.framework.detectors.array;
 
 import com.oregondsp.signalProcessing.SimpleSTALTA;
-import llnl.gnem.apps.detection.core.dataObjects.ArrayConfiguration;
-import llnl.gnem.apps.detection.core.dataObjects.ArrayElement;
+
+
 import llnl.gnem.apps.detection.core.dataObjects.FKScreenParams;
 import llnl.gnem.apps.detection.core.dataObjects.SlownessRangeSpecification;
 import llnl.gnem.apps.detection.core.dataObjects.SlownessSpecification;
@@ -40,6 +40,9 @@ import llnl.gnem.apps.detection.core.dataObjects.TransformedStreamSegment;
 import llnl.gnem.apps.detection.core.framework.DetectionStatistic;
 import llnl.gnem.apps.detection.core.framework.detectors.AbstractSimpleDetector;
 import llnl.gnem.apps.detection.core.framework.detectors.DetectorInfo;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayConfiguration;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayElementInfo;
+import llnl.gnem.apps.detection.util.initialization.ProcessingPrescription;
 import llnl.gnem.core.util.StreamKey;
 
 /**
@@ -73,13 +76,20 @@ public class ArrayPowerDetector extends AbstractSimpleDetector {
         super( detectorid, sampleRate, streamName, decimatedBlockSize, specification );
 
         configuration = specification.getArrayConfiguration();
-        Collection< ? extends StreamKey> channels = specification.getStaChanList();
+        Collection<StreamKey> channels = specification.getStreamKeys();
         ArrayDetectorSpecification spec = (ArrayDetectorSpecification) getSpecification();
         SlownessSpecification slowness = spec.getSlownessSpecification();
-        Map<StreamKey, ArrayElement> ourElements = configuration.getElements(channels);
+        int jdate = ProcessingPrescription.getInstance().getMinJdateToProcess();
+        Map<StreamKey, ArrayElementInfo> ourElements = configuration.getElements(channels,jdate);
 
-        double[] delaysInSeconds = configuration.delaysInSeconds(channels, specification.getSlownessSpecification());
-        nch = channels.size();
+        double[] delaysInSeconds = new double[channels.size()];
+        int j = 0;
+        for(StreamKey key : channels){
+            ArrayElementInfo aei = ourElements.get(key);
+           double delay =  aei.delayInSeconds(specification.getSlownessSpecification().getSlownessVector());
+           delaysInSeconds[j++] = delay;
+        }
+         nch = channels.size();
 
         for (int i = 0; i < nch; i++) {
             delaysInSeconds[i] *= -1.0;
@@ -138,6 +148,7 @@ public class ArrayPowerDetector extends AbstractSimpleDetector {
         for (int i = 0; i < decimatedSegmentLength; i++) {
             beam[i] /= nch;
         }
+        // This would be a good place to write out a debug SAC file
         for (int i = 0; i < decimatedSegmentLength; i++) {
             detectionStatistic[i + offset] = STALTA.filter(beam[i] * beam[i]);
         }
@@ -152,12 +163,12 @@ public class ArrayPowerDetector extends AbstractSimpleDetector {
     
     public FKScreenConfiguration createFKScreen(FKScreenParams screenParams) {
         ArrayDetectorSpecification spec = (ArrayDetectorSpecification) getSpecification();
-        Collection< ? extends StreamKey> channels = spec.getStaChanList();
+        Collection<StreamKey> channels = spec.getStreamKeys();
         SlownessSpecification slowness = spec.getSlownessSpecification();
         SlownessRangeSpecification srs = new SlownessRangeSpecification(slowness, screenParams.getFKScreenRange());
-        Map<StreamKey, ArrayElement> ourElements = configuration.getElements(channels);
+        int jdate = ProcessingPrescription.getInstance().getMinJdateToProcess();
+        Map<StreamKey, ArrayElementInfo> ourElements = configuration.getElements(channels,jdate);
         return new FKScreenConfiguration(screenParams, srs, ourElements);
-
     }
 
     

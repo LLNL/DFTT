@@ -34,10 +34,22 @@ import java.util.Collection;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.StationInfo;
 import llnl.gnem.apps.detection.dataAccess.interfaces.StationDAO;
+
 import llnl.gnem.core.dataAccess.DataAccessException;
 import llnl.gnem.core.database.Connections;
 
+
 public abstract class DbStationDAO implements StationDAO {
+
+    @Override
+    public int getGroupForDetectionid(long detectionid) throws DataAccessException {
+        try {
+            return getGroupForDetectionidP(detectionid);
+        } catch (SQLException ex) {
+            throw new DataAccessException(ex.getMessage());
+        }
+
+    }
 
     @Override
     public Collection<StationInfo> getGroupStations(int groupid) throws DataAccessException {
@@ -48,6 +60,8 @@ public abstract class DbStationDAO implements StationDAO {
         }
     }
 
+ 
+ 
     private Collection<StationInfo> getGroupStationsInfoP(int groupid) throws SQLException {
         Collection<StationInfo> result = new ArrayList<>();
         String sql = String.format("select configid,sta,stla,stlo from %s where groupid = ?", TableNames.getGroupStationDataTable());
@@ -72,16 +86,6 @@ public abstract class DbStationDAO implements StationDAO {
         } finally {
             DetectionDAOFactory.getInstance().getConnections().checkIn(conn);
         }
-    }
-
-    @Override
-    public int getGroupForDetectionid(long detectionid) throws DataAccessException {
-        try {
-            return getGroupForDetectionidP(detectionid);
-        } catch (SQLException ex) {
-            throw new DataAccessException(ex.getMessage());
-        }
-
     }
 
     private int getGroupForDetectionidP(long detectionid) throws SQLException {
@@ -109,4 +113,14 @@ public abstract class DbStationDAO implements StationDAO {
         }
     }
 
+    private String makeQuotedStationString(Collection<String> stations) {
+        StringBuilder sb = new StringBuilder("'");
+        for (String sta : stations) {
+            sb.append(sta);
+            sb.append("','");
+        }
+        String tmp = sb.toString();
+        int idx = tmp.lastIndexOf(",'");
+        return tmp.substring(0, idx);
+    }
 }

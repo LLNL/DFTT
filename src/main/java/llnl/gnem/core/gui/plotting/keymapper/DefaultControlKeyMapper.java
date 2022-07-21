@@ -37,10 +37,11 @@ import java.awt.event.KeyEvent;
  * Copyright (C) 2004 Lawrence Livermore National Laboratory.
  */
 public class DefaultControlKeyMapper implements ControlKeyMapper {
-    public MouseMode getMouseMode( int keyCode )
+    public MouseMode getMouseMode( KeyEvent keyEvent )
     {
+        int keyCode = keyEvent.getKeyCode();
         if( keyCode == KeyEvent.VK_SHIFT ){
-            return ( MouseMode.PAN );
+            return ( MouseMode.PAN2 );
         }
         else if( keyCode == KeyEvent.VK_ESCAPE ){
             return ( MouseMode.ZOOM_ONLY );

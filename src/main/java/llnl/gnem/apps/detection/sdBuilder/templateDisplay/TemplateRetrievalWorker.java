@@ -30,11 +30,9 @@ import java.sql.Connection;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
-import llnl.gnem.apps.detection.core.framework.detectors.EmpiricalTemplate;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceTemplate;
-import llnl.gnem.apps.detection.database.DetectorDAO;
-import llnl.gnem.apps.detection.database.StreamDAO;
-import llnl.gnem.apps.detection.database.SubspaceTemplateDAO;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
+
 import llnl.gnem.apps.detection.sdBuilder.templateDisplay.projections.ProjectionModel;
 import llnl.gnem.core.database.ConnectionManager;
 import llnl.gnem.core.util.ApplicationLogger;
@@ -60,10 +58,10 @@ public class TemplateRetrievalWorker extends SwingWorker<Void, Void> {
         Connection conn = null;
         try {
             conn = ConnectionManager.getInstance().checkOut();
-            Object obj = SubspaceTemplateDAO.getInstance().getEmpiricalTemplate(conn, detectorid);
+            Object obj = DetectionDAOFactory.getInstance().getSubspaceTemplateDAO().getEmpiricalTemplate(detectorid);
             template = (SubspaceTemplate) obj;
-            streamFilter = StreamDAO.getInstance().getStreamFilter(detectorid);
-            detectorInfo = DetectorDAO.getInstance().getDetectorSourceInfo(detectorid);
+            streamFilter = DetectionDAOFactory.getInstance().getStreamDAO().getStreamFilter(detectorid);
+            detectorInfo = DetectionDAOFactory.getInstance().getDetectorDAO().getDetectorSourceInfo(detectorid);
         } finally {
             if (conn != null) {
                 ConnectionManager.getInstance().checkIn(conn);

@@ -26,7 +26,7 @@
 package llnl.gnem.apps.detection.core.framework.detectors.arrayCorrelation;
 
 import llnl.gnem.apps.detection.core.dataObjects.AbstractEmpiricalSpecification;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.core.dataObjects.TriggerPositionType;
 import java.io.IOException;
 import java.io.InputStream;

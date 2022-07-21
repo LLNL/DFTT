@@ -72,7 +72,7 @@ public class WriteSACFilesWorker extends SwingWorker<Void, Void> {
 
         CorrelatedTracesModel ctModel = CorrelatedTracesModel.getInstance();
         for (CorrelationComponent cc : ctModel.getMatchingTraces()) {
-            CorrelationTraceData td = (CorrelationTraceData) cc.getTraceData();
+            CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
             float[] plotData = td.getPlotData();
             double traceStart = td.getTime().getEpochTime();
             double nominalPickTime = td.getNominalPick().getTime();
@@ -109,7 +109,7 @@ public class WriteSACFilesWorker extends SwingWorker<Void, Void> {
             int detectionid = (int)cc.getEvent().getEvid();
             DetectionWaveforms dw = components.get(cc);
             for (CorrelationComponent cc2 : dw.getSegments()) {
-                CorrelationTraceData td = (CorrelationTraceData) cc2.getTraceData();
+                CorrelationTraceData td = (CorrelationTraceData) cc2.getCorrelationTraceData();
                 CssSeismogram tmp = new CssSeismogram(td.getBackupSeismogram());
 
                 float[] theData = td.getBackupSeismogram().getData();

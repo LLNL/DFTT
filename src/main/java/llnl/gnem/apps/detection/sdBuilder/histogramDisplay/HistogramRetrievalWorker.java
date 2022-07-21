@@ -29,7 +29,8 @@ import llnl.gnem.apps.detection.statistics.HistogramData;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
-import llnl.gnem.apps.detection.database.SubspaceDetectorDAO;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
+
 import llnl.gnem.core.util.ApplicationLogger;
 import llnl.gnem.core.util.PairT;
 
@@ -50,7 +51,7 @@ public class HistogramRetrievalWorker extends SwingWorker<Void,Void> {
 
     @Override
     protected Void doInBackground() throws Exception {
-            result = SubspaceDetectorDAO.getInstance().getHistogramData(detectorid, runid);
+            result = DetectionDAOFactory.getInstance().getSubspaceDetectorDAO().getHistogramData(detectorid, runid);
         return null;
     }
     

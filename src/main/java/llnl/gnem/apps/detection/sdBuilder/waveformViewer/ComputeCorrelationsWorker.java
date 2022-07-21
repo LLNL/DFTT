@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,21 +25,25 @@
  */
 package llnl.gnem.apps.detection.sdBuilder.waveformViewer;
 
-import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
+
 import javax.swing.SwingWorker;
+
 import llnl.gnem.apps.detection.sdBuilder.actions.CreateTemplateAction;
-import llnl.gnem.apps.detection.sdBuilder.actions.OutputClustersAction;
 import llnl.gnem.apps.detection.sdBuilder.configuration.DetectorCreationEnabler;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
-import llnl.gnem.core.correlation.*;
+import llnl.gnem.core.correlation.ChannelDataCollection;
+import llnl.gnem.core.correlation.CorrelationComponent;
+import llnl.gnem.core.correlation.CorrelationResults;
+import llnl.gnem.core.correlation.RealSequenceCorrelator;
+import llnl.gnem.core.correlation.StationEventChannelData;
 import llnl.gnem.core.correlation.clustering.AdHocClusterer;
 import llnl.gnem.core.correlation.clustering.ClusterResult;
-import llnl.gnem.core.correlation.util.*;
+import llnl.gnem.core.correlation.util.ShiftType;
 import llnl.gnem.core.gui.util.ExceptionDialog;
 import llnl.gnem.core.gui.util.ProgressDialog;
 import llnl.gnem.core.util.ApplicationLogger;
@@ -50,12 +54,12 @@ import llnl.gnem.core.util.PairT;
  * Lawrence Livermore National Laboratory.
  */
 public class ComputeCorrelationsWorker extends SwingWorker<Void, Void> {
-    
+
     private ClusterResult clusterResult;
     private final boolean fixShiftsToZero;
     private final ProgressDialog progress;
     private boolean singleSeisSubmitted;
-    
+
     public ComputeCorrelationsWorker(boolean fixShiftsToZero) {
         this.fixShiftsToZero = fixShiftsToZero;
         Collection<CorrelationComponent> matches = CorrelatedTracesModel.getInstance().getMatchingTraces();
@@ -69,11 +73,11 @@ public class ComputeCorrelationsWorker extends SwingWorker<Void, Void> {
         progress.setVisible(true);
         progress.setProgressBarIndeterminate(true);
     }
-    
+
     @Override
     protected Void doInBackground() throws Exception {
-        double windowStart = -ParameterModel.getInstance().getWindowStart();        
-        
+        double windowStart = -ParameterModel.getInstance().getWindowStart();
+
         double windowEnd = ParameterModel.getInstance().getCorrelationWindowLength() - windowStart;
         progress.setText("Accumulating data...");
         Collection<CorrelationComponent> matches = CorrelatedTracesModel.getInstance().getMatchingTraces();
@@ -82,7 +86,7 @@ public class ComputeCorrelationsWorker extends SwingWorker<Void, Void> {
         for (CorrelationComponent cc : matches) {
             secdCollection.add(new StationEventChannelData(cc));
         }
-        
+
         if (!secdCollection.isEmpty()) {
             PairT<Double, Double> windowOffsets = new PairT<>(windowStart, windowEnd);
             ChannelDataCollection cdc = new ChannelDataCollection(secdCollection, windowOffsets);
@@ -97,14 +101,14 @@ public class ComputeCorrelationsWorker extends SwingWorker<Void, Void> {
                 clusterResult = ahc.cluster(result, matches, ParameterModel.getInstance().getCorrelationThreshold(), fixShiftsToZero);
                 progress.setText("Done clustering.");
                 if (clusterResult.isEmpty()) {
-                    result.getCorrelations().print(10, 10);
+                    System.out.println(result.getCorrelations().get(10, 10));
                 }
             }
         }
         return null;
-        
+
     }
-    
+
     @Override
     public void done() {
         try {
@@ -112,10 +116,8 @@ public class ComputeCorrelationsWorker extends SwingWorker<Void, Void> {
             get();
             if (clusterResult != null) {
                 CorrelatedTracesModel.getInstance().updateFromClusterResult(clusterResult);
-                OutputClustersAction.getInstance(this).setEnabled(true);
                 DetectorCreationEnabler.getInstance().setWaveformsAvailable(true);
-            }
-            else if( singleSeisSubmitted ){
+            } else if (singleSeisSubmitted) {
                 CreateTemplateAction.getInstance(this).setEnabled(true);
                 DetectorCreationEnabler.getInstance().hasBeenCorrelated(true);
                 DetectorCreationEnabler.getInstance().setWaveformsAvailable(true);

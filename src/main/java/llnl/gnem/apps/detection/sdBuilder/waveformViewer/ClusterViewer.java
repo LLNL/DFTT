@@ -48,6 +48,7 @@ import llnl.gnem.apps.detection.sdBuilder.picking.PredictedPhasePick;
 import llnl.gnem.apps.detection.sdBuilder.picking.PredictedPhasePickModel;
 import llnl.gnem.core.correlation.CorrelationComponent;
 import llnl.gnem.core.correlation.CorrelationTraceData;
+import llnl.gnem.core.correlation.clustering.GroupData;
 import llnl.gnem.core.correlation.util.*;
 import llnl.gnem.core.gui.plotting.HorizAlignment;
 import llnl.gnem.core.gui.plotting.HorizPinEdge;
@@ -138,15 +139,17 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
 
     public Collection<CorrelationComponent> getVisibleTraces() {
 
-        double ymin = subplot.getYaxis().getMin();
-        double ymax = subplot.getYaxis().getMax();
         ArrayList<CorrelationComponent> result = new ArrayList<>();
-        for (Line line : lineCenterValueMap.keySet()) {
-            double centerValue = lineCenterValueMap.get(line);
-            if (centerValue >= ymin && centerValue <= ymax) {
-                CorrelationComponent cc = lineCompMap.get(line);
-                if (cc != null) {
-                    result.add(cc);
+        if (subplot != null && lineCenterValueMap != null) {
+            double ymin = subplot.getYaxis().getMin();
+            double ymax = subplot.getYaxis().getMax();
+            for (Line line : lineCenterValueMap.keySet()) {
+                double centerValue = lineCenterValueMap.get(line);
+                if (centerValue >= ymin && centerValue <= ymax) {
+                    CorrelationComponent cc = lineCompMap.get(line);
+                    if (cc != null) {
+                        result.add(cc);
+                    }
                 }
             }
         }
@@ -170,6 +173,20 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
         repaint();
     }
 
+    public void updateTraceColors() {
+        Collection<CorrelationComponent> data = CorrelatedTracesModel.getInstance().getMatchingTraces();
+        for (CorrelationComponent cc : data) {
+            CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
+            long detectionid = cc.getEvent().getEvid();
+            Color color = CorrelatedTracesModel.getInstance().getTriggerClassification((int) detectionid).getTraceDisplayColor();
+            Line line = compLineMap.get(cc);
+            if (line != null) {
+                line.setColor(color);
+            }
+        }
+        repaint();
+    }
+
     @Override
     public void dataWereLoaded(boolean replotData) {
         getPlotRegion().setBackgroundColor(Color.white);
@@ -177,6 +194,11 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
         clear();
         subplot = addSubplot();
 
+        GroupData gd = CorrelatedTracesModel.getInstance().getCurrent();
+        Color residualColor = null;
+        if (gd != null && gd.isResidualGroup()) {
+            residualColor = Color.DARK_GRAY;
+        }
         Collection<CorrelationComponent> data = CorrelatedTracesModel.getInstance().getMatchingTraces();
         if (data.isEmpty()) {
             return;
@@ -189,12 +211,12 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
         double maxEnd = -minStart;
         CorrelationComponent component = data.iterator().next();
         String text = String.format(" %d detections on %s(%3.0f Hz)",
-                data.size(), component.getTraceData().getName(), component.getSeismogram().getSamprate());
+                data.size(), component.getCorrelationTraceData().getName(), component.getSeismogram().getSamprate());
         getTitle().setText(text);
 
         for (CorrelationComponent cc : data) {
 
-            CorrelationTraceData td = (CorrelationTraceData) cc.getTraceData();
+            CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
 
             float[] plotData = td.getPlotData();
             double traceStart = td.getTime().getEpochTime();
@@ -208,6 +230,9 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
             lineCenterValueMap.put(line, centerValue);
             long detectionid = component.getEvent().getEvid();
             Color color = CorrelatedTracesModel.getInstance().getTriggerClassification((int) detectionid).getTraceDisplayColor();
+            if (residualColor != null) {
+                color = residualColor;
+            }
             line.setColor(color);
             subplot.AddPlotObject(line);
             line.setSelectable(true);
@@ -380,13 +405,19 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
             WindowDurationChangedState wdcs = (WindowDurationChangedState) obj;
             if (wdcs.getWindowHandle().getAssociatedPick() == corrWindowPickLine) {
                 double delta = wdcs.getDeltaD();
-                ParameterModel.getInstance().setCorrelationWindowLength(ParameterModel.getInstance().getCorrelationWindowLength() + delta);
+                double newLength = ParameterModel.getInstance().getCorrelationWindowLength() + delta;
+                ClusterBuilderFrame.getInstance().setCorrelationWindowLength(newLength);
+                ParameterModel.getInstance().setCorrelationWindowLength(newLength);
             }
         } else if (obj instanceof MouseMode) {
             // System.out.println( "owner.setMouseModeMessage((MouseMode) obj);");
         } else if (obj instanceof JPlotKeyMessage) {
             JPlotKeyMessage msg = (JPlotKeyMessage) obj;
             KeyEvent e = msg.getKeyEvent();
+            if (e.getKeyChar() == '+') {
+                zoomInAroundMouse(msg);
+                return;
+            }
             //       ControlKeyMapper controlKeyMapper = msg.getControlKeyMapper();
             int keyCode = e.getKeyCode();
 
@@ -410,6 +441,8 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
             VPickLine vpl = pms.getPickLine();
             if (corrWindowPickLine != null && vpl == corrWindowPickLine) {
                 ParameterModel.getInstance().adjustWindowStart(deltaT);
+                double newStart = ParameterModel.getInstance().getWindowStart();
+                ClusterBuilderFrame.getInstance().setCorrelationWindowStart(newStart);
             } else {
                 PhasePick dpp = pickLinePickMap.get(vpl);
                 if (dpp != null) {
@@ -426,7 +459,7 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
                 if (cc != null) {
                     Coordinate coord = pci.getCoordinate();
                     double pointerXvalue = coord.getWorldC1();
-                    CorrelationTraceData td = (CorrelationTraceData) cc.getTraceData();
+                    CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
                     double nominalPickTime = td.getNominalPick().getTime();
                     double ccShift = cc.getShift();
                     double pickEpochTime = nominalPickTime - ccShift + pointerXvalue;
@@ -441,7 +474,7 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
                         detPhasePickVplMap.remove(dpp);
                         subplot.DeletePlotObject(vpl);
                     }
-                    dpp = DetectionPhasePickModel.getInstance().addSinglePick(cc, pickEpochTime, pickStd);
+                    dpp = DetectionPhasePickModel.getInstance().addSinglePick(cc, pickEpochTime, pickStd, td.getStreamKey());
                     if (dpp != null) {
                         LineBounds bounds = line.getLineBounds();
                         double traceStart = td.getTime().getEpochTime();
@@ -481,7 +514,7 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
     }
 
     private void addNominalPick(CorrelationComponent cc, double centerValue) {
-        CorrelationTraceData td = (CorrelationTraceData) cc.getTraceData();
+        CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
         NominalArrival arrival = td.getNominalPick();
         String phase = arrival.getPhase();
         String auth = arrival.getAuth();
@@ -527,7 +560,7 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
         for (CorrelationComponent cc : data) {
             Line line = compLineMap.get(cc);
             if (line != null) {
-                float[] newData = cc.getTraceData().getPlotData();
+                float[] newData = cc.getCorrelationTraceData().getPlotData();
                 if (newData != null && newData.length == line.length()) {
                     line.replaceYarray(newData);
                 }
@@ -646,17 +679,21 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
             subplot.DeletePlotObject(vpl);
         }
         pickLinePickMap.clear();
+        detPhasePickVplMap.clear();
         Map<CorrelationComponent, Collection<PhasePick>> ccPickMap = DetectionPhasePickModel.getInstance().getAllPicks();
         for (CorrelationComponent cc : ccPickMap.keySet()) {
             Line line = compLineMap.get(cc);
             if (line != null) {
+
                 Collection<PhasePick> picks = ccPickMap.get(cc);
                 LineBounds bounds = line.getLineBounds();
-                CorrelationTraceData td = (CorrelationTraceData) cc.getTraceData();
+                CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
                 double ccShift = cc.getShift();
                 double traceStart = td.getTime().getEpochTime();
                 for (PhasePick dpp : picks) {
-                    createSinglePick(dpp, traceStart, ccShift, bounds);
+                    if (cc.getStreamKey().equals(dpp.getKey())) {
+                        createSinglePick(dpp, traceStart, ccShift, bounds);
+                    }
                 }
             }
         }
@@ -692,7 +729,7 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
             if (line != null) {
                 Collection<PredictedPhasePick> picks = ccPickMap.get(cc);
                 LineBounds bounds = line.getLineBounds();
-                CorrelationTraceData td = (CorrelationTraceData) cc.getTraceData();
+                CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
                 double ccShift = cc.getShift();
                 double traceStart = td.getTime().getEpochTime();
                 for (PredictedPhasePick dpp : picks) {
@@ -720,6 +757,16 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
             subplot.DeletePlotObject(vpl);
         }
         pickLinePickMap.clear();
+        repaint();
+    }
+
+    void setCorrelationWindowLength(double duration) {
+        corrWindowPickLine.getWindow().setDuration(duration);
+        repaint();
+    }
+
+    void setCorrelationWindowStart(double newStart) {
+        corrWindowPickLine.setXval(newStart);
         repaint();
     }
 }

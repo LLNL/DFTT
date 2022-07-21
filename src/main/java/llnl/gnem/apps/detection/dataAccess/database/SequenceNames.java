@@ -29,28 +29,53 @@ import llnl.gnem.core.database.ConnectedUser;
 
 public class SequenceNames {
 
-    private static final String TMP_SCHEMA = System.getProperty("schema_name");
-    private static String SCHEMA = TMP_SCHEMA != null && !TMP_SCHEMA.isEmpty() ? TMP_SCHEMA : "detector";
-
-    public static void setSchemaFromConnectedUser() {
-        SCHEMA = ConnectedUser.getInstance().getUser();
-    }
 
     private static final String PICKID_SEQ = "PICKID";
     private static final String FILTERID_SEQ = "FILTERID";
-   private static final String EVENTID_SEQ = "EVENTID";
-
+    private static final String EVENTID_SEQ = "EVENTID";
+    private static final String TRIGGERID_SEQ = "TRIGGERID";
+    private static final String DETECTIONID_SEQ = "DETECTIONID";
+    private static final String CONFIGID_SEQ = "CONFIGID";
+    private static final String STREAMID_SEQ = "STREAMID";
+    private static final String DETECTORID_SEQ = "DETECTORID";
+    private static final String RUNID_SEQ = "RUNID";
 
     public static String getPickidSequenceName() {
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + PICKID_SEQ : PICKID_SEQ;
+        return PICKID_SEQ;
     }
 
     public static String getFilterdSequenceName() {
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + FILTERID_SEQ : FILTERID_SEQ;
+        return  FILTERID_SEQ;
     }
 
     public static String getEventidSequenceName() {
-        return SCHEMA != null && !SCHEMA.isEmpty() ? SCHEMA + "." + EVENTID_SEQ : EVENTID_SEQ;
+        return  EVENTID_SEQ;
+    }
+
+    public static String getTriggeridSequenceName() {
+        return TRIGGERID_SEQ;
     }
     
+    public static String getDetectionidSequenceName(){
+        return DETECTIONID_SEQ;
+    }
+
+    public static String getConfigidSequenceName()
+    {
+        return  CONFIGID_SEQ;
+    }
+    
+    public static String getStreamidSequenceName()
+    {
+        return  STREAMID_SEQ;
+    }
+    
+    public static String getDetectoridSequenceName()
+    {
+        return  DETECTORID_SEQ;
+    }
+
+    public static String getRunidSequenceName() {
+        return  RUNID_SEQ;
+    }
 }

@@ -27,8 +27,8 @@ package llnl.gnem.apps.detection.sdBuilder.allStations;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Objects;
-import llnl.gnem.apps.detection.dataAccess.dataobjects.EventInfo;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.StationInfo;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.OriginInfo;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.PhasePick;
@@ -43,6 +43,7 @@ import llnl.gnem.core.waveform.seismogram.CssSeismogram;
  * @author dodge1
  */
 public class EventSeismogramData {
+
     private final Collection<OriginInfo> origins;
     private final StationInfo stationInfo;
     private final BaseTraceData traceData;
@@ -50,17 +51,17 @@ public class EventSeismogramData {
     private final Collection<PhasePick> picks;
     private final Collection<Integer> picksToDelete;
 
-    public EventSeismogramData(Collection<OriginInfo> origins, 
-            StationInfo stationInfo, 
+    public EventSeismogramData(Collection<OriginInfo> origins,
+            StationInfo stationInfo,
             CssSeismogram seis,
             Collection<ShortDetectionSummary> detections,
             Collection<PhasePick> picks) {
         this.origins = new ArrayList<>(origins);
         this.stationInfo = stationInfo;
-        this.traceData = new BaseTraceData(seis,WaveformDataType.unknown, WaveformDataUnits.unknown);
+        this.traceData = new BaseTraceData(seis, WaveformDataType.unknown, WaveformDataUnits.unknown);
         this.detections = new ArrayList<>(detections);
-        this.picks = new ArrayList<>(picks);
-       picksToDelete = new ArrayList<>();
+        this.picks = new HashSet<>(picks);
+        picksToDelete = new ArrayList<>();
     }
 
     public Collection<Integer> getPicksToDelete() {
@@ -143,5 +144,5 @@ public class EventSeismogramData {
         }
         return true;
     }
-    
+
 }

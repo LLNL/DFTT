@@ -26,6 +26,7 @@
 package llnl.gnem.apps.detection.dataAccess.interfaces;
 
 import java.util.Collection;
+import java.util.Map;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.StationInfo;
 import llnl.gnem.core.dataAccess.DataAccessException;
 
@@ -38,4 +39,7 @@ public interface StationDAO {
     Collection<StationInfo> getGroupStations(int groupid) throws DataAccessException;
 
     int getGroupForDetectionid(long detectionid) throws DataAccessException;
+ 
+    
+   
 }

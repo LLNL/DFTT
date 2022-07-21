@@ -119,8 +119,8 @@ public class ProgressDialogBase extends JFrame implements ProgressMonitor{
         getContentPane().setLayout(new SpringLayout());
         getContentPane().add(scrollPane, BorderLayout.CENTER);
         
-        setSize(340, 110);
-        setPreferredSize(new Dimension(340, 110));
+        setSize(380, 130);
+        setPreferredSize(new Dimension(380, 130));
         SpringUtilities.makeCompactGrid(getContentPane(),
                         1, 1, // rows, cols
                         6, 6, // initX, initY

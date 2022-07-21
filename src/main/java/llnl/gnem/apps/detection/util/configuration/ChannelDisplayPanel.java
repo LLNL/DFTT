@@ -27,10 +27,13 @@ package llnl.gnem.apps.detection.util.configuration;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.*;
+import llnl.gnem.core.dataAccess.dataObjects.continuous.StreamAvailability;
 import llnl.gnem.core.gui.util.SpringUtilities;
+import llnl.gnem.core.util.StreamKey;
 
 /**
  *
@@ -38,38 +41,37 @@ import llnl.gnem.core.gui.util.SpringUtilities;
  */
 public class ChannelDisplayPanel extends JPanel {
 
-    private final Map<JCheckBox, ChanInfo> chkBoxChanMap;
+    Map<JCheckBox, StreamAvailability> items;
 
-    public ChannelDisplayPanel(Collection<ChanInfo> channels, String refsta) {
+    public ChannelDisplayPanel(Collection<StreamAvailability> candidates) {
         super(new SpringLayout());
-        String target = refsta;
-        if( target == null)
-            target = "these stations";
-        String text = String.format("<html><h2>These are possible channels (FDSN naming convention) that may be used with %s</h2><br>Please choose one or more.</html>", target);
-        JLabel label = new JLabel(text);
-        add(label);
-        chkBoxChanMap = new HashMap<JCheckBox, ChanInfo>();
-        for (ChanInfo ci : channels) {
-            JCheckBox check = new JCheckBox(ci.toString());
-            add(check);
-            chkBoxChanMap.put(check, ci);
+        items = new HashMap<>();
+        int index = 0;
+        for(StreamAvailability sa : candidates){
+            JCheckBox jcb = new JCheckBox(sa.toString());
+            add(jcb);
+            items.put(jcb,sa);
+            ++index;
         }
-
         this.setBorder(BorderFactory.createTitledBorder("Channel Selection"));
         SpringUtilities.makeCompactGrid(this,
-                channels.size() + 1, 1, //rows, cols
+                index, 1, //rows, cols
                 5, 5, //initX, initY
                 5, 5);       //xPad, yPad
 
     }
-
-    Collection<? extends ChanInfo> getSelectedChannels() {
-        Collection<ChanInfo> result = new ArrayList<ChanInfo>();
-        for (JCheckBox box : chkBoxChanMap.keySet()) {
-            if (box.isSelected()) {
-                result.add(chkBoxChanMap.get(box));
+    
+    public Collection<StreamKey> getSelectedChannels()
+    {
+        ArrayList<StreamKey> result = new ArrayList<>();
+        for(JCheckBox jcb : items.keySet()){
+            if(jcb.isSelected()){
+                StreamAvailability sa = items.get(jcb);
+                result.add(sa.getKey());
             }
         }
+        Collections.sort(result);
         return result;
     }
+
 }

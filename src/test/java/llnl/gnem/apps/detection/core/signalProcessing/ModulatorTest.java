@@ -6,41 +6,44 @@
 
 package llnl.gnem.apps.detection.core.signalProcessing;
 
-import llnl.gnem.apps.detection.core.TestUtilsX;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import llnl.gnem.apps.detection.core.TestUtilsX;
 
 /**
  *
  * @author dodge1
  */
 public class ModulatorTest {
-    
+
     public ModulatorTest() {
     }
-    
+
     @BeforeClass
     public static void setUpClass() {
     }
-    
+
     @AfterClass
     public static void tearDownClass() {
     }
-    
+
     @Before
     public void setUp() {
     }
-    
+
     @After
     public void tearDown() {
     }
 
-    
     /**
      * Test of modulate method, of class Modulator.
      */
@@ -58,23 +61,19 @@ public class ModulatorTest {
         z[1] = y;
         Modulator mod = new Modulator(1, 37, -1);
         mod.modulate(z);
-       
-        try{
-        ArrayList<Float> xList = new TestUtilsX().getStoredFloatArray("/detection/core/signalProcessing/ModulatorX.txt");
-        ArrayList<Float> yList = new TestUtilsX().getStoredFloatArray("/detection/core/signalProcessing/ModulatorY.txt");
+
+        try {
+            ArrayList<Float> xList = new TestUtilsX().getStoredFloatArray("/detection/core/signalProcessing/ModulatorX.txt");
+            ArrayList<Float> yList = new TestUtilsX().getStoredFloatArray("/detection/core/signalProcessing/ModulatorY.txt");
             for (int j = 0; j < 100; j++) {
                 assertEquals(x[j], xList.get(j), 0.0001f);
                 assertEquals(y[j], yList.get(j), 0.0001f);
             }
-        
-        }
-        catch( Exception ex )
-        {
+
+        } catch (Exception ex) {
             fail("Failed retrieving resources.");
         }
-        
+
     }
 
-   
-    
 }

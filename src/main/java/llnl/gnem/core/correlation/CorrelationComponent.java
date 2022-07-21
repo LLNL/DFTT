@@ -27,21 +27,16 @@ package llnl.gnem.core.correlation;
 
 import llnl.gnem.core.seismicData.EventInfo;
 import llnl.gnem.core.correlation.util.NominalArrival;
-import llnl.gnem.core.dataAccess.dataObjects.StreamEpochInfo;
-import llnl.gnem.core.gui.map.stations.StationInfo;
-import llnl.gnem.core.metadata.site.core.CssSite;
-import llnl.gnem.core.util.Geometry.EModel;
 import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.waveform.components.BaseSingleComponent;
-import llnl.gnem.core.waveform.components.ComponentIdentifier;
-import llnl.gnem.core.waveform.components.RotationStatus;
-import llnl.gnem.core.waveform.responseProcessing.TransferStatus;
+import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.core.waveform.filter.StoredFilter;
+import llnl.gnem.core.waveform.seismogram.CssSeismogram;
 
 /**
  *
  * @author dodge1
  */
-public class CorrelationComponent extends BaseSingleComponent implements Comparable {
+public class CorrelationComponent implements Comparable { //extends BaseSingleComponent
 
     private final CorrelationEventInfo event;
     private double shift;
@@ -52,9 +47,9 @@ public class CorrelationComponent extends BaseSingleComponent implements Compara
     private final Double deast;
     private final boolean refsta;
     private final boolean element;
+    private CorrelationTraceData correlationTraceData;
 
     public CorrelationComponent(CorrelationComponent other) {
-        super(other);
         event = new CorrelationEventInfo(other.event);
         shift = other.shift;
         correlation = other.correlation;
@@ -64,6 +59,10 @@ public class CorrelationComponent extends BaseSingleComponent implements Compara
         deast = other.deast;
         refsta = other.refsta;
         element = other.element;
+    }
+
+    public CssSeismogram getSeismogram() {
+        return correlationTraceData.getSeismogram();
     }
 
     /**
@@ -101,43 +100,72 @@ public class CorrelationComponent extends BaseSingleComponent implements Compara
         return element;
     }
 
-    public CorrelationComponent(StationInfo stationInfo,
-            ComponentIdentifier identifier,
-            CorrelationTraceData ctd,
-            TransferStatus transferStatus,
-            RotationStatus rotationStatus,
-            EventInfo event, StreamEpochInfo sei) {
-        super(stationInfo, identifier, transferStatus, rotationStatus, ctd, sei);
-        this.event = new CorrelationEventInfo(event);
-        shift = 0;
-        correlation = 0;
-        if (stationInfo != null && stationInfo instanceof CssSite) {
-            CssSite site = (CssSite) stationInfo;
-            refstaName = site.getRefsta();
-            dnorth = site.getDnorth();
-            deast = site.getDeast();
-            refsta = site.isArrayRefsta();
-            element = site.isNonRefstaArrayElement();
-        } else {
-            refstaName = null;
-            dnorth = null;
-            deast = null;
-            refsta = false;
-            element = false;
-
-        }
+    public CorrelationTraceData getCorrelationTraceData() {
+        return correlationTraceData;
     }
 
-    public CorrelationComponent(BaseSingleComponent source, CorrelationEventInfo event) {
-        super(source);
-        this.event = event;
+    public double estimatePickStdErr(double time) {
+        return correlationTraceData.estimatePickStdErr(time);
+    }
+
+    public void applyFilter(StoredFilter filter) {
+        correlationTraceData.applyFilter(filter);
+    }
+
+    public void unApplyFilter() {
+        correlationTraceData.unApplyFilter();
+    }
+
+    public void removeTrend() {
+        correlationTraceData.removeTrend();
+    }
+
+    public void removeMean() {
+        correlationTraceData.removeMean();
+    }
+
+    public void applyTaper(double taperPercent) {
+        correlationTraceData.taper(taperPercent);
+    }
+
+    public void resample(double newRate) {
+        correlationTraceData.resample(newRate);
+    }
+
+    public Integer getFilterid() {
+        StoredFilter filter = correlationTraceData.getCurrentFilter();
+        return filter != null ? filter.getFilterid() : null;
+    }
+
+    public float[] getSegment(double start, double duration) {
+        return correlationTraceData.getSegment(start, duration);
+    }
+
+    public CorrelationComponent(
+            CorrelationTraceData ctd, EventInfo event) {
+        this.event = new CorrelationEventInfo(event);
+        this.correlationTraceData = ctd;
         shift = 0;
         correlation = 0;
+
         refstaName = null;
         dnorth = null;
         deast = null;
         refsta = false;
         element = false;
+
+    }
+
+    public CorrelationComponent( CorrelationTraceData ctd, EventInfo event, String refstaName, Double dnorth, Double deast) {
+        this.event = new CorrelationEventInfo(event);
+        this.correlationTraceData = ctd;
+        shift = 0;
+        correlation = 0;
+        this.refstaName = refstaName;
+        this.dnorth = dnorth;
+        this.deast = deast;
+        refsta = true;
+        element = true;
     }
 
     public boolean isArrayComponent() {
@@ -148,13 +176,12 @@ public class CorrelationComponent extends BaseSingleComponent implements Compara
         return event;
     }
 
+    public StreamKey getStreamKey() {
+        return correlationTraceData.getStreamKey();
+    }
+
     public double getDegDist() {
-        if (event != null && this.getStationInfo() != null) {
-            return EModel.getDeltaWGS84(getEvent().getLat(), getEvent().getLon(),
-                    getStationInfo().getLat(), getStationInfo().getLon());
-        } else {
-            return -999.0;
-        }
+        return -999.0;
     }
 
     public void setCorrelation(double correlation) {
@@ -182,26 +209,19 @@ public class CorrelationComponent extends BaseSingleComponent implements Compara
     }
 
     public NominalArrival getNominalPick() {
-        CorrelationTraceData ctd = (CorrelationTraceData) getTraceData();
-        return ctd.getNominalPick();
-    }
-
-    public String getChan() {
-        return getTraceData().getChan();
+        return this.correlationTraceData.getNominalPick();
     }
 
     public boolean containsWindow() {
-        CorrelationProcessingParamsInitial cls = new CorrelationProcessingParamsInitial();
 
         double prePhaseOffset = 5; // 
         double postPhaseOffset = 10;
 
-        CorrelationTraceData ctd = (CorrelationTraceData) getTraceData();
-        NominalArrival arrival = ctd.getNominalPick();
+        NominalArrival arrival = correlationTraceData.getNominalPick();
         double start = arrival.getTime() - prePhaseOffset;
         double end = arrival.getTime() + postPhaseOffset;
         Epoch epoch = new Epoch(start, end);
-        return ctd.getSeismogram().contains(epoch, true);
+        return correlationTraceData.getSeismogram().contains(epoch, true);
     }
 
     @Override
@@ -214,5 +234,9 @@ public class CorrelationComponent extends BaseSingleComponent implements Compara
         } else {
             return 0;
         }
+    }
+
+    long getWfid() {
+        return correlationTraceData.getIdentifier();
     }
 }

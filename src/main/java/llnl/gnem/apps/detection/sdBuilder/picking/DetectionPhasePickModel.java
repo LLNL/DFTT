@@ -28,13 +28,16 @@ package llnl.gnem.apps.detection.sdBuilder.picking;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.PhasePick;
 import llnl.gnem.apps.detection.sdBuilder.DetectionWaveforms;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
 import llnl.gnem.core.correlation.CorrelationComponent;
 import llnl.gnem.core.correlation.CorrelationTraceData;
+import llnl.gnem.core.util.StreamKey;
 
 /**
  *
@@ -44,7 +47,7 @@ public class DetectionPhasePickModel {
 
     private String currentPhase = "NONE";
     private final Map<String, Double> phaseTimeMap;
-    private final Map<CorrelationComponent, Collection<PhasePick>> corrCompPhasePickMap;
+    private final Map<CorrelationComponent, Set<PhasePick>> corrCompPhasePickMap;
     private final Collection<Integer> deletedPicks;
 
     private DetectionPhasePickModel() {
@@ -69,67 +72,83 @@ public class DetectionPhasePickModel {
         return new ArrayList<>(deletedPicks);
     }
 
-    public void createPickForCurrentPhase(double pickTime, Double pickStd) {
-        phaseTimeMap.put(currentPhase, pickTime);
-        Collection<CorrelationComponent> data = CorrelatedTracesModel.getInstance().getMatchingTraces();
-        for (CorrelationComponent cc : data) {
-            CorrelationTraceData td = (CorrelationTraceData) cc.getTraceData();
-
-            double nominalPickTime = td.getNominalPick().getTime();
-            double ccShift = cc.getShift();
-            double detectionTime = nominalPickTime - ccShift + pickTime;
-            addSinglePick(cc, detectionTime, pickStd);
+    public void createMultiplePicksForCurrentPhase(double relativePickTime, Double pickStd, StreamKey key, Collection<CorrelationComponent> channels) {
+        phaseTimeMap.put(currentPhase, relativePickTime);
+//        Collection<CorrelationComponent> data = CorrelatedTracesModel.getInstance().getMatchingTraces(sta, chan);
+        for (CorrelationComponent cc : channels) {
+            CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
+            if (td.getStreamKey().equals(key)) {
+                double detectionTime = td.getNominalPick().getTime();
+                double ccShift = cc.getShift();
+                double pickEpochTime = detectionTime - ccShift + relativePickTime;
+                addSinglePick(cc, pickEpochTime, pickStd, key);
+            }
         }
 
         CorrelatedTracesModel.getInstance().notifyViewsPicksChanged();
     }
 
-    public void adjustAllPickTimesForPhase(String phase, double deltaT) {
+    public void adjustAllPickTimesForPhase(String phase, double deltaT, StreamKey key) {
 
         for (CorrelationComponent cc : corrCompPhasePickMap.keySet()) {
-            Collection<PhasePick> detPicks = corrCompPhasePickMap.get(cc);
-            Collection<PhasePick> replacement = new ArrayList<>();
-            Iterator<PhasePick> it = detPicks.iterator();
-            while (it.hasNext()) {
-                PhasePick dpp = it.next();
-                if (dpp.getPhase().equals(phase)) {
-                    replacement.add(new PhasePick(dpp.getPickid(), dpp.getConfigid(), dpp.getDetectionid(), phase, dpp.getTime() + deltaT, dpp.getStd()));
-                    it.remove();
+            if (cc.getStreamKey().equals(key)) {
+                // get all picks for this station-chan...
+                Set<PhasePick> detPicks = corrCompPhasePickMap.get(cc);
+                for (PhasePick dpp : detPicks) {
+                    if (dpp.getPhase().equals(phase)) {
+                        dpp.adjustPickTime(deltaT);
+                    }
                 }
             }
-            detPicks.addAll(replacement);
 
         }
         CorrelatedTracesModel.getInstance().notifyViewsPicksChanged();
     }
 
     public void clear() {
+        deletedPicks.clear();
         phaseTimeMap.clear();
         corrCompPhasePickMap.clear();
-        deletedPicks.clear();
         CorrelatedTracesModel.getInstance().notifyViewsPicksRemoved();
     }
-    
-    public PhasePick getPickForComponentAndPhase(CorrelationComponent cc, String phase){
+
+    public void deleteAllPicks() {
+        for (CorrelationComponent cc : corrCompPhasePickMap.keySet()) {
+            Collection<PhasePick> picks = corrCompPhasePickMap.get(cc);
+            for (PhasePick pp : picks) {
+                int pickid = pp.getPickid();
+                if (pickid > 0) {
+                    deletedPicks.add(pickid);
+                }
+            }
+        }
+        phaseTimeMap.clear();
+        corrCompPhasePickMap.clear();
+        CorrelatedTracesModel.getInstance().notifyViewsPicksRemoved();
+    }
+
+    public PhasePick getPickForComponentAndPhase(CorrelationComponent cc, String phase) {
         Collection<PhasePick> picks = corrCompPhasePickMap.get(cc);
-        if( picks == null){
+        if (picks == null) {
             return null;
         }
-        for( PhasePick dpp : picks){
-            if(dpp.getPhase().equals(phase)){
+        for (PhasePick dpp : picks) {
+            if (dpp.getPhase().equals(phase)) {
                 return dpp;
             }
         }
         return null;
     }
 
-    public PhasePick addSinglePick(CorrelationComponent cc, double detectionTime, Double pickStd) {
+    public PhasePick addSinglePick(CorrelationComponent cc, double detectionTime, Double pickStd, StreamKey key) {
         int detectionid = (int) cc.getEvent().getEvid();
         int configid = CorrelatedTracesModel.getInstance().getConfigid();
-        Collection<PhasePick> picks = corrCompPhasePickMap.get(cc);
+
+        //Get or create the collection of picks for this component...
+        Set<PhasePick> picks = corrCompPhasePickMap.get(cc);
 
         if (picks == null) {
-            picks = new ArrayList<>();
+            picks = new HashSet<>();
             corrCompPhasePickMap.put(cc, picks);
         }
 
@@ -137,11 +156,14 @@ public class DetectionPhasePickModel {
         Iterator<PhasePick> it = picks.iterator();
         while (it.hasNext()) {
             PhasePick dpp = it.next();
-            if (dpp.getDetectionid() != null && dpp.getDetectionid() == detectionid && dpp.getPhase().equals(currentPhase)) {
+            if (dpp.getDetectionid() != null && dpp.getDetectionid() == detectionid && dpp.getPhase().equals(currentPhase) && dpp.getKey().equals(key) ) {
                 it.remove();
+                if (dpp.getPickid() > 0) {
+                    deletedPicks.add(dpp.getPickid());
+                }
             }
         }
-        PhasePick dpp = new PhasePick(-1,configid, detectionid, currentPhase, detectionTime, pickStd);
+        PhasePick dpp = new PhasePick(-1, configid, detectionid, key, currentPhase, detectionTime, pickStd);
         picks.add(dpp);
         return dpp;
     }
@@ -162,36 +184,35 @@ public class DetectionPhasePickModel {
         }
 
         for (DetectionWaveforms dw : allWaveforms) {
-            Collection<PhasePick> nonDetectionPicks = dw.getAssociatedPicks();
             for (CorrelationComponent cc : dw.getSegments()) {
                 int detectionid = (int) cc.getEvent().getEvid();
-                Collection<PhasePick> picks = detectionPickMap.get(detectionid);
-                if (picks != null) {
-                    picks.addAll(nonDetectionPicks);
-                    corrCompPhasePickMap.put(cc, picks);
-                }
-                else if(!nonDetectionPicks.isEmpty()){
-                    corrCompPhasePickMap.put(cc, nonDetectionPicks);
+                Collection<PhasePick> tmp = detectionPickMap.get(detectionid);
+                if (tmp != null && !tmp.isEmpty()) {
+                    Set<PhasePick> picks = new HashSet<>();
+                    for (PhasePick pp : tmp) {
+                        if (pp.getKey().equals(cc.getStreamKey())) {
+                            picks.add(pp);
+                        }
+                    }
+                    if (!picks.isEmpty()) {
+                        corrCompPhasePickMap.put(cc, picks);
+                    }
                 }
             }
         }
     }
 
-    public void adjustAllPickStdValuesForPhase(String phase, double deltaT) {
+    public void adjustAllPickStdValuesForPhase(String phase, double deltaT, StreamKey key) {
         for (CorrelationComponent cc : corrCompPhasePickMap.keySet()) {
-            Collection<PhasePick> detPicks = corrCompPhasePickMap.get(cc);
-            Collection<PhasePick> replacement = new ArrayList<>();
-            Iterator<PhasePick> it = detPicks.iterator();
-            while (it.hasNext()) {
-                PhasePick dpp = it.next();
-                if (dpp.getPhase().equals(phase)) {
-                    replacement.add(new PhasePick(dpp.getPickid(), dpp.getConfigid(), 
-                            dpp.getDetectionid(), phase, dpp.getTime(), dpp.getStd() + deltaT));
-                    it.remove();
+            if (cc.getStreamKey().equals(key)) {
+                Set<PhasePick> detPicks = corrCompPhasePickMap.get(cc);
+
+                for (PhasePick dpp : detPicks) {
+                    if (dpp.getPhase().equals(phase) && dpp.getKey().equals(key) ) {
+                        dpp.adjustStd(deltaT);
+                    }
                 }
             }
-            detPicks.addAll(replacement);
-
         }
         CorrelatedTracesModel.getInstance().notifyViewsPicksChanged();
     }
@@ -201,9 +222,7 @@ public class DetectionPhasePickModel {
             Collection<PhasePick> detpicks = corrCompPhasePickMap.get(cc);
             for (PhasePick detPick : detpicks) {
                 if (detPick.equals(dpp)) {
-                    detpicks.add(new PhasePick(dpp.getPickid(), dpp.getConfigid(), dpp.getDetectionid(),
-                            dpp.getPhase(), dpp.getTime() + deltaT, dpp.getStd()));
-                    detpicks.remove(detPick);
+                    detPick.adjustPickTime(deltaT);
                     CorrelatedTracesModel.getInstance().notifyViewsPicksChanged();
                     return;
                 }
@@ -217,9 +236,7 @@ public class DetectionPhasePickModel {
             Collection<PhasePick> detpicks = corrCompPhasePickMap.get(cc);
             for (PhasePick detPick : detpicks) {
                 if (detPick.equals(dpp)) {
-                    detpicks.add(new PhasePick(dpp.getPickid(), dpp.getConfigid(),dpp.getDetectionid(),
-                            dpp.getPhase(), dpp.getTime(), dpp.getStd() + deltaT));
-                    detpicks.remove(detPick);
+                    detPick.adjustStd(deltaT);
                     CorrelatedTracesModel.getInstance().notifyViewsPicksChanged();
                     return;
                 }
@@ -237,9 +254,36 @@ public class DetectionPhasePickModel {
                     deletedPicks.add(detPick.getPickid());
                     CorrelatedTracesModel.getInstance().notifyViewsPicksChanged();
                     return;
+
                 }
             }
         }
+    }
+
+    public String getBestChanForPicks() {
+        Map<String, Integer> chanCountMap = new HashMap<>();
+        for (CorrelationComponent cc : corrCompPhasePickMap.keySet()) {
+            String chan = cc.getStreamKey().getChan();
+            Integer acount = chanCountMap.get(chan);
+            if (acount == null) {
+                acount = 0;
+            }
+            Collection<PhasePick> detpicks = corrCompPhasePickMap.get(cc);
+            if (detpicks != null) {
+                acount += detpicks.size();
+            }
+            chanCountMap.put(chan, acount);
+        }
+        String best = null;
+        int bestCount = 0;
+        for (String chan : chanCountMap.keySet()) {
+            Integer acount = chanCountMap.get(chan);
+            if (acount > bestCount) {
+                bestCount = acount;
+                best = chan;
+            }
+        }
+        return best;
     }
 
     private static class DetectionPhasePickModelHolder {

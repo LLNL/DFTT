@@ -29,7 +29,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
-import llnl.gnem.apps.detection.database.DetectorDAO;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.core.util.ApplicationLogger;
 
 /**
@@ -39,24 +39,27 @@ import llnl.gnem.core.util.ApplicationLogger;
 public class ReplaceTemplateWorker extends SwingWorker<Void, Void> {
 
     private final int targetDetectorid;
-           private final  int sourceDetectorid;
-           private final  double templateOffset;
-           private final  double templateDuration;
+    private final int sourceDetectorid;
+    private final double templateOffset;
+    private final double templateDuration;
+    private final String sourceInfo;
 
     public ReplaceTemplateWorker(int targetDetectorid,
             int sourceDetectorid,
             double templateOffset,
-            double templateDuration) {
+            double templateDuration,
+            String sourceInfo) {
         this.sourceDetectorid = sourceDetectorid;
         this.targetDetectorid = targetDetectorid;
         this.templateOffset = templateOffset;
         this.templateDuration = templateDuration;
+        this.sourceInfo = sourceInfo;
     }
 
     @Override
     protected Void doInBackground() throws Exception {
 
-        DetectorDAO.getInstance().replaceSubspaceTemplate(targetDetectorid, sourceDetectorid, templateOffset, templateDuration);
+        DetectionDAOFactory.getInstance().getDetectorDAO().replaceSubspaceTemplate(targetDetectorid, sourceDetectorid, templateOffset, templateDuration, sourceInfo);
         return null;
 
     }

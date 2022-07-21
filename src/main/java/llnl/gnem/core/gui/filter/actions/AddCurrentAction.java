@@ -35,9 +35,7 @@ import llnl.gnem.core.gui.util.Utility;
 import llnl.gnem.core.waveform.filter.StoredFilter;
 
 /**
- * User: Doug
- * Date: Feb 8, 2009
- * Time: 11:19:02 AM
+ * User: Doug Date: Feb 8, 2009 Time: 11:19:02 AM
  */
 public class AddCurrentAction extends AbstractAction {
 
@@ -62,10 +60,10 @@ public class AddCurrentAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
 
         StoredFilter filter = associatedGui.getUserDefinedFilter();
-        if(!FilterModel.getInstance().addFilterFromPool(filter)){ // We did not have this filter in the allFilters pool
+        if (!FilterModel.getInstance().addFilterFromPool(filter)) { // We did not have this filter in the allFilters pool
             new FilterAdditionWorker(filter).execute(); // So add it to database
         }
-        
+
     }
 
     public void setFilterGui(FilterGui gui) {

@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -32,7 +32,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 import edu.iris.dmc.seedcodec.Codec;
 import edu.iris.dmc.seedcodec.CodecException;
@@ -43,9 +46,6 @@ import edu.sc.seis.seisFile.mseed.DataRecord;
 import edu.sc.seis.seisFile.mseed.MiniSeedRead;
 import edu.sc.seis.seisFile.mseed.SeedFormatException;
 import edu.sc.seis.seisFile.mseed.SeedRecord;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.TimeZone;
 import llnl.gnem.core.util.TimeT;
 import llnl.gnem.core.waveform.merge.MergeException;
 import llnl.gnem.core.waveform.merge.NamedIntWaveform;
@@ -60,8 +60,10 @@ public class sdIO extends BinaryDataReader {
      * BinaryData object.
      *
      * @param stream
-     * @param byteOffset offset into file in words.
-     * @param npts number of words to read.
+     * @param byteOffset
+     *            offset into file in words.
+     * @param npts
+     *            number of words to read.
      * @param buffer
      * @return The BinaryData object holding the uncompressed waveform data.
      * @throws FileNotFoundException
@@ -81,8 +83,7 @@ public class sdIO extends BinaryDataReader {
         return new IntBinaryData(npts);
     }
 
-    private static Collection<NamedIntWaveform> readMiniSeed(InputStream fis, int byteOffset, int requested) throws
-            IOException, SeedFormatException, CodecException {
+    private static Collection<NamedIntWaveform> readMiniSeed(InputStream fis, int byteOffset, int requested) throws IOException, SeedFormatException, CodecException {
 
         DataInputStream ls = null;
         BufferedInputStream bis = null;
@@ -111,9 +112,9 @@ public class sdIO extends BinaryDataReader {
                     if (sr instanceof DataRecord) {
                         DataRecord dr = (DataRecord) sr;
                         DataHeader dataHeader = dr.getHeader();
-                        double sampleRate = dataHeader.getSampleRate();
+                        double sampleRate = dataHeader.calcSampleRateFromMultipilerFactor();
 
-//                        TimeT start = dataHeader.getStart();
+                        //                        TimeT start = dataHeader.getStart();
                         TimeT start = toTimeT(dataHeader.getStartBtime());
 
                         int nsamp = dataHeader.getNumSamples();
@@ -183,8 +184,7 @@ public class sdIO extends BinaryDataReader {
         }
     }
 
-    private static NamedIntWaveform createWaveform(ArrayList<int[]> samples, String sta,
-            String chan, TimeT segmentStart, Double rate) {
+    private static NamedIntWaveform createWaveform(ArrayList<int[]> samples, String sta, String chan, TimeT segmentStart, Double rate) {
 
         return new NamedIntWaveform(sta, chan, segmentStart.getEpochTime(), rate, samples);
     }
@@ -208,13 +208,10 @@ public class sdIO extends BinaryDataReader {
                 return buffer;
             }
         }
-        throw new IllegalStateException(String.format("Attempt to fill buffer of "
-                + "size %d failed because only %d points were available!",
-                buffer.size(), totalExtracted));
+        throw new IllegalStateException(String.format("Attempt to fill buffer of " + "size %d failed because only %d points were available!", buffer.size(), totalExtracted));
     }
-    
-    public static TimeT toTimeT(Btime time)
-    {
+
+    public static TimeT toTimeT(Btime time) {
         int tmilli = time.tenthMilli;
         int msec = tmilli / 10;
 
@@ -230,7 +227,7 @@ public class sdIO extends BinaryDataReader {
         double microseconds = 0;
 
         double remainder = (tmilli - msec * 10) / 10000.0;
-        double etime =  Math.min((milliseconds / 1000.0) + (double) microseconds / 1000000.0, TimeT.MAX_EPOCH_TIME);
-        return new TimeT(etime+remainder);
+        double etime = Math.min((milliseconds / 1000.0) + microseconds / 1000000.0, TimeT.MAX_EPOCH_TIME);
+        return new TimeT(etime + remainder);
     }
 }

@@ -25,13 +25,12 @@
  */
 package llnl.gnem.apps.detection.streams;
 
-
 import llnl.gnem.apps.detection.core.framework.StreamProcessor;
 import llnl.gnem.apps.detection.source.SourceData;
 import llnl.gnem.apps.detection.util.initialization.ProcessingPrescription;
 import llnl.gnem.apps.detection.util.initialization.StreamsConfig;
 import java.io.IOException;
-import java.sql.SQLException;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -65,10 +64,10 @@ public class StreamServer {
         dataEpoch = source.getTimeRange();
         blockStartTime = dataEpoch.getTime();
         preRetrievedMap = new HashMap<>();
-        channels = source.getStaChan();
+        channels = source.getStreamKeys();
         blockSize = StreamsConfig.getInstance().getUndecimatedBlockSize();
-        requestedSeconds = (StreamsConfig.getInstance().getUndecimatedBlockSize() - 1) / source.getCommonSampleRate();
-        
+        requestedSeconds = (StreamsConfig.getInstance().getUndecimatedBlockSize()) / source.getCommonSampleRate();
+
     }
 
     public void addStreamProcessor(StreamProcessor processor) {
@@ -80,37 +79,42 @@ public class StreamServer {
     }
 
     public boolean advance() throws Exception {
-
+        ApplicationLogger.getInstance().log(Level.FINEST, String.format("Entered StreamServer.advance()."));
         if (preRetrievedMap.isEmpty()) {
             return false;
         }
         Epoch epoch = new Epoch(blockStartTime, blockStartTime.add(requestedSeconds));
-        String activity =  "Processing";
+        String activity = "Processing";
         String msg = String.format("%s block : %s (length = %8.3f s)...", activity, epoch.toString(), epoch.duration());
         ApplicationLogger.getInstance().log(Level.FINE, msg);
-        
-        
+
         int jdate = epoch.getOnJdate();
-        if( jdate > lastJdate){
+        if (jdate > lastJdate) {
             ApplicationLogger.getInstance().log(Level.INFO, String.format("Processing day(%d)...", jdate));
         }
         lastJdate = jdate;
         if (currentDataIncludesEpoch(epoch)) {
+            ApplicationLogger.getInstance().log(Level.FINEST, String.format("Calling StreamServer.processEpoch()."));
             processEpoch(epoch);
         } else {
             while (!currentDataIncludesEpoch(epoch)) {
+                ApplicationLogger.getInstance().log(Level.FINEST, String.format("Calling StreamServer.extendPreRetrievedData()."));
                 if (!extendPreRetrievedData()) {
+                    ApplicationLogger.getInstance().log(Level.FINEST, String.format(" StreamServer.advance() is returning false after extension attempt."));
                     return false;
                 }
             }
 
             if (currentDataIncludesEpoch(epoch)) {
+                ApplicationLogger.getInstance().log(Level.FINEST, String.format("Calling StreamServer.processEpoch() after extension."));
                 processEpoch(epoch);
             } else {
+                ApplicationLogger.getInstance().log(Level.FINEST, String.format(" StreamServer.advance() is returning false."));
                 return false;
             }
         }
         blockStartTime = blockStartTime.add(requestedSeconds);
+        ApplicationLogger.getInstance().log(Level.FINEST, String.format(" StreamServer.advance() is returning true."));
         return true;
     }
 
@@ -125,7 +129,7 @@ public class StreamServer {
         for (WaveformSegment data : results) {
             blockStartTime = new TimeT(data.getTimeAsDouble());
             retrievedSeconds = getDuration(data);
-            StreamKey sc = new StreamKey(data.getSta(), data.getChan());
+            StreamKey sc = data.getStreamKey();
             preRetrievedMap.put(sc, data);
         }
         ApplicationLogger.getInstance().log(Level.FINE, String.format("Retrieved datablock starting at %s and extending for %f seconds...",
@@ -166,10 +170,6 @@ public class StreamServer {
         retrieveFirstDataBlock();
     }
 
-    public void close() throws IOException, SQLException {
-        source.close();
-    }
-
     public double getCommonSampleRate() {
         return source.getCommonSampleRate();
     }
@@ -189,13 +189,12 @@ public class StreamServer {
     }
 
     private boolean appendDataBlock() throws InterruptedException, IOException {
+        ApplicationLogger.getInstance().log(Level.FINEST, String.format(" StreamServer.appendDataBlock() is requesting block from source."));
         Collection<WaveformSegment> results = source.getDataBlock();
         if (!results.isEmpty()) {
             double retrievedSeconds = 0;
             for (WaveformSegment newData : results) {
-                String sta = newData.getSta();
-                String chan = newData.getChan();
-                StreamKey sc = new StreamKey(sta, chan);
+                StreamKey sc = newData.getStreamKey(); 
                 WaveformSegment existing = preRetrievedMap.get(sc);
                 if (existing == null) {
                     throw new IllegalStateException("Attempt to extend non-existing segment");

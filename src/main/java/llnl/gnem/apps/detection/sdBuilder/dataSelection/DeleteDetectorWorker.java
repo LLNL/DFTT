@@ -30,7 +30,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
 import javax.swing.tree.DefaultMutableTreeNode;
-import llnl.gnem.apps.detection.database.DetectorDAO;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
 import llnl.gnem.core.util.ApplicationLogger;
 
@@ -51,7 +51,7 @@ public class DeleteDetectorWorker extends SwingWorker<Void, Void> {
     @Override
     protected Void doInBackground() throws Exception {
 
-        DetectorDAO.getInstance().deleteDetector(detectorid);
+        DetectionDAOFactory.getInstance().getDetectorDAO().deleteDetector(detectorid);
         return null;
 
     }

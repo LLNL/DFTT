@@ -25,6 +25,7 @@
  */
 package llnl.gnem.core.gui.util;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -37,6 +38,8 @@ import javax.swing.SwingUtilities;
  * Lawrence Livermore National Laboratory.
  */
 public class ProgressPanel extends JPanel {
+
+    private static final long serialVersionUID = 437514089288982208L;
 
     private final JLabel titleLabel;
     private final JProgressBar progressBar;
@@ -52,15 +55,16 @@ public class ProgressPanel extends JPanel {
         progressBar.setStringPainted(true);
         msgLabel = new JLabel("Processing");
         msgLabel.setVisible(true);
+        msgLabel.setBackground(Color.red);
         progressBar.setVisible(true);
 
         add(titleLabel);
         add(progressBar);
         add(msgLabel);
 
-        setPreferredSize(new Dimension(320, 80));
-        setMinimumSize(new Dimension(320, 80));
-        setMaximumSize(new Dimension(320, 80));
+  //      setPreferredSize(new Dimension(320, 80));
+  //      setMinimumSize(new Dimension(320, 80));
+  //      setMaximumSize(new Dimension(320, 80));
         SpringUtilities.makeCompactGrid(this,
                 3, 1, //rows, cols
                 6, 6, //initX, initY

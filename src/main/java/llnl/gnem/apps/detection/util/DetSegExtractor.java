@@ -26,21 +26,14 @@
 package llnl.gnem.apps.detection.util;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.Collection;
 import java.util.logging.Level;
-import llnl.gnem.apps.detection.database.ChannelSubstitutionDAO;
+import llnl.gnem.apps.detection.ConfigurationInfo;
 
-import llnl.gnem.apps.detection.database.ConfigurationDAO;
-import llnl.gnem.apps.detection.database.DbOps;
-import llnl.gnem.apps.detection.database.FrameworkRunDAO;
-import llnl.gnem.apps.detection.database.TableNames;
 import llnl.gnem.apps.detection.source.SourceData;
-import llnl.gnem.apps.detection.source.WfdiscTableSourceData;
-import llnl.gnem.core.database.ConnectionManager;
+
 import llnl.gnem.core.database.DbCommandLineParser;
 import llnl.gnem.core.io.SAC.SACFile;
 import llnl.gnem.core.io.SAC.SACHeader;
@@ -49,6 +42,12 @@ import llnl.gnem.core.util.ApplicationLogger;
 import llnl.gnem.core.util.FileSystemException;
 import llnl.gnem.core.util.TimeT;
 import llnl.gnem.apps.detection.core.dataObjects.WaveformSegment;
+import llnl.gnem.apps.detection.dataAccess.ApplicationRoleManager;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectionSummary;
+import llnl.gnem.core.dataAccess.DAOFactory;
+import llnl.gnem.core.dataAccess.SeismogramSourceInfo;
+import llnl.gnem.core.util.FileUtil.DriveMapper;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
@@ -76,24 +75,29 @@ public class DetSegExtractor {
     }
 
     private void initializeConnection() throws Exception {
-
-        ConnectionManager.getInstance(parser.getCredentials().username, parser.getCredentials().password, parser.getCredentials().instance);
+        DAOFactory.getInstance(parser.getCredentials().username, parser.getCredentials().password, parser.getCredentials().instance, new ApplicationRoleManager());
     }
 
     public DetSegExtractor(String[] args) throws Exception {
 
         getCommandLineInfo(args);
         initializeConnection();
+        FrameworkRun fr = DetectionDAOFactory.getInstance().getFrameworkRunDAO().getFrameworkRun(runid);
+        if (fr == null) {
+            throw new IllegalStateException("Could not retrieve FrameworkRun info for runid: " + runid);
+        }
+        int configid = fr.getConfigid();
+        SeismogramSourceInfo sourceInfo = DetectionDAOFactory.getInstance().getConfigurationDAO().getConfigurationSeismogramSourceInfo(configid);
+        if (sourceInfo == null) {
+            throw new IllegalStateException("Could not retrieve SeismogramSourceInfo for configuration " + configid + ", runid " + runid);
+        }
+        DAOFactory.getInstance().setSeismogramSourceInfo(sourceInfo);
 
-        FrameworkRun fr = FrameworkRunDAO.getInstance().getFrameworkRun(runid);
-        String sourceWfdiscTable = fr.getWfdisc();
-        double fixedRawRate = fr.getFixedRawSampleRate();
-        String configName = ConfigurationDAO.getInstance().getConfigNameForRun(runid);
-        int configid = ConfigurationDAO.getInstance().getConfigid(configName);
-        source = new WfdiscTableSourceData(sourceWfdiscTable, configName, false);
-        source.setFixedRawRate(fixedRawRate);
-        source.setChannelSubstitutions(ChannelSubstitutionDAO.getInstance().getChannelSubstitutions(configid));
+        String configName = DetectionDAOFactory.getInstance().getConfigurationDAO().getConfigNameForRun(runid);
 
+        boolean scaleByCalib = false;
+        source = new SourceData(configName, scaleByCalib);
+        ConfigurationInfo.getInstance().setCurrentConfigurationData(configid);
     }
 
     private void getCommandLineInfo(String[] args) throws IOException {
@@ -144,9 +148,6 @@ public class DetSegExtractor {
             runid = new Integer(cmd.getOptionValue(runidOption.getOpt()));
             detectorid = new Integer(cmd.getOptionValue(detectoridOption.getOpt()));
 
-            String site = cmd.hasOption(siteTableNameOption.getOpt()) ? cmd.getOptionValue(siteTableNameOption.getOpt()) : "site";
-            TableNames.getInstance().setSiteTableName(site);
-
         } catch (ParseException ex) {
             System.err.println(ex.getMessage());
             printUsage(options);
@@ -155,49 +156,24 @@ public class DetSegExtractor {
     }
 
     public void run() throws Exception {
-        source.setStaChanArrays();
-    //    createBaseDirectory();
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
+
         if (duration <= 0) {
-            duration = preTrigSeconds + DbOps.getInstance().getMeanDuration(runid, detectorid);
+            duration = preTrigSeconds + DetectionDAOFactory.getInstance().getTriggerDAO().getMeanDuration(runid, detectorid);
         }
-        try {
-            conn = ConnectionManager.getInstance().checkOut();
-            stmt = conn.prepareStatement("select detectionid, time, a.detectorid from detection a, trigger_record b where a.runid = ? "
-                    + "and  a.triggerid = b.triggerid and detection_statistic >= ?");
-            stmt.setInt(1, runid);
-//            stmt.setInt(2, detectorid);
-            stmt.setDouble(2, detStatThreshold);
-            rs = stmt.executeQuery();
-            while (rs.next()) {
-                int detectionid = rs.getInt(1);
-                System.out.println("Processing detectionid: " + detectionid);
-                double time = rs.getDouble(2);
-                detectorid = rs.getInt(3);
-                createBaseDirectory();
-                Collection<WaveformSegment> results = source.retrieveDataBlock(new TimeT(time - preTrigSeconds), duration, false);
-                boolean segmentsAreSameLength = segmentLengthsAgree(results);
-                if (segmentsAreSameLength) {
-                    for (WaveformSegment data : results) {
-                        writeSacFile(detectionid, data);
-                    }
-                } else {
-                    System.out.println(String.format("Skipping detectionid: %d because not all segements are same length.", detectionid));
+        Collection<DetectionSummary> detections = DetectionDAOFactory.getInstance().getDetectionDAO().getDetectionSummaries(runid, detectorid, detStatThreshold);
+        for (DetectionSummary summary : detections) {
+            createBaseDirectory();
+            Collection<WaveformSegment> results = source.retrieveDataBlock(new TimeT(summary.getTriggerTime() - preTrigSeconds), duration, false);
+            boolean segmentsAreSameLength = segmentLengthsAgree(results);
+            if (segmentsAreSameLength) {
+                for (WaveformSegment data : results) {
+                    writeSacFile(summary.getDetectionid(), data);
                 }
-            }
-        } finally {
-            if (rs != null) {
-                rs.close();
-            }
-            if (stmt != null) {
-                stmt.close();
-            }
-            if (conn != null) {
-                ConnectionManager.getInstance().checkIn(conn);
+            } else {
+                System.out.println(String.format("Skipping detectionid: %d because not all segements are same length.", summary.getDetectionid()));
             }
         }
+
     }
 
     private void createBaseDirectory() throws FileSystemException {
@@ -239,7 +215,12 @@ public class DetSegExtractor {
         sacfile.write();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException {
+
+        String driveMapFile = System.getenv("DRIVE_MAP_FILE");
+        if (driveMapFile != null) {
+            DriveMapper.getInstance().loadDriveMapData(driveMapFile);
+        }
 
         DetSegExtractor runner;
         try {

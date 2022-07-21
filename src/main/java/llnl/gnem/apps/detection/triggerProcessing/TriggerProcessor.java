@@ -25,6 +25,7 @@
  */
 package llnl.gnem.apps.detection.triggerProcessing;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -36,7 +37,7 @@ import llnl.gnem.apps.detection.classify.DetectorClassifier;
 import llnl.gnem.apps.detection.classify.LabeledFeature;
 import llnl.gnem.apps.detection.classify.TriggerClassification;
 import llnl.gnem.apps.detection.core.dataObjects.DetectorSpecification;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.core.dataObjects.FKScreenParams;
 
 import llnl.gnem.apps.detection.core.framework.FKScreen;
@@ -51,6 +52,8 @@ import llnl.gnem.apps.detection.core.framework.detectors.Detector;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceDetector;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceSpecification;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceTemplate;
+import llnl.gnem.apps.detection.core.signalProcessing.Beamformer;
+import llnl.gnem.apps.detection.core.signalProcessing.SNRfromSTALTA;
 import llnl.gnem.core.util.Epoch;
 import llnl.gnem.core.util.PairT;
 import llnl.gnem.core.util.SeriesMath;
@@ -112,12 +115,6 @@ public class TriggerProcessor {
             Logger.getLogger(TriggerProcessor.class.getName()).log(Level.SEVERE, null, ex);
         }
         double snr = feature.getSnr();
-        boolean snrIsOK = (snr >= snrThreshold && snr < 50000) || isExemptFromScreen(td);
-
-        if (!snrIsOK && classification == TriggerClassification.GOOD) {
-            String msg = String.format("Trigger at(%s) failed SNR screen. Median SNR was %8.2f", td.getTriggerTime().toString(), snr);
-            ApplicationLogger.getInstance().log(Level.FINE, msg);
-        }
         boolean durationOK = medianDuration != null && medianDuration >= minDuration || isExemptFromScreen(td);
         if (!durationOK && classification == TriggerClassification.GOOD) {
             String msg = String.format("Trigger at(%s) failed Duration screen. Median duration was %4.1f s", td.getTriggerTime().toString(), medianDuration);
@@ -125,7 +122,6 @@ public class TriggerProcessor {
         }
 
         FKScreenResults fkResults = null;
- //       FKScreenConfiguration fkConfig = di.createFKScreen(fkScreenParams);
 
         boolean velocityOK = true;
         FKStatus fkStatus = FKStatus.NOT_PERFORMED;
@@ -141,6 +137,24 @@ public class TriggerProcessor {
                         fkConfig.getSlownessVector(),
                         (float) fkConfig.getSlowTol(),
                         (float) fkConfig.getMinFKQual());
+                if (fkResults != null && fkResults.isValidFkResult()) {
+                    double backAzimuth = fkResults.getAzimuth();
+                    double apparentVelocity = fkResults.getVelocity();
+                    double[][] channelCoordinates = fkConfig.getChannelCoordinates();
+                    double dt = fkConfig.getDelta();
+                    Beamformer beamFormer = new Beamformer(channelCoordinates, backAzimuth, apparentVelocity, dt);
+                    float[] beam = beamFormer.beam(fkConfig.getWaveformsFromStreamSegment(stream));
+                     int S = (int) Math.round(3.0 / dt); // STA is 3 seconds
+                    int L = (int) Math.round(30.0 / dt); // LTA is 3 seconds
+                    int triggerIndex = td.getIndex();
+                    int idxBegin = Math.max(triggerIndex - 2 * L, 0);
+                    int idxEnd = Math.min(triggerIndex + L, beam.length - 1);
+                    int[] window = {idxBegin, idxEnd};
+                    float snrBeam = SNRfromSTALTA.calculateSNR(beam, S, L, window);
+                    if (snr < snrBeam) {
+                        snr = snrBeam;
+                    }
+                }
                 fkStatus = FKStatus.IGNORED;
                 if (!fkResults.isPassed() && fkConfig.isScreenTrigger(td.getDetectorInfo().getDetectorType())) {
                     ApplicationLogger.getInstance().log(Level.FINE,
@@ -161,11 +175,20 @@ public class TriggerProcessor {
                         ApplicationLogger.getInstance().log(Level.FINE, String.format("Failed: Velocity = %f", fkResults.getVelocity()));
                     }
                 }
+
             } catch (Exception ex) {
                 ApplicationLogger.getInstance().log(Level.FINE, "Failed computing FK!");
             }
 
         }
+        if(snr >= 0)snr = Math.sqrt(snr);
+        boolean snrIsOK = (snr >= snrThreshold && snr < 50000) || isExemptFromScreen(td);
+
+        if (!snrIsOK && classification == TriggerClassification.GOOD) {
+            String msg = String.format("Trigger at(%s) failed SNR screen. Median SNR was %8.2f", td.getTriggerTime().toString(), snr);
+            ApplicationLogger.getInstance().log(Level.FINE, msg);
+        }
+
         boolean usableTrigger
                 = classification == TriggerClassification.GOOD
                 && velocityOK

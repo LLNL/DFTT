@@ -25,7 +25,6 @@
  */
 package llnl.gnem.apps.detection.sdBuilder.waveformViewer;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -34,13 +33,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import llnl.gnem.apps.detection.classify.TriggerClassification;
-import llnl.gnem.apps.detection.core.dataObjects.Detection;
-import llnl.gnem.apps.detection.database.StreamDAO;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
+
 import llnl.gnem.apps.detection.sdBuilder.ChannelCombo;
 import llnl.gnem.apps.detection.sdBuilder.DetectionWaveforms;
-import llnl.gnem.apps.detection.sdBuilder.DetectorCreator;
 import llnl.gnem.apps.detection.sdBuilder.actions.CreateSacfilesAction;
 import llnl.gnem.apps.detection.sdBuilder.actions.NextCorrelationAction;
 import llnl.gnem.apps.detection.sdBuilder.actions.PreviousCorrelationAction;
@@ -50,6 +48,8 @@ import llnl.gnem.apps.detection.sdBuilder.arrayDisplay.ArrayDisplayModel;
 import llnl.gnem.apps.detection.sdBuilder.configuration.DetectorCreationEnabler;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.PhasePick;
+import llnl.gnem.apps.detection.sdBuilder.DetectorCreationWorker;
+import llnl.gnem.apps.detection.sdBuilder.actions.BuildStackBeamAction;
 import llnl.gnem.apps.detection.sdBuilder.picking.SavePicksWorker;
 import llnl.gnem.apps.detection.sdBuilder.allStations.SeismogramModel;
 import llnl.gnem.apps.detection.sdBuilder.multiStationStack.MultiStationStackModel;
@@ -60,14 +60,17 @@ import llnl.gnem.apps.detection.sdBuilder.picking.PredictedPhasePick;
 import llnl.gnem.apps.detection.sdBuilder.picking.PredictedPhasePickModel;
 
 import llnl.gnem.apps.detection.sdBuilder.stackViewer.SingleComponentStack;
+import llnl.gnem.apps.detection.sdBuilder.stackViewer.StackModel;
 import llnl.gnem.core.correlation.CorrelationComponent;
 import llnl.gnem.core.correlation.clustering.ClusterResult;
 import llnl.gnem.core.correlation.clustering.GroupData;
+import llnl.gnem.core.dataAccess.DataAccessException;
 import llnl.gnem.core.gui.plotting.MouseMode;
 import llnl.gnem.core.util.ApplicationLogger;
 import llnl.gnem.core.util.StreamKey;
 import llnl.gnem.core.waveform.filter.FilterClient;
 import llnl.gnem.core.waveform.filter.StoredFilter;
+import llnl.gnem.core.waveform.seismogram.CssSeismogram;
 
 /**
  *
@@ -76,6 +79,15 @@ import llnl.gnem.core.waveform.filter.StoredFilter;
 public class CorrelatedTracesModel implements FilterClient {
 
     private static final double TAPER_PERCENT = 5.0;
+
+    public void resetTriggerClassification(TriggerClassification tc, int aDetectorid) {
+        if (aDetectorid != detectorid) {
+            return;
+        }
+        for (int key : triggerClassificationMap.keySet()) {
+            triggerClassificationMap.replace(key, tc);
+        }
+    }
     private int detectorid;
     private final Collection<SeismogramViewer> viewers;
     private final Collection<DetectionWaveforms> myWaveforms;
@@ -92,6 +104,10 @@ public class CorrelatedTracesModel implements FilterClient {
     private int totalDetectionCount;
     private int configid;
 
+    public GroupData getCurrent() {
+        return current;
+    }
+
     public int getConfigid() {
         return configid;
     }
@@ -99,7 +115,7 @@ public class CorrelatedTracesModel implements FilterClient {
     public static double getSeismogramTaperPercent() {
         return TAPER_PERCENT;
     }
-    
+
     public boolean isCanAdvance() {
         return totalRowsRetrieved < totalDetectionCount && ParameterModel.getInstance().isRetrieveByBlocks();
     }
@@ -128,10 +144,12 @@ public class CorrelatedTracesModel implements FilterClient {
         lastDetectionId = 0;
         totalRowsRetrieved = 0;
         configid = -1;
+        current = null;
     }
 
     public void revert() {
         allGroups.clear();
+        current = null;
         setTraces(new ArrayList<>(), new HashMap<>(), new ArrayList<>(), new ArrayList<>());
 
         // DetectorCreationEnabler.getInstance().hasBeenCorrelated(false);
@@ -152,7 +170,7 @@ public class CorrelatedTracesModel implements FilterClient {
     }
 
     public void setDetectorid(int detectorid) {
-        if (this.detectorid > 0 && this.detectorid != detectorid){
+        if (this.detectorid > 0 && this.detectorid != detectorid) {
             lastDetectionId = 0;
             totalRowsRetrieved = 0;
         }
@@ -168,8 +186,6 @@ public class CorrelatedTracesModel implements FilterClient {
         return totalRowsRetrieved;
     }
 
-
-
     public int getLastDetectionId() {
         return lastDetectionId;
     }
@@ -178,27 +194,38 @@ public class CorrelatedTracesModel implements FilterClient {
             Map<Integer, TriggerClassification> triggerClassificationMap,
             Collection<PhasePick> detectionPicks,
             Collection<PredictedPhasePick> predictedPicks) {
-
+        current = null;
         myWaveforms.addAll(retrieved);
         this.triggerClassificationMap.clear();
         this.triggerClassificationMap.putAll(triggerClassificationMap);
         ParameterModel.getInstance().setWindowStart(0.0);
-        populateChannelCombo();
         DetectionPhasePickModel.getInstance().addExistingPicks(retrieved, detectionPicks);
         PredictedPhasePickModel.getInstance().addExistingPicks(retrieved, predictedPicks);
+        populateChannelCombo();
 
         displayTraces();
         if (ParameterModel.getInstance().isAutoApplyFilter()) {
             try {
-                StoredFilter filter = StreamDAO.getInstance().getStreamFilter(detectorid);
+                StoredFilter filter = DetectionDAOFactory.getInstance().getStreamDAO().getStreamFilter(detectorid);
                 applyFilter(filter);
-            } catch (SQLException ex) {
+            } catch (DataAccessException ex) {
                 ApplicationLogger.getInstance().log(Level.WARNING, "Failed to retrieve stored filter from database!");
-                Logger.getLogger(CorrelatedTracesModel.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
 
         DetectorCreationEnabler.getInstance().setWaveformsAvailable(!retrieved.isEmpty());
+        setFKActions();
+    }
+
+    private void setFKActions() {
+        for(DetectionWaveforms dw : myWaveforms){
+            ArrayList<CorrelationComponent> acc = dw.getSegments();
+            for(CorrelationComponent cc : acc){
+                Double dnorth = cc.getDnorth();
+                BuildStackBeamAction.getInstance(this).setEnabled(dnorth != null);
+                return;
+            }
+        }
     }
 
     private void populateChannelCombo() {
@@ -211,7 +238,7 @@ public class CorrelatedTracesModel implements FilterClient {
         if (channels.isEmpty()) {
             ChannelCombo.getInstance().addItem("NONE");
         }
-        elementIndex = 0;
+        elementIndex = getBestDisplayableChannel();
 
         ChannelCombo.getInstance().setSelectedIndex(elementIndex);
         ChannelCombo.getInstance().revalidate();
@@ -236,6 +263,14 @@ public class CorrelatedTracesModel implements FilterClient {
     public TriggerClassification getTriggerClassification(int triggerid) {
         TriggerClassification result = triggerClassificationMap.get(triggerid);
         return result != null ? result : TriggerClassification.UNSET;
+    }
+
+    public TriggerClassification getCommonTriggerClassification() {
+        if (triggerClassificationMap.isEmpty()) {
+            return TriggerClassification.UNSET;
+        } else {
+            return triggerClassificationMap.values().iterator().next();
+        }
     }
 
     public Collection<CorrelationComponent> getMatchingTraces() {
@@ -278,8 +313,8 @@ public class CorrelatedTracesModel implements FilterClient {
         dataWereLoaded(false);
 
     }
-    
-    public void detectionsWereDeleted(Collection<CorrelationComponent> deleteThese){
+
+    public void detectionsWereDeleted(Collection<CorrelationComponent> deleteThese) {
         deleteThese.forEach((cc) -> {
             components.remove(cc);
         });
@@ -396,9 +431,7 @@ public class CorrelatedTracesModel implements FilterClient {
 
     public void writeNewDetector() throws Exception {
         setMouseMode(MouseMode.SELECT_REGION);
-        DetectorCreator.writeNewDetector();
-        setMouseMode(MouseMode.SELECT_ZOOM);
-        ClusterBuilderFrame.getInstance().returnFocusToTree();
+        new DetectorCreationWorker().execute();
     }
 
     public int getCurrentDetectorid() {
@@ -419,7 +452,25 @@ public class CorrelatedTracesModel implements FilterClient {
         this.runid = runid;
     }
 
-    private Collection<StreamKey> getDataChannels() {
+    public Map<Long, ArrayList<CssSeismogram>> getDetectionSeismogramListMap() {
+        Map<Long, ArrayList<CssSeismogram>> result = new HashMap<>();
+        for (DetectionWaveforms dw : myWaveforms) {
+            ArrayList<CorrelationComponent> comps = dw.getSegments();
+            for (CorrelationComponent comp : comps) {
+                long detectionid = comp.getEvent().getEvid();
+                CssSeismogram seis = comp.getSeismogram();
+                ArrayList<CssSeismogram> seismograms = result.get(detectionid);
+                if (seismograms == null) {
+                    seismograms = new ArrayList<>();
+                    result.put(detectionid, seismograms);
+                }
+                seismograms.add(seis);
+            }
+        }
+        return result;
+    }
+
+    public Collection<StreamKey> getDataChannels() {
         Collection<StreamKey> result = new ArrayList<>();
         if (myWaveforms.isEmpty()) {
             return result;
@@ -450,6 +501,21 @@ public class CorrelatedTracesModel implements FilterClient {
                 ++idx;
             }
         }
+    }
+
+    public Collection<CorrelationComponent> getMatchingTraces(String sta, String chan) {
+        Collection<CorrelationComponent> result = new ArrayList<>();
+        for (DetectionWaveforms dw : myWaveforms) {
+            ArrayList<CorrelationComponent> segments = dw.getSegments();
+            for (CorrelationComponent cc : segments) {
+                StreamKey aKey = cc.getSeismogram().getStreamKey();
+                if (aKey.getSta().equals(sta) && aKey.getChan().equals(chan)) {
+                    result.add(cc);
+                }
+            }
+        }
+
+        return result;
     }
 
     public void displayArrayElements(CorrelationComponent selectedComponent) {
@@ -524,12 +590,15 @@ public class CorrelatedTracesModel implements FilterClient {
         for (SeismogramViewer viewer : viewers) {
             viewer.clear();
         }
+        StackModel.getInstance().clear();
     }
 
     public void adjustAllWindows(double windowStart, double winLen) {
         for (SeismogramViewer viewer : viewers) {
             viewer.adjustWindow(windowStart, winLen);
         }
+        ClusterBuilderFrame.getInstance().setCorrelationWindowStart(windowStart);
+        ClusterBuilderFrame.getInstance().setCorrelationWindowLength(winLen);
     }
 
     private void maybeHighlightAllTraces(CorrelationComponent cc) {
@@ -538,19 +607,21 @@ public class CorrelatedTracesModel implements FilterClient {
         }
     }
 
-    private void setMouseMode(MouseMode mouseMode) {
+    public void setMouseMode(MouseMode mouseMode) {
         for (SeismogramViewer viewer : viewers) {
             viewer.setMouseMode(mouseMode);
         }
     }
 
-    private void updateForChangedTrace() {
+    public void updateForChangedTrace() {
+        StackModel.getInstance().setCurrentStack();
         viewers.forEach((viewer) -> {
             viewer.updateForChangedTrace();
         });
     }
 
     private void loadClusterResult() {
+        StackModel.getInstance().setCurrentStack();
         viewers.forEach((viewer) -> {
             viewer.loadClusterResult();
         });
@@ -563,6 +634,7 @@ public class CorrelatedTracesModel implements FilterClient {
     }
 
     private void dataWereLoaded(boolean b) {
+        StackModel.getInstance().setCurrentStack();
         viewers.forEach((viewer) -> {
             viewer.dataWereLoaded(b);
         });
@@ -587,7 +659,7 @@ public class CorrelatedTracesModel implements FilterClient {
         Map<StreamKey, SingleComponentStack> keyStackMap = new HashMap<>();
 
         for (CorrelationComponent cc : result) {
-            StreamKey key = cc.getTraceData().getStreamKey();
+            StreamKey key = cc.getCorrelationTraceData().getStreamKey();
             SingleComponentStack stack = keyStackMap.get(key);
             if (stack == null) {
                 stack = new SingleComponentStack(key);
@@ -624,22 +696,21 @@ public class CorrelatedTracesModel implements FilterClient {
         Map<CorrelationComponent, Collection<PhasePick>> pickMap = DetectionPhasePickModel.getInstance().getAllPicks();
         Collection<Integer> deletedPicks = DetectionPhasePickModel.getInstance().getDeletedPicks();
         ArrayList<PhasePick> picks = new ArrayList<>();
-        for( Collection<PhasePick> cdpp : pickMap.values()){
+        for (Collection<PhasePick> cdpp : pickMap.values()) {
             picks.addAll(cdpp);
         }
         new SavePicksWorker(picks, deletedPicks, ClusterBuilderFrame.getInstance()).execute();
     }
 
     public void incrementRowsRetrieved(int value) {
-        if (totalRowsRetrieved+value == this.totalDetectionCount){
+        if (totalRowsRetrieved + value == this.totalDetectionCount) {
             lastDetectionId = 0;
             totalRowsRetrieved = 0;
-       
-        } 
-        else{
-         totalRowsRetrieved+=value;   
+
+        } else {
+            totalRowsRetrieved += value;
         }
-        
+
     }
 
     public void setTotalDetectionCount(int detectionCount) {
@@ -648,6 +719,31 @@ public class CorrelatedTracesModel implements FilterClient {
 
     public void setConfigid(int configid) {
         this.configid = configid;
+    }
+
+    private int getBestDisplayableChannel() {
+
+        String chan = DetectionPhasePickModel.getInstance().getBestChanForPicks();
+        if (chan != null) {
+            for (int j = 0; j < ChannelCombo.getInstance().getItemCount(); ++j) {
+                StreamKey sk = (StreamKey) ChannelCombo.getInstance().getItemAt(j);
+                if (sk.getChan().equals(chan)) {
+                    return j;
+                }
+            }
+        } else {
+            for (int j = 0; j < ChannelCombo.getInstance().getItemCount(); ++j) {
+                Object obj = ChannelCombo.getInstance().getItemAt(j);
+                if (obj instanceof StreamKey) {
+                    StreamKey sk = (StreamKey) obj;
+                    if (sk.getChan().endsWith("Z")) {
+                        return j;
+                    }
+                }
+            }
+        }
+
+        return 0;
     }
 
     private static class CorrelatedTracesModelHolder {

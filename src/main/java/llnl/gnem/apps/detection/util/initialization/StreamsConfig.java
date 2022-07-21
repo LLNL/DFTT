@@ -30,7 +30,7 @@ import llnl.gnem.apps.detection.core.dataObjects.FKScreenParams;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import llnl.gnem.apps.detection.cancellation.CancellationTemplateSource;
+
 
 /**
  *
@@ -170,24 +170,10 @@ public class StreamsConfig {
         }
     }
 
-    public boolean isApplyStreamCancellation(String streamName) {
-        return getInfo(streamName).isApplyStreamCancellation();
-    }
 
-    public String getCancellorParamsFile(String streamName) {
-        return getInfo(streamName).getCancellorParamsFile();
-    }
 
     public boolean isUseDynamicThresholds(String streamName) {
         return getInfo(streamName).isUseDynamicThresholds();
-    }
-
-    public CancellationTemplateSource getCancellationTemplateSource(String streamName) {
-        return getInfo(streamName).getCancellationTemplateSource();
-    }
-
-    public String getCancellationDetectoridFile(String streamName) {
-        return getInfo(streamName).getCancellationDetectoridFile();
     }
 
     public boolean isPositionRequired(String sta) {

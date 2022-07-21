@@ -25,9 +25,8 @@
  */
 package llnl.gnem.apps.detection.triggerProcessing;
 
-import com.oregondsp.util.TimeStamp;
-import java.util.stream.Stream;
 import llnl.gnem.apps.detection.core.framework.detectors.DetectorInfo;
+import llnl.gnem.apps.detection.util.TimeStamp;
 import llnl.gnem.core.util.Epoch;
 import llnl.gnem.apps.detection.core.dataObjects.StreamSegment;
 

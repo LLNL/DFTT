@@ -94,7 +94,7 @@ public abstract class StationInfo extends LocationInfo<Station<GeographicCoordin
     }
     public String getSource()
     {
-        return station.getSource();
+        return station.getAgency();
     }
     
     public String getNetworkCode()
@@ -134,7 +134,7 @@ public abstract class StationInfo extends LocationInfo<Station<GeographicCoordin
             double endTime,
             long networkId,
             long stationId,
-            long stationEpochId) {
+            Long stationEpochId) {
         super(Station.fromGeo(lat, lon, elev, description));
         station = new StationKey(stationSource, networkCode, netStartDate, stationCode);
 

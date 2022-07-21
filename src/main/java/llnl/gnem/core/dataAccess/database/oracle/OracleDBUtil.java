@@ -29,6 +29,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 
 /**
@@ -141,4 +142,88 @@ public class OracleDBUtil {
     }
     
     
+    public static void setStringValue(String value, final PreparedStatement stmt, int jdx) throws SQLException {
+        if (value == null || value.isEmpty()) {
+            stmt.setNull(jdx, Types.VARCHAR);
+        } else {
+            stmt.setString(jdx, value);
+}
+    }
+
+    public static void setDoubleValue(Double value, final PreparedStatement stmt, int jdx) throws SQLException {
+        if (value == null || value.isInfinite() || value.isNaN() || ( value != 0 && Math.abs(value) < Float.MIN_NORMAL)) {
+            stmt.setNull(jdx, Types.DOUBLE);
+        } else {
+            stmt.setDouble(jdx, value);
+        }
+    }
+
+    public static void setIntegerValue(Integer value, final PreparedStatement stmt, int jdx) throws SQLException {
+        if (value == null) {
+            stmt.setNull(jdx, Types.INTEGER);
+        } else {
+            stmt.setInt(jdx, value);
+        }
+    }
+
+    public static void setLongValue(Long value, final PreparedStatement stmt, int jdx) throws SQLException {
+        if (value == null) {
+            stmt.setNull(jdx, Types.INTEGER);
+        } else {
+            stmt.setLong(jdx, value);
+        }
+    }
+
+
+    public static String getStringFromCursor(final ResultSet rs, int jdx) throws SQLException {
+        String result = rs.getString(jdx);
+        if (rs.wasNull()) {
+            result = null;
+        }
+        return result;
+    }
+
+    public static Double getDoubleFromCursor(ResultSet rs, int jdx) throws SQLException {
+        Double result = rs.getDouble(jdx);
+        if (rs.wasNull()) {
+            result = null;
+        }
+        return result;
+    }
+
+    public static Integer getIntegerFromCursor(ResultSet rs, int jdx) throws SQLException {
+        Integer result = rs.getInt(jdx);
+        if (rs.wasNull()) {
+            result = null;
+        }
+        return result;
+    }
+    public static Long getLongFromCursor(ResultSet rs, int jdx) throws SQLException {
+        Long result = rs.getLong(jdx);
+        if (rs.wasNull()) {
+            result = null;
+        }
+        return result;
+    }
+   
+    public static void alterSessionParallelism(boolean parallel, Connection conn) throws SQLException {
+        String tmp = parallel ? "enable " : "disable ";
+        String sql = "alter session " + tmp + "parallel dml";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.execute();
+        }
+    }
+
+    public static String getCurrentUser(Connection conn) throws SQLException {
+        String sql = "select lower(user) from dual";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            try(ResultSet rs = stmt.executeQuery()){
+                while(rs.next()){
+                    return rs.getString(1);
+                }
+            }
+        }
+        return "";
+    }
+
 }

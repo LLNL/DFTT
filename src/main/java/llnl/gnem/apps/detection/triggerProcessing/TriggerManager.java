@@ -25,18 +25,17 @@
  */
 package llnl.gnem.apps.detection.triggerProcessing;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-import llnl.gnem.apps.detection.core.dataObjects.Detection;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
-import llnl.gnem.apps.detection.core.dataObjects.Trigger;
-import llnl.gnem.apps.detection.database.DetectionDAO;
-import llnl.gnem.apps.detection.database.TriggerDAO;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Trigger;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
+import llnl.gnem.core.dataAccess.DataAccessException;
 import llnl.gnem.core.util.ApplicationLogger;
 import llnl.gnem.core.util.Epoch;
 
@@ -46,7 +45,7 @@ import llnl.gnem.core.util.Epoch;
  */
 public class TriggerManager {
 
-    public Collection<Detection> processTriggersIntoDetections(Map<DetectorType, List<Trigger>> triggerMap, double blackoutSeconds) throws SQLException {
+    public Collection<Detection> processTriggersIntoDetections(Map<DetectorType, List<Trigger>> triggerMap, double blackoutSeconds) throws DataAccessException {
         Collection<Detection> result = new ArrayList<>();
         removeOverlappedSpawningDetections(triggerMap);
         for (int priority : DetectorType.getRanks()) {
@@ -60,7 +59,7 @@ public class TriggerManager {
         return result;
     }
 
-    private static Collection<Detection> processThisRank(Collection<Trigger> triggers, Map<DetectorType, List<Trigger>> triggerMap, double blackoutSeconds) throws SQLException {
+    private static Collection<Detection> processThisRank(Collection<Trigger> triggers, Map<DetectorType, List<Trigger>> triggerMap, double blackoutSeconds) throws DataAccessException {
         Collection<Detection> result = new ArrayList<>();
         while (!triggers.isEmpty()) {
             Trigger highestStatTrigger = getHighestStatTrigger(triggers);
@@ -77,7 +76,7 @@ public class TriggerManager {
         return result;
     }
 
-    public static Collection<Trigger> getCancellationTriggers(Collection<Trigger> triggers, double blackoutSeconds) throws SQLException {
+    public static Collection<Trigger> getCancellationTriggers(Collection<Trigger> triggers, double blackoutSeconds) throws DataAccessException {
         Collection<Trigger> result = new ArrayList<>();
         while (!triggers.isEmpty()) {
             Trigger highestStatTrigger = getHighestStatTrigger(triggers);
@@ -88,8 +87,8 @@ public class TriggerManager {
         return result;
     }
 
-    private static Detection convertToDetection(Trigger trigger) throws SQLException {
-        return DetectionDAO.getInstance().detectionFromTrigger(trigger);
+    private static Detection convertToDetection(Trigger trigger) throws DataAccessException {
+        return DetectionDAOFactory.getInstance().getDetectionDAO().detectionFromTrigger(trigger);
     }
 
     private static Trigger getHighestStatTrigger(Collection<Trigger> triggers) {
@@ -105,7 +104,7 @@ public class TriggerManager {
         return best;
     }
 
-    private static void removeCoincidentTriggers(Trigger highestStatTrigger, Collection<Trigger> triggers, double blackoutSeconds) throws SQLException {
+    private static void removeCoincidentTriggers(Trigger highestStatTrigger, Collection<Trigger> triggers, double blackoutSeconds) throws DataAccessException {
 
         Iterator<Trigger> it = triggers.iterator();
         while (it.hasNext()) {
@@ -114,7 +113,7 @@ public class TriggerManager {
             if (isCoincident(highestStatTrigger, trigger, blackoutSeconds)) {
                 if (trigger.getTriggerid() != highestStatTrigger.getTriggerid()) {
                     it.remove();
-                    TriggerDAO.getInstance().markAsCoincident(trigger);
+                    DetectionDAOFactory.getInstance().getTriggerDAO().markAsCoincident(trigger);
                     String msg = String.format("Trigger (%s) was rejected as coincident in TriggerManager:removeCoincidentTriggers.", trigger.toString());
                     ApplicationLogger.getInstance().log(Level.FINE, String.format(msg));
                 }
@@ -135,7 +134,7 @@ public class TriggerManager {
 
     }
 
-    private void removeOverlappedSpawningDetections(Map<DetectorType, List<Trigger>> triggerMap) throws SQLException {
+    private void removeOverlappedSpawningDetections(Map<DetectorType, List<Trigger>> triggerMap) throws DataAccessException {
         for (DetectorType type : DetectorType.getSpawningDetectorTypes()) {
             Collection<Trigger> triggers = triggerMap.get(type);
             if (triggers != null && !triggers.isEmpty()) {
@@ -147,7 +146,7 @@ public class TriggerManager {
         }
     }
 
-    private void removeOverlappedForType(Collection<Trigger> triggers) throws SQLException {
+    private void removeOverlappedForType(Collection<Trigger> triggers) throws DataAccessException {
         ArrayList<Trigger> tmp = new ArrayList<>(triggers);
         triggers.clear();
         while (collectionHasOverlaps(tmp)) {
@@ -192,7 +191,7 @@ public class TriggerManager {
         return overlapped;
     }
 
-    private Trigger chooseSurvivor(ArrayList<Trigger> overlapped) throws SQLException {
+    private Trigger chooseSurvivor(ArrayList<Trigger> overlapped) throws DataAccessException {
         int index = -1;
         double bestDetStat = 0;
         for (int j = 0; j < overlapped.size(); ++j) {
@@ -205,7 +204,7 @@ public class TriggerManager {
         Trigger survivor = overlapped.get(index);
         overlapped.remove(survivor);
         for (Trigger trigger : overlapped) {
-            TriggerDAO.getInstance().markAsCoincident(trigger);
+            DetectionDAOFactory.getInstance().getTriggerDAO().markAsCoincident(trigger);
             String msg = String.format("Trigger (%s) was rejected as coincident in TriggerManager:chooseSurvivor.",
                     trigger.toString());
             ApplicationLogger.getInstance().log(Level.FINE, String.format(msg));

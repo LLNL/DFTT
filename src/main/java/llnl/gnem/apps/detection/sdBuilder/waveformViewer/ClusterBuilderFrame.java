@@ -26,14 +26,20 @@
 package llnl.gnem.apps.detection.sdBuilder.waveformViewer;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.util.Collection;
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.JSplitPane;
+import javax.swing.JToolBar;
 import llnl.gnem.apps.detection.sdBuilder.ClusterDlgToolbar;
+import llnl.gnem.apps.detection.sdBuilder.actions.BuildStackBeamAction;
 import llnl.gnem.apps.detection.sdBuilder.dataSelection.ConfigDataModel;
 import llnl.gnem.apps.detection.sdBuilder.dataSelection.GetConfigurationsWorker;
 import llnl.gnem.apps.detection.sdBuilder.dataSelection.TreePanel;
 import llnl.gnem.apps.detection.sdBuilder.stackViewer.StackViewer;
+import llnl.gnem.apps.detection.sdBuilder.stackViewer.StackViewerPanel;
 import llnl.gnem.core.correlation.CorrelationComponent;
 import llnl.gnem.core.gui.plotting.Limits;
 import llnl.gnem.core.gui.plotting.MouseMode;
@@ -48,7 +54,8 @@ public class ClusterBuilderFrame extends PersistentPositionContainer {
     private static ClusterBuilderFrame instance;
     private static final long serialVersionUID = 7841877980319845713L;
     private final ClusterViewer traceViewer;
-    private final StackViewer stackViewer;
+    private final StackViewerPanel stackViewer;
+    
     private final TreePanel treePanel;
 
     public synchronized static ClusterBuilderFrame getInstance() {
@@ -66,9 +73,9 @@ public class ClusterBuilderFrame extends PersistentPositionContainer {
         treePanel = new TreePanel();
         ConfigDataModel.getInstance().setView(treePanel);
         traceViewer = new ClusterViewer();
-        stackViewer = new StackViewer();
+        stackViewer = new StackViewerPanel();
         new GetConfigurationsWorker().execute();
-        
+         
         JSplitPane waveformSplitter = new JSplitPane(JSplitPane.VERTICAL_SPLIT,traceViewer,stackViewer);
         this.registerSplitter(waveformSplitter, "traceTraceSplitter", 500);
         
@@ -90,6 +97,14 @@ public class ClusterBuilderFrame extends PersistentPositionContainer {
 
 //        updateCaption();
     }
+    
+
+    public void setCorrelationWindowVisible(boolean value) {
+        traceViewer.setCorrelationWindowVisible(value);
+        stackViewer.setCorrelationWindowVisible(value);
+        repaint();
+    }
+    
 
     @Override
     protected void updateCaption() {
@@ -164,4 +179,21 @@ public class ClusterBuilderFrame extends PersistentPositionContainer {
     public Collection<CorrelationComponent> getVisibleTraces() {
         return traceViewer.getVisibleTraces();
     }
+    
+    public void updateTraceColors()
+    {
+        traceViewer.updateTraceColors();
+    }
+
+    public void setCorrelationWindowLength(double newLength) {
+        stackViewer.setCorrelationWindowLength(newLength);
+        traceViewer.setCorrelationWindowLength(newLength);
+    }
+    
+    
+    public void setCorrelationWindowStart(double newStart) {
+        stackViewer.setCorrelationWindowStart(newStart);
+        traceViewer.setCorrelationWindowStart(newStart);
+    }
+
 }

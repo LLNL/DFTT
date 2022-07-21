@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oracle
+  namespace: dftt
+  labels:
+    app: oracle
+    tier: databases
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: oracle   
+  template:
+    metadata:
+      labels:
+        name: oracle
+    spec:
+      containers:
+      - name: oracle
+        image: llnl/oracle:latest
+        env:
+         - name: ORACLE_SQL_DIR
+           value: /opt/oracle/scripts/startup
+         - name: ORACLE_PDB
+           value: ORCL
+         - name: ORACLE_NODE_NAME
+           valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 1521
+          name: oracle
+        - containerPort: 8080
+          name: oracle-studio
+        volumeMounts:
+        - mountPath: /opt/oracle/oradata
+          name: oracle-data
+        - mountPath: /dev/shm
+          name: dshm
+      volumes:
+      - name: oracle-data
+        hostPath: 
+          path: /oradata
+      - name: dshm
+        emptyDir:
+          medium: Memory
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dftt-db-service
+spec:
+  selector:
+    app: oracle
+  ports:
+  - port: 1521
+    targetPort: oracle

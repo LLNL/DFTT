@@ -30,7 +30,7 @@ import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
-import llnl.gnem.apps.detection.database.TriggerDAO;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.core.gui.util.ProgressDialog;
 import llnl.gnem.core.util.ApplicationLogger;
 
@@ -58,7 +58,7 @@ public class FeatureValuesRetrievalWorker extends SwingWorker<Void, Void> {
 
     @Override
     protected Void doInBackground() throws Exception {
-        result.addAll(TriggerDAO.getInstance().getFeatureValues(runid, columnName));
+        result.addAll(DetectionDAOFactory.getInstance().getTriggerDAO().getFeatureValues(runid, columnName));
         return null;
     }
 

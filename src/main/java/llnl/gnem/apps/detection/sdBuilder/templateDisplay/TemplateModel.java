@@ -25,6 +25,10 @@
  */
 package llnl.gnem.apps.detection.sdBuilder.templateDisplay;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.SwingUtilities;
 import llnl.gnem.apps.detection.core.framework.detectors.EmpiricalTemplate;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceTemplate;
 import llnl.gnem.apps.detection.sdBuilder.templateDisplay.projections.DetectorProjection;
@@ -63,9 +67,8 @@ public class TemplateModel {
     public EmpiricalTemplate getCurrentTemplate() {
         return template;
     }
-    
-    public StoredFilter getStreamFilter()
-    {
+
+    public StoredFilter getStreamFilter() {
         return streamFilter;
     }
 
@@ -78,7 +81,7 @@ public class TemplateModel {
     }
 
     public void setSecondTemplate(SubspaceTemplate template, DetectorProjection detectorProjection) {
-        view.secondTemplateAdded(template,detectorProjection);
+        view.secondTemplateAdded(template, detectorProjection);
     }
 
     private static class TemplateModelHolder {
@@ -94,7 +97,18 @@ public class TemplateModel {
         this.template = template;
         this.detectorid = detectorid;
         WriteTemplateAction.getInstance(this).setDetectorid(detectorid);
-        view.templateWasUpdated();
+        if (SwingUtilities.isEventDispatchThread()) {
+            view.templateWasUpdated();
+        } else {
+            Runnable foo = () -> {
+                view.templateWasUpdated();
+            };
+            try {
+                SwingUtilities.invokeAndWait(foo);
+            } catch (InterruptedException | InvocationTargetException ex) {
+                Logger.getLogger(TemplateModel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     public void clear() {

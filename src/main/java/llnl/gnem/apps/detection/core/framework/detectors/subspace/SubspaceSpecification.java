@@ -30,7 +30,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Collection;
 import llnl.gnem.apps.detection.core.dataObjects.AbstractEmpiricalSpecification;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.core.dataObjects.TriggerPositionType;
 import llnl.gnem.core.util.StreamKey;
 

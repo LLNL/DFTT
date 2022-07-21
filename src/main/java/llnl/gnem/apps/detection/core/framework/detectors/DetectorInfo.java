@@ -28,15 +28,17 @@ package llnl.gnem.apps.detection.core.framework.detectors;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import llnl.gnem.apps.detection.core.dataObjects.ArrayConfiguration;
-import llnl.gnem.apps.detection.core.dataObjects.ArrayElement;
+
+
 import llnl.gnem.apps.detection.core.dataObjects.DetectorSpecification;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.core.dataObjects.FKScreenParams;
 import llnl.gnem.apps.detection.core.dataObjects.SlownessRangeSpecification;
 import llnl.gnem.apps.detection.core.dataObjects.SlownessSpecification;
 import llnl.gnem.apps.detection.core.dataObjects.TriggerPositionType;
 import llnl.gnem.apps.detection.core.framework.detectors.array.FKScreenConfiguration;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayConfiguration;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayElementInfo;
 import llnl.gnem.core.util.StreamKey;
 
 /**
@@ -51,7 +53,7 @@ public class DetectorInfo {
     private final DetectorSpecification specification;
     private final ArrayConfiguration arrayConfiguration;
     private final SlownessSpecification slowness;
-    private final HashMap<StreamKey, ArrayElement> ourElements;
+    private final HashMap<StreamKey, ArrayElementInfo> ourElements;
     private final double detectorDelayInSeconds;
     private final DetectorType detectorType;
 
@@ -63,7 +65,7 @@ public class DetectorInfo {
             double detectorDelayInSeconds,
             ArrayConfiguration arrayConfiguration,
             SlownessSpecification slowness,
-            Map<StreamKey, ArrayElement> ourElements) {
+            Map<StreamKey, ArrayElementInfo> ourElements) {
         this.detectorid = detectorid;
         this.detectorType = detectorType;
         this.detectorName = detectorName;
@@ -80,8 +82,8 @@ public class DetectorInfo {
         return "DetectorInfo{" + "detectorid=" + detectorid + ", detectorName=" + detectorName + ", processingDelay=" + processingDelay + ", detectorDelayInSeconds=" + detectorDelayInSeconds + ", detectorType=" + detectorType + '}';
     }
 
-    public Collection<? extends StreamKey> getStaChanList() {
-        return specification.getStaChanList();
+    public Collection<StreamKey> getStaChanList() {
+        return specification.getStreamKeys();
     }
 
     /**
@@ -126,12 +128,7 @@ public class DetectorInfo {
         return specification.getBlackoutPeriod();
     }
 
-    /**
-     * @return the arrayConfiguration
-     */
-    public ArrayConfiguration getArrayConfiguration() {
-        return arrayConfiguration;
-    }
+
 
     public FKScreenConfiguration createFKScreen(FKScreenParams screenParams) {
         if ( slowness == null || ourElements == null) {

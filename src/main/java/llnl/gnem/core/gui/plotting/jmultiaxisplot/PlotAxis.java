@@ -412,11 +412,9 @@ public abstract class PlotAxis {
             max = min + 1;
             inc = 1;
             return new LinearTickMetrics(min, max, inc, true);
+        } else if (range <= eps) {
+            return new LinearTickMetrics(min, max, range / 10, true);
         }
-        else if(range <= eps){
-            return new LinearTickMetrics(min,max,range/10,true);
-        }
-        
 
         // compute candidate for increment
         testInc = Math.pow(10.0, Math.ceil(Math.log10(range / 10)));
@@ -429,7 +427,7 @@ public abstract class PlotAxis {
 
         // establish minimum scale value...
         double testMin = testMax;
-        
+
         do {
             ++i;
             testMin -= testInc;
@@ -560,6 +558,11 @@ public abstract class PlotAxis {
                 }
             }
             if (val >= displayMin && val <= displayMax) {
+                // Prevent the zero tick label from being displayed as a very small exponential number.
+                double test = Math.abs(val);
+                if ( test < ticks.getIncrement()/1000.0) {
+                    val = 0;
+                }
                 String tmp = formatValue(val);
                 renderTick(g, val, new TickLabel(tmp), true, HorizAlignment.CENTER);
                 // render major tick

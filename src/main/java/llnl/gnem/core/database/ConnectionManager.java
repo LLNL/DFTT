@@ -66,8 +66,8 @@ public class ConnectionManager implements Connections {
     private static ConnectionManager instance;
     private final String password;
     private final String connSpec;
-    private final static int DEFAULT_POOL_SIZE = 2;
-    private final static int MAX_POOL_SIZE = 20;
+    private final static int DEFAULT_POOL_SIZE = 4;
+    private final static int MAX_POOL_SIZE = 30;
     private final ArrayBlockingQueue<Connection> available;
     private String setRoleCommand;
     private int numConnections = 0;

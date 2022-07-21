@@ -44,7 +44,7 @@ public class FilterModel {
     private final ArrayList<StoredFilter> allStoredFilters;
     private final ArrayList<StoredFilter> myStoredFilters;
     private final Collection<FilterView> views;
-    private final static String NODE_NAME = "USER_STORED_FILTERS";
+    private final Collection<FilterModelObserver> changeObservers;
 
     private void maybeSetDefaultFilters() {
         if (myStoredFilters.isEmpty()) {
@@ -64,10 +64,34 @@ public class FilterModel {
                 currentFilter = afilter;
                 savePreferences();
                 notifyViewsModelChanged();
+                notifyChangeObserversFilterAdded(afilter);
                 return true;
             }
         }
         return false;
+    }
+
+    public void replaceUserFilters(Collection<StoredFilter> filters) {
+        myStoredFilters.clear();
+        myStoredFilters.addAll(filters);
+        notifyViewsModelChanged();
+    }
+
+    private void notifyChangeObserversFilterRemoved(StoredFilter filter) {
+        for (FilterModelObserver fmo : changeObservers) {
+            fmo.filterWasRemoved(filter);
+        }
+    }
+
+    private void notifyChangeObserversFilterAdded(StoredFilter filter) {
+        for (FilterModelObserver fmo : changeObservers) {
+            fmo.filterWasAdded(filter);
+        }
+    }
+
+    void setCurrentFilter(StoredFilter selected) {
+        currentFilter = selected;
+        savePreferences();
     }
 
     private static class FilterModelHolder {
@@ -77,39 +101,39 @@ public class FilterModel {
 
     public static FilterModel getInstance() {
         return FilterModelHolder.INSTANCE;
-
     }
 
     private FilterModel() {
         allStoredFilters = new ArrayList<>();
         myStoredFilters = new ArrayList<>();
-        try {
-            ArrayList<StoredFilter> tmp = (ArrayList<StoredFilter>) UserObjectPreferences.getInstance().retrieveObjectFromPrefs(NODE_NAME, ArrayList.class);
-            if (tmp != null && !tmp.isEmpty()) {
-                myStoredFilters.addAll(tmp);
-            }
-            currentFilter = (StoredFilter) UserObjectPreferences.getInstance().retrieveObjectFromPrefs("PREF_FILTERID", StoredFilter.class);
-        } catch (IOException | ClassNotFoundException | BackingStoreException ex) {
 
-        }
-        if (currentFilter == null) {
-            currentFilter = new StoredFilter();
-        }
+        currentFilter = getCurrentFromStorage();
+
         views = new ArrayList<>();
+        changeObservers = new ArrayList<>();
+    }
+
+    public void addChangeObserver(FilterModelObserver observer) {
+        changeObservers.add(observer);
     }
 
     public void savePreferences() {
         try {
-            UserObjectPreferences.getInstance().saveObjectToPrefs(NODE_NAME, myStoredFilters);
-            UserObjectPreferences.getInstance().saveObjectToPrefs("PREF_FILTERID", currentFilter);
+            StoredFilter target = currentFilter;
+            if (target == null) {
+                target = new StoredFilter();
+            }
+            UserObjectPreferences.getInstance().saveObjectToPrefs("PREF_FILTERID", target);
         } catch (IOException | BackingStoreException ex) {
             ApplicationLogger.getInstance().log(Level.SEVERE, "Failed saving preferred Filters preferences!", ex);
         }
     }
 
-    public void updateModel(Collection<StoredFilter> storedFilters) {
+    public void updateModel(Collection<StoredFilter> allFilters, Collection<StoredFilter> myFilters) {
         allStoredFilters.clear();
-        allStoredFilters.addAll(storedFilters);
+        myStoredFilters.clear();
+        allStoredFilters.addAll(allFilters);
+        myStoredFilters.addAll(myFilters);
         maybeSetDefaultFilters();
         currentFilter = getCurrentFromStorage();
         notifyViewsModelChanged();
@@ -121,6 +145,10 @@ public class FilterModel {
             result = (StoredFilter) UserObjectPreferences.getInstance().retrieveObjectFromPrefs("PREF_FILTERID", StoredFilter.class);
         } catch (IOException | ClassNotFoundException | BackingStoreException ex) {
             Logger.getLogger(FilterModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        if (result != null && result.isNoFilter()) {
+            result = null;
         }
         return result;
     }
@@ -144,8 +172,12 @@ public class FilterModel {
         return currentFilter;
     }
 
+    public ArrayList<StoredFilter> getMyStoredFilters() {
+        return new ArrayList<>(myStoredFilters);
+    }
+
     public ArrayList<StoredFilter> getAllStoredFilters() {
-        return myStoredFilters;
+        return new ArrayList<>(allStoredFilters);
     }
 
     public void addNewFilter(StoredFilter filter) {
@@ -155,6 +187,7 @@ public class FilterModel {
             currentFilter = filter;
             savePreferences();
             notifyViewsModelChanged();
+            notifyChangeObserversFilterAdded(filter);
         }
     }
 
@@ -173,5 +206,6 @@ public class FilterModel {
             savePreferences();
         }
         notifyViewsModelChanged();
+        notifyChangeObserversFilterRemoved(filter);
     }
 }

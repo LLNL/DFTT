@@ -32,8 +32,8 @@ package llnl.gnem.apps.detection.core.framework;
 public class FKScreenResults {
 
     private final boolean passed;
-    private final double sx;
-    private final double sy;
+    private final double sx; //positive north
+    private final double sy; // positive east
     private final double quality;
     private final double velocity;
     private final double azimuth;
@@ -60,6 +60,11 @@ public class FKScreenResults {
         return "FKScreenResults{" + "passed=" + passed + ", sx=" + sx + ", sy=" + sy + ", quality=" + quality + ", velocity=" + velocity + ", azimuth=" + azimuth + '}';
     }
 
+    public boolean isValidFkResult()
+    {
+        return passed;
+    }
+    
     /**
      * @return the passed
      */

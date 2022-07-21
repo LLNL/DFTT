@@ -1,8 +1,8 @@
-/*
+/*-
  * #%L
  * Detection Framework (Release)
  * %%
- * Copyright (C) 2015 - 2020 Lawrence Livermore National Laboratory (LLNL)
+ * Copyright (C) 2015 - 2022 Lawrence Livermore National Laboratory (LLNL)
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,6 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  * #L%
+ */
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
  */
 package llnl.gnem.core.dataAccess.database.javadb;
 
@@ -46,13 +51,24 @@ public class DerbyFilterDAO implements FilterDAO{
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+
     @Override
-    public void setStoredFilterTable(String storedFilterTable) {
+    public StoredFilter getSingleFilter(int filterid) throws DataAccessException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void setSequenceName(String filterdSequenceName) {
+    public Collection<StoredFilter> getUserFilters() throws DataAccessException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void createDefaultUserFilters() throws DataAccessException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void removeUserFilter(int filterid) throws DataAccessException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     

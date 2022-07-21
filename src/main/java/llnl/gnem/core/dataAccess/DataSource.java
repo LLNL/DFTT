@@ -1,8 +1,8 @@
-/*
+/*-
  * #%L
  * Detection Framework (Release)
  * %%
- * Copyright (C) 2015 - 2020 Lawrence Livermore National Laboratory (LLNL)
+ * Copyright (C) 2015 - 2022 Lawrence Livermore National Laboratory (LLNL)
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,11 @@
  * THE SOFTWARE.
  * #L%
  */
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package llnl.gnem.core.dataAccess;
 
 /**
@@ -30,5 +35,5 @@ package llnl.gnem.core.dataAccess;
  * @author dodge1
  */
 public enum DataSource {
-    ORACLE,DERBY
+     ORACLE,DERBY,IN_MEM_TEST
 }

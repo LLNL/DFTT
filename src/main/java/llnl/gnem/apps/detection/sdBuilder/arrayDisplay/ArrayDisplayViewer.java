@@ -27,12 +27,10 @@ package llnl.gnem.apps.detection.sdBuilder.arrayDisplay;
 
 import llnl.gnem.core.gui.plotting.Limits;
 import llnl.gnem.core.gui.plotting.VertAlignment;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.ZoomInStateChange;
 import llnl.gnem.core.gui.plotting.jmultiaxisplot.JSubplot;
 import llnl.gnem.core.gui.plotting.jmultiaxisplot.VPickLine;
 import llnl.gnem.core.gui.plotting.jmultiaxisplot.PickErrorChangeState;
 import llnl.gnem.core.gui.plotting.jmultiaxisplot.WindowDurationChangedState;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.ZoomOutStateChange;
 import llnl.gnem.core.gui.plotting.ZoomType;
 import llnl.gnem.core.gui.plotting.MouseMode;
 import llnl.gnem.core.gui.plotting.jmultiaxisplot.JPlotKeyMessage;
@@ -45,7 +43,6 @@ import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.*;
-import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
 import llnl.gnem.core.correlation.util.NominalArrival;
@@ -125,7 +122,7 @@ public class ArrayDisplayViewer extends JMultiAxisPlot implements Observer {
         double minStart = Double.MAX_VALUE;
         double maxEnd = -minStart;
         for (CorrelationComponent cc : data) {
-            CorrelationTraceData td = (CorrelationTraceData) cc.getTraceData();
+            CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
             float[] plotData = td.getPlotData();
             double traceStart = td.getTime().getEpochTime();
             double nominalPickTime = td.getNominalPick().getTime();
@@ -221,7 +218,7 @@ public class ArrayDisplayViewer extends JMultiAxisPlot implements Observer {
     
     private void plotAllText(CorrelationComponent component, double verticalPosition) {
         String text = String.format("%s DETID: %d",
-                component.getTraceData().getName(), component.getEvent().getEvid());
+                component.getCorrelationTraceData().getName(), component.getEvent().getEvid());
         
         plotLeftText(subplot, text, verticalPosition);
         double correlation = component.getCorrelation();
@@ -410,7 +407,7 @@ public class ArrayDisplayViewer extends JMultiAxisPlot implements Observer {
     }
     
     private void addNominalPick(CorrelationComponent cc, double centerValue) {
-        CorrelationTraceData td = (CorrelationTraceData) cc.getTraceData();
+        CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
         NominalArrival arrival = td.getNominalPick();
         String phase = arrival.getPhase();
         String auth = arrival.getAuth();
@@ -452,7 +449,7 @@ public class ArrayDisplayViewer extends JMultiAxisPlot implements Observer {
         for (CorrelationComponent cc : data) {
             Line line = compLineMap.get(cc);
             if (line != null) {
-                float[] newData = cc.getTraceData().getPlotData();
+                float[] newData = cc.getCorrelationTraceData().getPlotData();
                 line.replaceYarray(newData);
             }
         }

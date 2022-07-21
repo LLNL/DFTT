@@ -26,13 +26,12 @@
 package llnl.gnem.apps.detection.sdBuilder.templateDisplay.projections;
 
 import llnl.gnem.apps.detection.sdBuilder.templateDisplay.*;
-import java.sql.Connection;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceTemplate;
-import llnl.gnem.apps.detection.database.SubspaceTemplateDAO;
-import llnl.gnem.core.database.ConnectionManager;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
+
 import llnl.gnem.core.util.ApplicationLogger;
 
 /**
@@ -50,16 +49,11 @@ public class SecondTemplateRetrievalWorker extends SwingWorker<Void, Void> {
 
     @Override
     protected Void doInBackground() throws Exception {
-        Connection conn = null;
-        try {
-            conn = ConnectionManager.getInstance().checkOut();
-            Object obj = SubspaceTemplateDAO.getInstance().getEmpiricalTemplate(conn, detectorProjection.getDetectorid());
+ 
+            Object obj = DetectionDAOFactory.getInstance().getSubspaceTemplateDAO().getEmpiricalTemplate(detectorProjection.getDetectorid());
             template = (SubspaceTemplate) obj;
-        } finally {
-            if (conn != null) {
-                ConnectionManager.getInstance().checkIn(conn);
-            }
-        }
+      
+        
 
         return null;
     }

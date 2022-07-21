@@ -27,9 +27,11 @@ package llnl.gnem.apps.detection.util;
 
 import llnl.gnem.apps.detection.util.initialization.ProcessingPrescription;
 import java.io.IOException;
-import java.sql.SQLException;
+
 import java.util.logging.Level;
-import llnl.gnem.apps.detection.database.FrameworkRunDAO;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
+
+import llnl.gnem.core.dataAccess.DataAccessException;
 import llnl.gnem.core.util.ApplicationLogger;
 
 public class RunInfo {
@@ -41,7 +43,7 @@ public class RunInfo {
         return INSTANCE;
     }
 
-    public void initialize(Integer runidToResume, String wfdiscTable, String commandLineArgs, double fixedRawSampleRate) throws SQLException, IOException {
+    public void initialize(Integer runidToResume, String commandLineArgs) throws IOException, DataAccessException {
         if (runid > 0) {
             ApplicationLogger.getInstance().log(Level.FINE, "RunInfo already initialized with runid = " + runid);
             return;
@@ -52,12 +54,12 @@ public class RunInfo {
         if (runidToResume != null){
             ApplicationLogger.getInstance().log(Level.FINE, "Retrieving run information for configuration using runid = " + runidToResume);
         }
-        if (runidToResume != null && runidToResume > 0 && FrameworkRunDAO.getInstance().isConsistentRunid(runidToResume, configName)) {
+        if (runidToResume != null && runidToResume > 0 && DetectionDAOFactory.getInstance().getFrameworkRunDAO().isConsistentRunid(runidToResume, configName)) {
             ApplicationLogger.getInstance().log(Level.FINE, "Resuming previous run: " + runidToResume);
             runid = runidToResume;
         } else {
             ApplicationLogger.getInstance().log(Level.FINE, "Creating new run entry for configuration: " + configName+"...");
-            runid = FrameworkRunDAO.getInstance().createFrameworkRunEntry(wfdiscTable, configName, commandLineArgs, fixedRawSampleRate);
+            runid = DetectionDAOFactory.getInstance().getFrameworkRunDAO().createFrameworkRunEntry(configName, commandLineArgs);
             ApplicationLogger.getInstance().log(Level.FINE, "Created new run entry for runid: " + runid);
         }
 
@@ -70,7 +72,7 @@ public class RunInfo {
         return runid;
     }
 
-    public void logEndTime() throws SQLException {
-        FrameworkRunDAO.getInstance().logEndTime(runid);
+    public void logEndTime() throws DataAccessException {
+        DetectionDAOFactory.getInstance().getFrameworkRunDAO().logEndTime(runid);
     }
 }

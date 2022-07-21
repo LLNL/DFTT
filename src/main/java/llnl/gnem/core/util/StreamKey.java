@@ -57,14 +57,14 @@ public class StreamKey implements Comparable<StreamKey>, Serializable {
         this.locationCode = locationCode;
     }
 
-    public StreamKey(String source, String net, Integer netJdate, String sta, String chan, String locationCode) {
-        station = new StationKey(source, net, netJdate, sta);
+    public StreamKey(String agency, String net, Integer netJdate, String sta, String chan, String locationCode) {
+        station = new StationKey(agency, net, netJdate, sta);
         this.chan = chan != null ? chan.trim() : null;
         this.locationCode = locationCode != null ? locationCode.trim() : null;
     }
 
-    public StreamKey(String source, String net, String sta, String chan, String locationCode) {
-        station = new StationKey(source, net, sta);
+    public StreamKey(String agency, String net, String sta, String chan, String locationCode) {
+        station = new StationKey(agency, net, sta);
         this.chan = chan != null ? chan.trim() : null;
         this.locationCode = locationCode != null ? locationCode.trim() : null;
     }
@@ -135,8 +135,8 @@ public class StreamKey implements Comparable<StreamKey>, Serializable {
     /**
      * @return the source
      */
-    public String getSource() {
-        return station.getSource();
+    public String getAgency() {
+        return station.getAgency();
     }
 
     /**
@@ -224,18 +224,17 @@ public class StreamKey implements Comparable<StreamKey>, Serializable {
     }
 
     public String getShortName() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(station.getSource());
+        StringBuilder sb = new StringBuilder("(");
+        sb.append(station.getAgency() != null ? station.getAgency() : "?");
         sb.append(", ");
-        sb.append(station.getNet());
+        sb.append(station.getNet() != null ? station.getNet() : '?');
         sb.append(", ");
-        sb.append(station.getSta());
+        sb.append(station.getSta() != null ? station.getSta() : '?');
         sb.append(", ");
-        sb.append(chan);
-        if (locationCode != null && !locationCode.isEmpty()) {
-            sb.append("-");
-            sb.append(locationCode);
-        }
+        sb.append(chan != null ? chan : '?');
+        sb.append(", ");
+        sb.append(locationCode != null ? locationCode : '?');
+        sb.append(')');
 
         return sb.toString();
     }

@@ -32,13 +32,45 @@ import java.awt.Color;
  * @author dodge1
  */
 public enum TriggerClassification {
-    UNSET(Color.BLUE), ARTIFACT(Color.RED), UNUSABLE(Color.GRAY), GOOD(Color.GREEN), INCOMPLETE(Color.CYAN);
+    UNSET(Color.BLUE,"-"), 
+    ARTIFACT(Color.RED,"b"), 
+    UNUSABLE(Color.GRAY,"u"), 
+    GOOD(new Color(32,255,32),"g"), 
+    INCOMPLETE(Color.CYAN,"i"), 
+    LOCAL(Color.GREEN,"l"), 
+    REGIONAL(new Color(0,128,0),"r"),
+    TELESEISMIC(new Color(0,0,0),"e");
 
+    /*
+                case "b":
+                return TriggerClassification.ARTIFACT;
+            case "g":
+                return TriggerClassification.GOOD;
+            case "u":
+                return TriggerClassification.UNUSABLE;
+            case "l":
+                return TriggerClassification.LOCAL;
+            case "r":
+                return TriggerClassification.REGIONAL;
+            case "e":
+                return TriggerClassification.TELESEISMIC;
+            default:
+                return TriggerClassification.UNSET;
+
+    */
+    
+    
     public static TriggerClassification createFromStatusStrings(String artifactStatus, String usabilityStatus) {
         if (artifactStatus.equals("unset") && usabilityStatus.equals("unset")) {
             return TriggerClassification.UNSET;
         } else if (artifactStatus.equals("valid") && usabilityStatus.equals("valid")) {
             return TriggerClassification.GOOD;
+        } else if (artifactStatus.equals("valid") && usabilityStatus.equals("local")) {
+            return TriggerClassification.LOCAL;
+        } else if (artifactStatus.equals("valid") && usabilityStatus.equals("regional")) {
+            return TriggerClassification.REGIONAL;
+        } else if (artifactStatus.equals("valid") && usabilityStatus.equals("teleseismic")) {
+            return TriggerClassification.TELESEISMIC;
         } else if (artifactStatus.equals("valid") && usabilityStatus.equals("invalid")) {
             return TriggerClassification.UNUSABLE;
         } else if (artifactStatus.equals("invalid")) {
@@ -56,17 +88,30 @@ public enum TriggerClassification {
                 return TriggerClassification.GOOD;
             case "u":
                 return TriggerClassification.UNUSABLE;
+            case "l":
+                return TriggerClassification.LOCAL;
+            case "r":
+                return TriggerClassification.REGIONAL;
+            case "e":
+                return TriggerClassification.TELESEISMIC;
             default:
                 return TriggerClassification.UNSET;
         }
     }
     private final Color traceDisplayColor;
+    private final String status;
 
-    private TriggerClassification(Color color) {
+    private TriggerClassification(Color color, String status) {
         traceDisplayColor = color;
+        this.status = status;
     }
 
     public Color getTraceDisplayColor() {
         return traceDisplayColor;
     }
+
+    public String getStatus() {
+        return status;
+    }
+    
 }

@@ -49,9 +49,13 @@ public class ClusterResult {
 
     public Collection<GroupData> getGroups()
     {
-        Collection<GroupData> result = new ArrayList<GroupData>();
+        Collection<GroupData> result = new ArrayList<>();
         while(!groups.isEmpty()){
             GroupData gd = getLargestGroup();
+            if(gd == null && groups.size()==1){
+                result.addAll(groups);
+                return result;
+            }
             result.add(gd);
             groups.remove(gd);
         }
@@ -62,7 +66,7 @@ public class ClusterResult {
         GroupData best = null;
         int bestSize = -1;
         for( GroupData gd : groups){
-            if( gd.size() > bestSize){
+            if( !gd.isResidualGroup() && gd.size() > bestSize){
                 bestSize = gd.size();
                 best = gd;
             }

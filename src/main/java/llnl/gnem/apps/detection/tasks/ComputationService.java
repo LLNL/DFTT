@@ -27,7 +27,7 @@ package llnl.gnem.apps.detection.tasks;
 
 
 import llnl.gnem.apps.detection.core.dataObjects.CancellationData;
-import llnl.gnem.apps.detection.core.dataObjects.Trigger;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Trigger;
 import llnl.gnem.apps.detection.util.initialization.ProcessingPrescription;
 import java.util.Collection;
 import llnl.gnem.core.util.ApplicationLogger;

@@ -25,7 +25,7 @@
  */
 package llnl.gnem.apps.detection.util.configuration;
 
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -41,22 +41,14 @@ public class BootDetectorCreator {
 
     private static final String sep = System.getProperty("line.separator");
     private final File bootDetDir;
-    private final String refSta;
     private final Collection<StreamKey> staChansToUse;
     private final double staLtaThresh;
     DetectorType bootDetectorType;
     private final Double beamAzimuth;
     private final Double beamVelocity;
 
-    public BootDetectorCreator(File stream1Dir,
-            String refSta,
-            double staLtaThreshold,
-            Collection<StreamKey> staChansToUse,
-            DetectorType bootDetectorType,
-            Double beamAzimuth,
-            Double beamVelocity) {
+    public BootDetectorCreator(File stream1Dir, double staLtaThreshold, Collection<StreamKey> staChansToUse, DetectorType bootDetectorType, Double beamAzimuth, Double beamVelocity) {
         this.staChansToUse = new ArrayList<>(staChansToUse);
-        this.refSta = refSta;
         this.staLtaThresh = staLtaThreshold;
         this.bootDetectorType = bootDetectorType;
         this.beamAzimuth = beamAzimuth;
@@ -72,13 +64,13 @@ public class BootDetectorCreator {
         if (null != bootDetectorType) {
             switch (bootDetectorType) {
                 case STALTA:
-                    File staLtaDetectorFile = writeStaLtaFile();
+                    File staLtaDetectorFile = writeStaLtaFile().toPath().normalize().toFile();
                     return writeBootDetectorsFile(staLtaDetectorFile, bootDetectorType);
                 case ARRAYPOWER:
-                    File arrayDetectorFile = writeArrayDetectorFile();
+                    File arrayDetectorFile = writeArrayDetectorFile().toPath().normalize().toFile();
                     return writeBootDetectorsFile(arrayDetectorFile, bootDetectorType);
                 case BULLETIN:
-                    File bulletinDetectorFile = writeBulletinDetectorFile(bulletinFile);
+                    File bulletinDetectorFile = writeBulletinDetectorFile(bulletinFile).toPath().normalize().toFile();
                     return writeBootDetectorsFile(bulletinDetectorFile, bootDetectorType);
                 default:
                     throw new IllegalStateException("Unsupported boot detector type: " + bootDetectorType);
@@ -88,10 +80,10 @@ public class BootDetectorCreator {
     }
 
     private File writeBootDetectorsFile(File detectorFile, DetectorType bootDetectorType) throws FileNotFoundException {
-        File bootDetFile = new File(bootDetDir, "BootDetector.txt");
+        File bootDetFile = new File(bootDetDir, "BootDetector.txt").toPath().normalize().toFile();
         try (PrintWriter writer = new PrintWriter(bootDetFile)) {
             String tmp = detectorFile.getAbsolutePath();
-            writer.print(String.format("%s  %s%s", bootDetectorType.toString(), tmp.replace("\\", "\\\\"), sep));
+            writer.print(String.format("%s  %s%s", bootDetectorType.toString(), tmp, sep));
 
             return bootDetFile;
         }
@@ -144,9 +136,15 @@ public class BootDetectorCreator {
 
     private void printStaChanSection(PrintWriter writer) {
         writer.print(".StaChanList" + sep);
-        for (StreamKey sck : staChansToUse) {
-            writer.print(String.format("%s %s  1%s", sck.getSta(), sck.getChan(), sep));
-        }
+            for (StreamKey sc : staChansToUse) {
+                writer.print(sc.getAgency() != null ? sc.getAgency() + " " : "");
+                writer.print(sc.getNet() != null ? sc.getNet() + " " : "");
+                writer.print(sc.getSta() != null ? sc.getSta() + " " : "");
+                writer.print(sc.getChan() != null ? sc.getChan() + " " : "");
+                writer.print(sc.getLocationCode() != null ? sc.getLocationCode() + " " : "");
+                writer.print( sep);
+            }
+
         writer.print(".EndList" + sep);
     }
 }

@@ -45,6 +45,10 @@ public class BootDetectorParams {
     private final Map<String, Collection<ArrayDetectorSpecification>> arrayParamsMap;
     private final Map<String, Collection<BulletinSpecification>> bulletinParamsMap;
 
+    public boolean isHasArrayBootDetector()
+    {
+        return !arrayParamsMap.isEmpty();
+    }
    
     public BootDetectorParams() {
         staLtaParamsMap = new HashMap<>();

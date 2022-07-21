@@ -31,7 +31,7 @@ import java.awt.Dimension;
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 
 /**
  *
@@ -39,10 +39,15 @@ import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
  */
 public class ParamPanel extends JPanel {
 
+    private static final long serialVersionUID = 1904024300665553940L;
+
     private final GeneralParamsPanel generalParams;
     private final CommonDetectorParamsPanel commonDetectorParams;
     private final SubspaceParamPane subspaceParams;
     private final ArrayCorrelationParamsPanel arrayCorrelationParams;
+    private final PickingParamPane pickingParams;
+    private final FKParamsPanel fkParams;
+    private final WindowSelectionParamPane refineWindowParams;
 
     public ParamPanel(double clusterThreshold,
             double detectionThreshold,
@@ -58,28 +63,49 @@ public class ParamPanel extends JPanel {
             boolean enableSpawning,
             double traceLength,
             boolean fixShiftsToZero,
-            String siteTableName,
             String originTableName,
             int minDetectionCount,
             double prePickSeconds,
             double minDetectionStat,
             double maxDetectionStat,
             boolean suppressBadDetectors,
-            boolean requireCorrelation, 
-            boolean fixSubspaceDimension, 
+            boolean requireCorrelation,
+            boolean fixSubspaceDimension,
+            boolean capSubspaceDimension,
             int subspaceDimension,
             boolean autoApplyFilter,
             boolean requireWindowPositionConfirmation,
             boolean retrieveByBlocks,
-            int blockSize) {
+            int blockSize,
+            boolean displayNewTemplates,
+            DetectorCreationOption detectorCreationOption,
+            boolean displayPredictedPicks,
+            boolean displayEventIDLabels,
+            boolean displayDetectionLabels,
+            double maxSlowness,
+            int numSlowness,
+            double minFrequency,
+            double maxFrequency,
+            double rWFloorFactor,
+            boolean rWRefineWindow,
+            double rWSnrThreshold,
+            double rWAnalysisWindowLength,
+            double rWMinimumWindowLength) {
 
         super(new BorderLayout());
-        generalParams = new GeneralParamsPanel(clusterThreshold, detectorType, traceLength, 
-                fixShiftsToZero, siteTableName, originTableName, minDetectionCount, 
-                prePickSeconds,minDetectionStat, maxDetectionStat, suppressBadDetectors, requireCorrelation, autoApplyFilter, retrieveByBlocks, blockSize);
+        generalParams = new GeneralParamsPanel(clusterThreshold, detectorType, traceLength,
+                fixShiftsToZero, originTableName, minDetectionCount,
+                prePickSeconds, minDetectionStat, maxDetectionStat, suppressBadDetectors, requireCorrelation, autoApplyFilter, retrieveByBlocks, blockSize);
         commonDetectorParams = new CommonDetectorParamsPanel(detectionThreshold, blackoutSeconds);
-        subspaceParams = new SubspaceParamPane(energyCapture, fixSubspaceDimension, subspaceDimension,requireWindowPositionConfirmation);
+        subspaceParams = new SubspaceParamPane(energyCapture, fixSubspaceDimension, capSubspaceDimension,
+                subspaceDimension, requireWindowPositionConfirmation, displayNewTemplates, detectorCreationOption);
         arrayCorrelationParams = new ArrayCorrelationParamsPanel(energyCapture, staDuration, ltaDuration, gapDuration);
+
+        pickingParams = new PickingParamPane(displayPredictedPicks, displayEventIDLabels, displayDetectionLabels);
+
+        fkParams = new FKParamsPanel(maxSlowness, numSlowness, minFrequency, maxFrequency);
+        
+       refineWindowParams =  new WindowSelectionParamPane( rWFloorFactor, rWRefineWindow, rWSnrThreshold, rWAnalysisWindowLength, rWMinimumWindowLength);
 
         add(generalParams, BorderLayout.NORTH);
 
@@ -90,14 +116,13 @@ public class ParamPanel extends JPanel {
         tabbedPane.addTab("Subspace Params", null, subspaceParams, "Parameters that apply to subspace detectors");
 
         tabbedPane.addTab("ArrayCorrelation Params", null, arrayCorrelationParams, "Parameters that apply to array correlation detectors");
+        tabbedPane.addTab("Picking Params", null, pickingParams, "Parameters that apply to picking");
+        tabbedPane.addTab("FK Params", null, fkParams, "Parameters controlling FK analysis");
+        tabbedPane.addTab("Refine Window Params", null, refineWindowParams, "Parameters controlling window refinement");
 
         add(tabbedPane, BorderLayout.CENTER);
         setBorder(BorderFactory.createLineBorder(Color.blue));
 
-    }
-
-    public String getSiteTableName() {
-        return generalParams.getSiteTableName();
     }
 
     public String getOriginTableName() {
@@ -107,14 +132,12 @@ public class ParamPanel extends JPanel {
     public double getClusterThreshold() {
         return generalParams.getClusterThreshold();
     }
-    
-    public double getMinDetStatThreshold()
-    {
+
+    public double getMinDetStatThreshold() {
         return generalParams.getMinDetStatThreshold();
     }
-    
-    public double getMaxDetStatThreshold()
-    {
+
+    public double getMaxDetStatThreshold() {
         return generalParams.getMaxDetStatThreshold();
     }
 
@@ -130,7 +153,7 @@ public class ParamPanel extends JPanel {
             return arrayCorrelationParams.getEnergyCapture();
         }
     }
-    
+
     public int getSubspaceDimension() {
         DetectorType type = getDetectorType();
         if (type == DetectorType.SUBSPACE) {
@@ -139,14 +162,36 @@ public class ParamPanel extends JPanel {
             return -1;
         }
     }
-    
-    public boolean isFixSubspaceDimension(){
+
+    public boolean isFixSubspaceDimension() {
         DetectorType type = getDetectorType();
         if (type == DetectorType.SUBSPACE) {
             return subspaceParams.isFixSubspaceDimension();
         } else {
             return false;
         }
+    }
+
+    public boolean isCapSubspaceDimension() {
+        DetectorType type = getDetectorType();
+        if (type == DetectorType.SUBSPACE) {
+            return subspaceParams.isCapSubspaceDimension();
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isDisplayNewTemplates() {
+        DetectorType type = getDetectorType();
+        if (type == DetectorType.SUBSPACE) {
+            return subspaceParams.isDisplayNewTemplates();
+        } else {
+            return false;
+        }
+    }
+
+    public DetectorCreationOption getDetectorCreationOption() {
+        return subspaceParams.getDetectorCreationOption();
     }
 
     public double getBlackoutSeconds() {
@@ -180,30 +225,27 @@ public class ParamPanel extends JPanel {
     public boolean isFixShiftsToZero() {
         return generalParams.isFixShiftsToZero();
     }
-    
+
     public boolean isSuppressBadDetectors() {
         return generalParams.isSuppressBadDetectors();
     }
-    
+
     public boolean isRequireCorrelation() {
         return generalParams.isRequireCorrelation();
     }
-    
-    public boolean isAutoApplyFilter()
-    {
+
+    public boolean isAutoApplyFilter() {
         return generalParams.isAutoApplyFilter();
     }
-    
-    public double getPrePickSeconds()
-    {
+
+    public double getPrePickSeconds() {
         return generalParams.getWindowStart();
     }
-    
-    public boolean isRequireWindowPositionConfirmation()
-    {
+
+    public boolean isRequireWindowPositionConfirmation() {
         return subspaceParams.isRequireWindowPositionConfirmation();
     }
-    
+
     public boolean isRetrieveByBlocks() {
         return generalParams.isRetrieveByBlocks();
     }
@@ -211,4 +253,55 @@ public class ParamPanel extends JPanel {
     public int getBlockSize() {
         return generalParams.getBlockSize();
     }
+
+    public boolean isDisplayPredictedPicks() {
+        return pickingParams.isDisplayPredictedPicks();
+    }
+
+    public boolean isDisplayEventIDLabels() {
+        return pickingParams.isDisplayEventIDLabels();
+    }
+
+    public boolean isDisplayDetectionLabels() {
+        return pickingParams.isDisplayDetectionLabels();
+    }
+
+    public double getMaxSlowness() {
+        return fkParams.getMaxSlowness();
+    }
+
+    public int getNumSlowness() {
+        return fkParams.getNumSlowness();
+    }
+
+    public double getMinFrequency() {
+        return fkParams.getMinFrequency();
+    }
+
+    public double getMaxFrequency() {
+        return fkParams.getMaxFrequency();
+    }
+
+ 
+    public double getRWFloorFactor() {
+        return refineWindowParams.getFloorFactor();
+    }
+
+    public double getRWSNRThreshold() {
+        return refineWindowParams.getSNRThreshold();
+    }
+
+    public boolean isRefineWindow() {
+        return refineWindowParams.isRefineWindow();
+    }
+
+    public double getRWAnalysisWindowLength() {
+        return refineWindowParams.getAnalysisWindowLength();
+    }
+
+    public double getRWMinimumWindowLength() {
+        return refineWindowParams.getMinimumWindowLength();
+    }
+   
+    
 }

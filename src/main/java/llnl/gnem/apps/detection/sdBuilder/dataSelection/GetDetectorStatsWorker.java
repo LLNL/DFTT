@@ -32,9 +32,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
 import javax.swing.tree.DefaultMutableTreeNode;
-import llnl.gnem.apps.detection.database.DetectorDAO;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
-import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
 import llnl.gnem.core.util.ApplicationLogger;
 
 /**
@@ -57,7 +56,7 @@ public class GetDetectorStatsWorker extends SwingWorker<Void, Void> {
     @Override
     protected Void doInBackground() throws Exception {
        
-        result.addAll(DetectorDAO.getInstance().getDetectorStats(runid, ParameterModel.getInstance().isSuppressBadDetectors()));
+        result.addAll(DetectionDAOFactory.getInstance().getDetectorDAO().getDetectorStats(runid, ParameterModel.getInstance().isSuppressBadDetectors()));
         return null;
 
     }

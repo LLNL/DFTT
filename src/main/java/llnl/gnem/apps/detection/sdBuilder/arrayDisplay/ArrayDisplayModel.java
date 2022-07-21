@@ -27,7 +27,6 @@ package llnl.gnem.apps.detection.sdBuilder.arrayDisplay;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import llnl.gnem.apps.detection.core.signalProcessing.FKMeasurement;
 
 import llnl.gnem.core.correlation.CorrelationComponent;
 
@@ -122,40 +121,57 @@ public class ArrayDisplayModel implements FilterClient {
     void adjustWindowDuration(double delta) {
         fkWindowDuration += delta;
     }
-    
-    public FKMeasurement computeFKStatistic()
-    {
-        float smax = 0.5f;
-        int ns = 100;
-        float f1 = 1;
-        float f2 = 8;
+
+    public FKInputData getFKInputData() {
         ArrayList<float[]> waveforms = new ArrayList<>();
         float[] xnorth = new float[elements.size()];
         float[] xeast = new float[elements.size()];
         float delta = 0;
         int idx = 0;
-        for(CorrelationComponent comp : elements) {
-            xnorth[idx] = (float)(double)comp.getDnorth();
-            xeast[idx] = (float)(double)comp.getDeast();
+        for (CorrelationComponent comp : elements) {
+            xnorth[idx] = (float) (double) comp.getDnorth();
+            xeast[idx] = (float) (double) comp.getDeast();
             waveforms.add(comp.getSegment(fWindowStart, fkWindowDuration));
-            delta = (float)comp.getSeismogram().getDelta();
+            delta = (float) comp.getSeismogram().getDelta();
             ++idx;
         }
-        
-        return new FKMeasurement( smax,
-             ns,
-             xnorth,
-             xeast,
-             waveforms,
-             delta,
-             f1,
-             f2);
+        return new FKInputData(waveforms,xnorth, xeast, delta );
+    }
+    
+    public static class FKInputData{
+        private final ArrayList<float[]> waveforms;
+        private final float[] xnorth;
+        private final float[] xeast;
+        private final float delta;
+
+        public FKInputData(ArrayList<float[]> waveforms, float[] xnorth, float[] xeast, float delta) {
+            this.waveforms = new ArrayList<>(waveforms);
+            this.xnorth = xnorth;
+            this.xeast = xeast;
+            this.delta = delta;
+        }
+
+        public ArrayList<float[]> getWaveforms() {
+            return new ArrayList<>(waveforms);
+        }
+
+        public float[] getXnorth() {
+            return xnorth;
+        }
+
+        public float[] getXeast() {
+            return xeast;
+        }
+
+        public float getDelta() {
+            return delta;
+        }
         
     }
 
     public int getDetectionID() {
         for (CorrelationComponent comp : elements) {
-            return (int)comp.getEvent().getEvid();
+            return (int) comp.getEvent().getEvid();
         }
         throw new IllegalStateException("No DETECTIONID found!");
     }

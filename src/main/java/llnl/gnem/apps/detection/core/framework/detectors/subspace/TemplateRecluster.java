@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,278 +25,280 @@
  */
 package llnl.gnem.apps.detection.core.framework.detectors.subspace;
 
-import java.util.ArrayList;
-import llnl.gnem.apps.detection.cancellation.dendrogram.CompleteLink;
-import llnl.gnem.apps.detection.cancellation.dendrogram.HierarchicalLinker;
-import llnl.gnem.apps.detection.cancellation.dendrogram.SimilarityMeasure;
-import llnl.gnem.apps.detection.cancellation.dendrogram.SingleLink;
-import llnl.gnem.apps.detection.core.signalProcessing.Sequence;
-import llnl.gnem.core.util.StreamKey;
-
-import Jama.Matrix;
-import Jama.SingularValueDecomposition;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
-import llnl.gnem.apps.detection.cancellation.dendrogram.LinkageType;
-import llnl.gnem.apps.detection.core.dataObjects.PreprocessorParams;
 
+import org.ojalgo.matrix.Primitive32Matrix;
+import org.ojalgo.matrix.Primitive32Matrix.DenseReceiver;
+import org.ojalgo.matrix.decomposition.SingularValue;
+import org.ojalgo.matrix.store.MatrixStore;
+import org.ojalgo.matrix.store.RawStore;
+import org.ojalgo.random.Deterministic;
+
+import llnl.gnem.apps.detection.core.cluster.dendrogram.CompleteLink;
+import llnl.gnem.apps.detection.core.cluster.dendrogram.HierarchicalLinker;
+import llnl.gnem.apps.detection.core.cluster.dendrogram.LinkageType;
+import llnl.gnem.apps.detection.core.cluster.dendrogram.SimilarityMeasure;
+import llnl.gnem.apps.detection.core.cluster.dendrogram.SingleLink;
+import llnl.gnem.apps.detection.core.dataObjects.PreprocessorParams;
+import llnl.gnem.core.signalprocessing.Sequence;
+import llnl.gnem.core.util.StreamKey;
 
 /**
  *
  * @author harris2
  */
 public class TemplateRecluster {
-    
-    private static final float ALMOST_ONE                 = 0.9999f;
+
+    private static final float ALMOST_ONE = 0.9999f;
     private static final double MIN_ALLOWABLE_CORRELATION = 0.2;
-    private static final double eps                       = Math.pow(2, -52);
-    
-    private final int                           ntemplates;
-    private final ArrayList< SubspaceTemplate > oldTemplates;
-    private final LinkageType                   linkageType;
-    private HierarchicalLinker                  linker;
-    private ArrayList< Object[] >               clusters;
-    
-    
-    
-    public TemplateRecluster( ArrayList< SubspaceTemplate > oldTemplates, LinkageType linkageType ) {
-        
-        ntemplates        = oldTemplates.size();
+    private static final double eps = Math.pow(2, -52);
+
+    private final int ntemplates;
+    private final ArrayList<SubspaceTemplate> oldTemplates;
+    private final LinkageType linkageType;
+    private HierarchicalLinker linker;
+    private ArrayList<Object[]> clusters;
+
+    public TemplateRecluster(ArrayList<SubspaceTemplate> oldTemplates, LinkageType linkageType) {
+
+        ntemplates = oldTemplates.size();
         this.oldTemplates = oldTemplates;
-        this.linkageType  = linkageType;
-        
-        linker = null;        
+        this.linkageType = linkageType;
+
+        linker = null;
     }
-    
-    
-    
-    public ArrayList< SubspaceTemplate >  buildAllTemplates( float clusteringThreshold, double energyCaptureThreshold ) {
-        
-        linker        = cluster( clusteringThreshold );
-        int nclusters = linker.getClusters( clusteringThreshold ).size();
-        
-        ArrayList< SubspaceTemplate> retval = new ArrayList<>( );
-        
-        for ( int ic = 0;  ic < nclusters;  ic++ ) {
-            retval.add( buildTemplateFromCluster( ic, energyCaptureThreshold ) );
+
+    public ArrayList<SubspaceTemplate> buildAllTemplates(float clusteringThreshold, double energyCaptureThreshold) {
+
+        linker = cluster(clusteringThreshold);
+        int nclusters = linker.getClusters(clusteringThreshold).size();
+
+        ArrayList<SubspaceTemplate> retval = new ArrayList<>();
+
+        for (int ic = 0; ic < nclusters; ic++) {
+            retval.add(buildTemplateFromCluster(ic, energyCaptureThreshold));
         }
-        
+
         return retval;
     }
-    
-    
-    
+
     // Cluster templates
-    
-    public HierarchicalLinker cluster( float threshold ) {
-        
+
+    public HierarchicalLinker cluster(float threshold) {
+
         // calculate pairwise projections
-        
-        ArrayList< SimilarityMeasure > measurements = new ArrayList<>();
-        ArrayList< Object >            objectProxy  = new ArrayList<>();
-        
+
+        ArrayList<SimilarityMeasure> measurements = new ArrayList<>();
+        ArrayList<Object> objectProxy = new ArrayList<>();
+
         int maxLength = 0;
-        for ( int i = 0;  i < ntemplates;  i++ )
-            maxLength = Math.max( maxLength, oldTemplates.get(i).getTemplateLength() );
-        
-        for ( int i = 0;  i < ntemplates;  i++ ) {
-            
+        for (int i = 0; i < ntemplates; i++) {
+            maxLength = Math.max(maxLength, oldTemplates.get(i).getTemplateLength());
+        }
+
+        for (int i = 0; i < ntemplates; i++) {
+
             SubspaceTemplate oldTi = oldTemplates.get(i);
-            objectProxy.add( oldTi );
-            
-            for ( int j = i+1;  j < ntemplates;  j++ ) {
+            objectProxy.add(oldTi);
+
+            for (int j = i + 1; j < ntemplates; j++) {
                 SubspaceTemplate oldTj = oldTemplates.get(j);
-                Projection p = new Projection( oldTi, oldTj, maxLength );
-                SimilarityMeasure SM = new SimilarityMeasure( oldTi, oldTj, p.getProjectionValue(), p.getDecimatedDelay() );
-                measurements.add( SM );
+                Projection p = new Projection(oldTi, oldTj, maxLength);
+                SimilarityMeasure SM = new SimilarityMeasure(oldTi, oldTj, p.getProjectionValue(), p.getDecimatedDelay());
+                measurements.add(SM);
             }
-            
+
         }
-        
-        switch ( linkageType ) {
-            case SingleLink:
-                linker = new SingleLink( measurements, threshold, objectProxy );
-                break;
-            case CompleteLink:
-                linker = new CompleteLink( measurements, threshold, objectProxy );
-                break;
-            default:
-                throw new IllegalStateException( "Unknown linkage type: " + linkageType );
+
+        switch (linkageType) {
+        case SingleLink:
+            linker = new SingleLink(measurements, threshold, objectProxy);
+            break;
+        case CompleteLink:
+            linker = new CompleteLink(measurements, threshold, objectProxy);
+            break;
+        default:
+            throw new IllegalStateException("Unknown linkage type: " + linkageType);
         }
-        
-        clusters  = linker.getClusters( threshold );
-        
-        return linker;        
+
+        clusters = linker.getClusters(threshold);
+
+        return linker;
     }
-    
-    
-    
+
     // Construct new template from cluster
-    
-    
-    public SubspaceTemplate buildTemplateFromCluster( int clusterIndex, double energyCaptureThreshold ) {
-        
-        Object[] cluster = clusters.get( clusterIndex );
-        
+
+    public SubspaceTemplate buildTemplateFromCluster(int clusterIndex, double energyCaptureThreshold) {
+
+        Object[] cluster = clusters.get(clusterIndex);
+
         // Calculate delays and correlations from Projections
-        
+
         int nT = cluster.length;
-        
-        Matrix S = new Matrix( nT, nT );
-        Matrix C = new Matrix( nT, nT );
-        
-        for ( int i = 0;  i < nT;  i++ ) {
+
+        DenseReceiver S = Primitive32Matrix.FACTORY.makeDense(nT, nT);
+        DenseReceiver C = Primitive32Matrix.FACTORY.makeDense(nT, nT);
+
+        for (int i = 0; i < nT; i++) {
             SubspaceTemplate Ti = (SubspaceTemplate) cluster[i];
-            for ( int j = 0;  j < nT;  j++ ) {
+            for (int j = 0; j < nT; j++) {
                 SubspaceTemplate Tj = (SubspaceTemplate) cluster[j];
-                Projection P = new Projection( Ti, Tj );
-                S.set( i, j, P.getDecimatedDelay() );
-                C.set( i, j, P.getProjectionValue() );
+                Projection P = new Projection(Ti, Tj);
+                S.set(i, j, P.getDecimatedDelay());
+                C.set(i, j, P.getProjectionValue());
             }
         }
-        
-        Matrix delays = VanDecarCrosson( nT, S, C, false );
-  
-        
+
+        Primitive32Matrix delays = VanDecarCrosson(nT, S.get(), C.get(), false);
+
         // Calculate number of columns of data matrix and find maximum length of templates
-        
-        int   ncols             = 0;
-        int   maxTemplateLength = 0;
-       
-        for ( Object O : cluster ) {
+
+        int ncols = 0;
+        int maxTemplateLength = 0;
+
+        for (Object O : cluster) {
             SubspaceTemplate T = (SubspaceTemplate) O;
-            ncols             +=  T.getdimension();
-            maxTemplateLength  = Math.max( maxTemplateLength, T.getTemplateLength() );
+            ncols += T.getdimension();
+            maxTemplateLength = Math.max(maxTemplateLength, T.getTemplateLength());
         }
-        
+
         // first template
-        
-        Object                 O                 = cluster[0];
-        int                    delay             = -(int) Math.round( delays.get(0,0) );
-        SubspaceTemplate       referenceTemplate = (SubspaceTemplate) O;
-        ArrayList< StreamKey > channels          = referenceTemplate.getStaChanList();
-        
+
+        Object O = cluster[0];
+        int delay = -(int) Math.round(delays.get(0, 0));
+        SubspaceTemplate referenceTemplate = (SubspaceTemplate) O;
+        ArrayList<StreamKey> channels = referenceTemplate.getStaChanList();
+
         int nchannels = referenceTemplate.getnchannels();
-        int nrows     = nchannels * maxTemplateLength;
-        
-        double[][] x   = new double[ nrows ][ ncols ];   
-        float[]    tmp = new float[ maxTemplateLength ];
-        
+        int nrows = nchannels * maxTemplateLength;
+
+        double[][] x = new double[nrows][ncols];
+        float[] tmp = new float[maxTemplateLength];
+
         // unpack first template
-        
-        int                  templateLength = referenceTemplate.getTemplateLength();
-        ArrayList< float[] > t              = referenceTemplate.getMultiplexedRepresentation();
-        int                  ndim           = referenceTemplate.getdimension();
-        
+
+        int templateLength = referenceTemplate.getTemplateLength();
+        ArrayList<float[]> t = referenceTemplate.getMultiplexedRepresentation();
+        int ndim = referenceTemplate.getdimension();
+
         int cptr = 0;
-        for ( int idim = 0;  idim < ndim;  idim++ ) {
-            
+        for (int idim = 0; idim < ndim; idim++) {
+
             float[] xt = t.get(idim);
-            
-            for ( int ich = 0;  ich < nchannels;  ich++ ) {
-                int src = ich*templateLength;
-                int dst = ich*maxTemplateLength;
-                Arrays.fill( tmp, 0.0f );
-                System.arraycopy( xt, src, tmp, 0, templateLength );
-                Sequence.zshift( tmp, delay );                                                          //  TODO:  check this
-                for ( int i = 0;  i < maxTemplateLength;  i++ ) x[i + dst][cptr] = tmp[i];
+
+            for (int ich = 0; ich < nchannels; ich++) {
+                int src = ich * templateLength;
+                int dst = ich * maxTemplateLength;
+                Arrays.fill(tmp, 0.0f);
+                System.arraycopy(xt, src, tmp, 0, templateLength);
+                Sequence.zshift(tmp, delay); //  TODO:  check this
+                for (int i = 0; i < maxTemplateLength; i++) {
+                    x[i + dst][cptr] = tmp[i];
+                }
             }
 
             cptr++;
         }
-        
+
         // add representations from remainder of templates
-        
-        for ( int it = 1;  it < cluster.length;  it++ ) {
-            
-            SubspaceTemplate T                = (SubspaceTemplate) cluster[it];
-            templateLength                    = T.getTemplateLength();
-            delay                             = -(int) Math.round( delays.get(it, 0) );
-            ArrayList< StreamKey > channels_i = T.getStaChanList();
-            
+
+        for (int it = 1; it < cluster.length; it++) {
+
+            SubspaceTemplate T = (SubspaceTemplate) cluster[it];
+            templateLength = T.getTemplateLength();
+            delay = -(int) Math.round(delays.get(it, 0));
+            ArrayList<StreamKey> channels_i = T.getStaChanList();
+
             // check consistency
-            
-            if ( !referenceTemplate.consistent( T ) ) throw new IllegalStateException( "Templates are inconsistent" );
-            
+
+            if (!referenceTemplate.consistent(T)) {
+                throw new IllegalStateException("Templates are inconsistent");
+            }
+
             // OK, consistent, now load representation into data matrix
 
             ndim = T.getdimension();
-            t    = T.getMultiplexedRepresentation();
-            
-            for ( int idim = 0;  idim < ndim;  idim++ ) {
+            t = T.getMultiplexedRepresentation();
+
+            for (int idim = 0; idim < ndim; idim++) {
                 float[] xt = t.get(idim);
-                for ( int ich = 0;  ich < nchannels;  ich++ ) {
-                    int src = channels_i.indexOf( channels.get(ich) ) * templateLength;
+                for (int ich = 0; ich < nchannels; ich++) {
+                    int src = channels_i.indexOf(channels.get(ich)) * templateLength;
                     int dst = ich * maxTemplateLength;
-                    Arrays.fill( tmp, 0.0f );
-                    System.arraycopy( xt, src, tmp, 0, templateLength );
-                    Sequence.zshift( tmp, -delay );                                                          //  TODO:  check this
-                    for ( int i = 0;  i < maxTemplateLength;  i++ ) x[ dst + i ][ cptr ] = tmp[ i ];  // reordering of channels here, as necessary
+                    Arrays.fill(tmp, 0.0f);
+                    System.arraycopy(xt, src, tmp, 0, templateLength);
+                    Sequence.zshift(tmp, -delay); //  TODO:  check this
+                    for (int i = 0; i < maxTemplateLength; i++) {
+                        x[dst + i][cptr] = tmp[i]; // reordering of channels here, as necessary
+                    }
                 }
                 cptr++;
             }
-            
-        }     
-                           
+
+        }
+
         // svd and dimension estimation
-            
-        Matrix X = new Matrix( x );
-        SingularValueDecomposition svd = X.svd();
-        
-        double[] s = svd.getSingularValues();
-        
+
+        Primitive32Matrix X = Primitive32Matrix.FACTORY.makeWrapper(RawStore.wrap(x));
+        SingularValue<Double> svd = SingularValue.PRIMITIVE.make(X);
+
+        double[] s = svd.getSingularValues().toRawCopy1D();
+
         double E = 0.0;
-        for ( int i = 0;  i < s.length;  i++ ) {
+        for (int i = 0; i < s.length; i++) {
             s[i] *= s[i];
-            E    += s[i];
+            E += s[i];
         }
         int dimension = 0;
         double sum = 0.0;
-        while (sum / E < energyCaptureThreshold ) {
-            sum += s[ dimension++ ];
+        while (sum / E < energyCaptureThreshold) {
+            sum += s[dimension++];
         }
-        
-        System.out.println( "Template dimension estimate: " );
-        DecimalFormat I3 = new DecimalFormat( "000" );
-        DecimalFormat D  = new DecimalFormat( "0.00000" );
+
+        System.out.println("Template dimension estimate: ");
+        DecimalFormat I3 = new DecimalFormat("000");
+        DecimalFormat D = new DecimalFormat("0.00000");
         sum = 0.0;
-        for ( int i = 0;  i < s.length;  i++ ) {
+        for (int i = 0; i < s.length; i++) {
             sum += s[i];
-            if ( i == dimension )
-                System.out.println( I3.format( i ) + "  " + D.format( sum/E ) + "    <---" );
-            else
-                System.out.println( I3.format( i ) + "  " + D.format( sum/E ) );
+            if (i == dimension) {
+                System.out.println(I3.format(i) + "  " + D.format(sum / E) + "    <---");
+            } else {
+                System.out.println(I3.format(i) + "  " + D.format(sum / E));
+            }
         }
-        
-        double[] sv = new double[ dimension ];
-        ArrayList< float[] > rep = new ArrayList<>();
-        Matrix U = svd.getU();
-        for ( int id = 0;  id < dimension;  id++ ) {
+
+        double[] sv = new double[dimension];
+        ArrayList<float[]> rep = new ArrayList<>();
+        MatrixStore<Double> U = svd.getU();
+        for (int id = 0; id < dimension; id++) {
             sv[id] = s[id];
-            tmp = new float[ maxTemplateLength ];
-            for ( int i = 0;  i < maxTemplateLength;  i++ ) tmp[i] = (float) U.get( i, id );
-            rep.add( tmp );
+            tmp = new float[maxTemplateLength];
+            for (int i = 0; i < maxTemplateLength; i++) {
+                tmp[i] = U.get(i, id).floatValue();
+            }
+            rep.add(tmp);
         }
-        
+
         // construct new SubspaceTemplate, taking specifications from the first (reference) template
-        
-        SubspaceSpecification spec   = (SubspaceSpecification) referenceTemplate.getSpecification();  // TODO:  check that components of spec are appropriate
-        PreprocessorParams    params = referenceTemplate.getPreprocessingParameters();
-        
-        SubspaceTemplate retval = new SubspaceTemplate( spec, params, rep, sv );
-          
+
+        SubspaceSpecification spec = (SubspaceSpecification) referenceTemplate.getSpecification(); // TODO:  check that components of spec are appropriate
+        PreprocessorParams params = referenceTemplate.getPreprocessingParameters();
+
+        SubspaceTemplate retval = new SubspaceTemplate(spec, params, rep, sv);
+
         return retval;
     }
-    
-    
-    
-    private Matrix VanDecarCrosson( int nTraces, Matrix shifts, Matrix correlations, boolean FixToZeroShift ) {
-        
+
+    private Primitive32Matrix VanDecarCrosson(int nTraces, Primitive32Matrix shifts, Primitive32Matrix correlations, boolean FixToZeroShift) {
+
         if (nTraces == 1) {
-            return new Matrix(1, 1, 0);
+            return Primitive32Matrix.FACTORY.makeFilled(1, 1, new Deterministic());
         }
         if (nTraces == 2) {
-            return shifts.getMatrix(0, 1, 0, 0);
+            return shifts.select(new long[] { 0, 1 }, new long[] { 0, 0 });
         }
         int nt = (nTraces * (nTraces - 1)) / 2 + 1;
 
@@ -305,7 +307,7 @@ public class TemplateRecluster {
         int windex = 0;
         for (int j = 0; j < nTraces - 1; ++j) {
             for (int k = j + 1; k < nTraces; ++k) {
-                float ccTmp = (float) correlations.get(j, k);
+                float ccTmp = correlations.get(j, k).floatValue();
                 if (ccTmp >= 1) {
                     ccTmp = ALMOST_ONE;
                 }
@@ -319,15 +321,13 @@ public class TemplateRecluster {
 
         preventSingularMatrix(w);
 
-        Matrix ATWA = buildATWAMatrix(nTraces, nt, w);
-        Matrix ATWDT = buildATWDTMatrix(nTraces, w, shifts);
-        Matrix result = pinv(ATWA).times(ATWDT);
+        Primitive32Matrix ATWA = buildATWAMatrix(nTraces, nt, w);
+        Primitive32Matrix ATWDT = buildATWDTMatrix(nTraces, w, shifts);
+        DenseReceiver result = Primitive32Matrix.FACTORY.makeWrapper(pinv(ATWA).multiply(ATWDT)).copy();
 
-//        Matrix result = ATWA.inverse().times(ATWDT);
-
-        if (result.getRowDimension() > 1) {
+        if (result.getRowDim() > 1) {
             double shift0 = result.get(0, 0);
-            for (int j = 0; j < result.getRowDimension(); ++j) {
+            for (int j = 0; j < result.getRowDim(); ++j) {
                 if (FixToZeroShift) {
                     result.set(j, 0, 0);
                 } else {
@@ -336,13 +336,11 @@ public class TemplateRecluster {
 
             }
         }
-        return result;
+        return result.get();
     }
 
-        
-    
     private void preventSingularMatrix(float[] w) {
-        
+
         int count = 0;
         for (int j = 0; j < w.length - 1; ++j) {
             if (w[j] > 0) {
@@ -352,20 +350,18 @@ public class TemplateRecluster {
         if (count < 2) {
             Arrays.fill(w, 1);
         }
-        
+
     }
-    
-    
-    
-    private static Matrix pinv(Matrix A) {
-        
-        SingularValueDecomposition svd = A.svd();
-        Matrix S = svd.getS();
-        Matrix U = svd.getU();
-        Matrix V = svd.getV();
-        double norm2 = svd.norm2();
-        double[] sv = svd.getSingularValues();
-        int maxA = Math.max(A.getRowDimension(), A.getColumnDimension());
+
+    private static Primitive32Matrix pinv(Primitive32Matrix A) {
+
+        SingularValue<Double> svd = SingularValue.PRIMITIVE.make(A);
+        DenseReceiver S = Primitive32Matrix.FACTORY.makeWrapper(svd.getD()).copy();
+        Primitive32Matrix U = Primitive32Matrix.FACTORY.make(svd.getU());
+        Primitive32Matrix V = Primitive32Matrix.FACTORY.make(svd.getV());
+        double norm2 = svd.getOperatorNorm();
+        double[] sv = svd.getSingularValues().toRawCopy1D();
+        int maxA = Math.max(A.getRowDim(), A.getColDim());
         double tolerance = maxA * norm2 * eps;
         for (int j = 0; j < sv.length; ++j) {
             if (sv[j] >= tolerance) {
@@ -374,15 +370,13 @@ public class TemplateRecluster {
                 S.set(j, j, 0);
             }
         }
-        
-        return (U.times(S)).times(V.transpose());
+
+        return (U.multiply(S.get())).multiply(V.transpose());
     }
-    
-    
-    
-    private Matrix buildATWAMatrix(int nTraces, int nt, float[] w) {
-        
-        Matrix ATWA = new Matrix(nTraces, nTraces);
+
+    private Primitive32Matrix buildATWAMatrix(int nTraces, int nt, float[] w) {
+
+        DenseReceiver ATWA = Primitive32Matrix.FACTORY.makeDense(nTraces, nTraces);
         for (int j = 0; j < nTraces; ++j) {
             for (int k = 0; k < nTraces; ++k) {
                 ATWA.set(j, k, 0);
@@ -417,14 +411,12 @@ public class TemplateRecluster {
                 ATWA.set(j, k, ATWA.get(j, k) + w[nt - 1]);
             }
         }
-        return ATWA;
+        return ATWA.get();
     }
-    
-    
 
-    private Matrix buildATWDTMatrix(int nTraces, float[] w, Matrix CCshift) {
-        
-        Matrix ATWDT = new Matrix(nTraces, 1);
+    private Primitive32Matrix buildATWDTMatrix(int nTraces, float[] w, Primitive32Matrix CCshift) {
+
+        DenseReceiver ATWDT = Primitive32Matrix.FACTORY.makeDense(nTraces, 1);
         int index = 0;
         for (int j = 0; j < nTraces - 1; ++j) {
             for (int k = j + 1; k < nTraces; ++k) {
@@ -452,8 +444,8 @@ public class TemplateRecluster {
                 ++index;
             }
         }
-        
-        return ATWDT;
-    }    
-    
+
+        return ATWDT.get();
+    }
+
 }

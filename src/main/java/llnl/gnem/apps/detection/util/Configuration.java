@@ -25,6 +25,8 @@
  */
 package llnl.gnem.apps.detection.util;
 
+import java.io.File;
+import llnl.gnem.core.util.FileUtil.DriveMapper;
 import net.jcip.annotations.ThreadSafe;
 
 /**
@@ -82,6 +84,13 @@ public class Configuration {
      */
     public String getFileName() {
         return fileName;
+    }
+    
+    public String getAbsoluteFileName()
+    {
+        String tmpDir = DriveMapper.getInstance().maybeMapPath(dir);
+        File file = new File(tmpDir,fileName);
+        return file.getAbsolutePath();
     }
     
 }

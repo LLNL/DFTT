@@ -33,11 +33,11 @@ import java.util.prefs.Preferences;
 import javax.swing.*;
 import llnl.gnem.apps.detection.sdBuilder.actions.*;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
+import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
 import llnl.gnem.core.gui.filter.FilterToolbarControl;
 import llnl.gnem.core.gui.plotting.ZoomType;
 import llnl.gnem.core.gui.util.Utility;
-import llnl.gnem.core.gui.waveform.factory.FilterComponentFactoryHolder;
 import llnl.gnem.core.gui.waveform.plotPrefs.OpenPlotPrefsDialogAction;
 import llnl.gnem.core.util.ButtonAction;
 
@@ -76,9 +76,6 @@ public class ClusterDlgToolbar extends JToolBar {
         button = new JButton(CreateSacfilesAction.getInstance(this));
         addButton(button);
 
-        button = new JButton(OutputClustersAction.getInstance(this));
-        addButton(button);
-
         this.addSeparator();
         button = new JButton(MagnifyAction.getInstance(this));
         addButton(button);
@@ -100,10 +97,8 @@ public class ClusterDlgToolbar extends JToolBar {
         }
         addButton(button);
 
-        button = new JButton(ResizeWindowAction.getInstance(this));
-        addButton(button);
         addSeparator();
-        // Utility.getIcon(this, "miscIcons/showerror16.gif");
+       
         ImageIcon imageIcon = new ImageIcon(Utility.getIcon(this, "miscIcons/showerror16.gif").getImage().getScaledInstance(32, 32, Image.SCALE_DEFAULT));
         JCheckBox showWindowCheck = new JCheckBox(imageIcon);
         imageIcon = new ImageIcon(Utility.getIcon(this, "miscIcons/viewStack.gif").getImage().getScaledInstance(32, 32, Image.SCALE_DEFAULT));
@@ -144,7 +139,6 @@ public class ClusterDlgToolbar extends JToolBar {
         
         button = new JButton(DisplayAllStationsStackAction.getInstance(this));
         addButton(button);
-        
 
         JPanel spacer = new JPanel();
         spacer.setPreferredSize(new Dimension(500, 10));
@@ -178,7 +172,7 @@ public class ClusterDlgToolbar extends JToolBar {
                 JCheckBox jcb = (JCheckBox) source;
                 boolean selected = jcb.isSelected();
                 ParameterModel.getInstance().setShowCorrelationWindow(selected);
-                viewer.setCorrelationWindowVisible(selected);
+                ClusterBuilderFrame.getInstance().setCorrelationWindowVisible(selected);
             }
         }
     }

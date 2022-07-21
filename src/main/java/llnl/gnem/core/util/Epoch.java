@@ -477,7 +477,7 @@ public class Epoch implements Serializable, Comparable {
     public String toString() {
         String on = TimeString(start, timeResolution);
         String off = TimeString(end, timeResolution);
-        return "Start = " + on + ", End = " + off;
+        return "(" + on + " ==> " + off + ")";
     }
 
     private String TimeString(TimeT T, TimeResolution resolution) {

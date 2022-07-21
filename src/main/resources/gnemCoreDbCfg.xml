@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<oracleDbServices xmlns="http://www.llnl.gov/gnemcore/1.0.0">
+    <services>
+        <service>
+            <serviceId>dftt-local</serviceId>
+            <connectionDescriptor>(DESCRIPTION = (ADDRESS_LIST =
+                (ADDRESS = (PROTOCOL = TCP)(HOST = 127.0.0.1)(PORT = 1521)) )           
+                (CONNECT_DATA =
+                (SERVICE_NAME = ORCL)
+                ))
+            </connectionDescriptor>
+            <isSensitiveService>true</isSensitiveService>
+        </service>
+    </services>
+</oracleDbServices>
+

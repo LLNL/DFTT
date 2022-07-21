@@ -78,7 +78,7 @@ public class PopulateCorrelatorAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         if (runInfo != null && runid > 0 && detectorid > 0) {
             try {
-                SourceData source = SourceDataHolder.getInstance().getSourceData(runid);
+                SourceData source = SourceDataHolder.getInstance().getSourceData(runid, false);
                
                 double duration = ParameterModel.getInstance().getTraceLength();
                

@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import llnl.gnem.apps.detection.core.dataObjects.AbstractSpecification;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.core.dataObjects.TriggerPositionType;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

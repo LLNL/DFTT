@@ -27,7 +27,6 @@ package llnl.gnem.apps.detection.sdBuilder.dataSelection;
 
 import java.util.Collection;
 import javax.swing.tree.DefaultMutableTreeNode;
-import llnl.gnem.apps.detection.core.dataObjects.Detection;
 import llnl.gnem.apps.detection.util.Configuration;
 import llnl.gnem.apps.detection.util.FrameworkRun;
 

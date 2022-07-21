@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
@@ -37,6 +38,7 @@ import llnl.gnem.apps.detection.dataAccess.dataobjects.StationInfo;
 import llnl.gnem.apps.detection.sdBuilder.multiStationStack.MultiStationStackModel;
 import llnl.gnem.apps.detection.sdBuilder.multiStationStack.StackElement;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
+import llnl.gnem.core.dataAccess.DAOFactory;
 import llnl.gnem.core.dataAccess.DataAccessException;
 import llnl.gnem.core.gui.util.ExceptionDialog;
 import llnl.gnem.core.gui.util.ProgressDialog;
@@ -66,7 +68,6 @@ public class BuildMultiStationStackWorker extends SwingWorker<Void, Void> {
         ProgressDialog.getInstance().setReferenceFrame(ClusterBuilderFrame.getInstance());
         ProgressDialog.getInstance().setVisible(true);
 
-
     }
 
     @Override
@@ -74,58 +75,57 @@ public class BuildMultiStationStackWorker extends SwingWorker<Void, Void> {
         int groupid = DetectionDAOFactory.getInstance().getStationDAO().getGroupForDetectionid(detectionid);
         if (groupid > 0) { // Detection belongs to group so it is possible to retrieve data for associated stations.
             Collection<StationInfo> evstaInfo = DetectionDAOFactory.getInstance().getStationDAO().getGroupStations(groupid);
-       ProgressDialog.getInstance().setMinMax(0, evstaInfo.size());
-       ProgressDialog.getInstance().setProgressBarIndeterminate(false);
-       int processedSoFar = 0;
-       ProgressDialog.getInstance().setValue(processedSoFar);
-            for (StationInfo si : evstaInfo) {
-                ProgressDialog.getInstance().setText(si.getSta());
-                try {
-                    List<StreamKey> keys = DetectionDAOFactory.getInstance().getDetectorDAO().getDetectorChannelsFromConfig(si.getConfigid());
-                    for (StreamKey key : keys) {
-                        double[] stack = null;
-                        int count = 0;
-                        double delta = -1;
-                        for (Epoch epoch : epochs) {
-                            CssSeismogram seis = DetectionDAOFactory.getInstance().getSeismogramDAO().getSeismogram(key, epoch.getTime(), epoch.getEndtime());
-                            if (seis != null) {
-                                if(delta < 0){
-                                    delta = seis.getDelta();
-                                }
-                                seis.RemoveMean();
-                                seis.Taper(5.0);
-                                float[] data = seis.getData();
-                                if(stack == null){
-                                    stack = new double[data.length];
-                                }
-                                else if(stack.length != data.length){
-                                    System.out.println("retrieved data not same length!");
-                                }
-                                else{
-                                    for(int j = 0; j < data.length; ++j){
-                                        stack[j] += data[j];
-                                    }
-                                    ++count;
-                                }
-                            }
-                        }
-                        if(count > 1 && stack  != null){
-                            double scale = 1.0/count;
-                            float[] result = new float[stack.length];
-                            for(int j = 0; j < result.length; ++j){
-                                result[j] = (float)(stack[j] * scale);
-                            }
-                            stacks.add(new StackElement(key,result,delta));
-                        }
-                    }
-                } catch (DataAccessException ex) {
-                    ApplicationLogger.getInstance().log(Level.INFO, "Stack creation failed!");
-                }
-                ++processedSoFar;
-                ProgressDialog.getInstance().setValue(processedSoFar);
-            }
+            ProgressDialog.getInstance().setMinMax(0, evstaInfo.size());
+            ProgressDialog.getInstance().setProgressBarIndeterminate(false);
+            AtomicInteger processedCount = new AtomicInteger(0);
+            ProgressDialog.getInstance().setValue(processedCount.get());
+            evstaInfo.parallelStream().forEach(t->stackSingleStation(t,processedCount));
         }
         return null;
+    }
+
+    private void stackSingleStation(StationInfo si, AtomicInteger processedCount) {
+        ProgressDialog.getInstance().setText(si.getSta());
+        try {
+            List<StreamKey> keys = DetectionDAOFactory.getInstance().getDetectorDAO().getDetectorChannelsFromConfig(si.getConfigid());
+            for (StreamKey key : keys) {
+                double[] stack = null;
+                int count = 0;
+                double delta = -1;
+                for (Epoch epoch : epochs) {
+                    CssSeismogram seis = DAOFactory.getInstance().getContinuousWaveformDAO().getCssSeismogram(key, epoch);
+                    if (seis != null) {
+                        if (delta < 0) {
+                            delta = seis.getDelta();
+                        }
+                        seis.RemoveMean();
+                        seis.Taper(5.0);
+                        float[] data = seis.getData();
+                        if (stack == null) {
+                            stack = new double[data.length];
+                        } else if (stack.length != data.length) {
+                            System.out.println("retrieved data not same length!");
+                        } else {
+                            for (int j = 0; j < data.length; ++j) {
+                                stack[j] += data[j];
+                            }
+                            ++count;
+                        }
+                    }
+                }
+                if (count > 1 && stack != null) {
+                    double scale = 1.0 / count;
+                    float[] result = new float[stack.length];
+                    for (int j = 0; j < result.length; ++j) {
+                        result[j] = (float) (stack[j] * scale);
+                    }
+                    stacks.add(new StackElement(key, result, delta));
+                }
+            }
+        } catch (DataAccessException ex) {
+            ApplicationLogger.getInstance().log(Level.INFO, "Stack creation failed!");
+        }
+        ProgressDialog.getInstance().setValue(processedCount.incrementAndGet());
     }
 
     @Override

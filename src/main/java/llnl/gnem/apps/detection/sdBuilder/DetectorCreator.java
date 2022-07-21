@@ -25,22 +25,22 @@
  */
 package llnl.gnem.apps.detection.sdBuilder;
 
+import java.awt.HeadlessException;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import javax.swing.JOptionPane;
+import llnl.gnem.apps.detection.classify.TriggerClassification;
 import llnl.gnem.apps.detection.core.dataObjects.ArrayCorrelationParams;
 
 import llnl.gnem.apps.detection.core.dataObjects.SubspaceParameters;
 
 import llnl.gnem.apps.detection.core.framework.detectors.arrayCorrelation.ArrayCorrelationDetector;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceDetector;
-import llnl.gnem.apps.detection.database.ArrayCorrelationDetectorDAO;
-import llnl.gnem.apps.detection.database.ConcreteStreamProcessorDAO;
-import llnl.gnem.apps.detection.database.StreamDAO;
-import llnl.gnem.apps.detection.database.SubspaceDetectorDAO;
+
+
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
 import llnl.gnem.apps.detection.sdBuilder.templateDisplay.TemplateDisplayFrame;
 import llnl.gnem.apps.detection.sdBuilder.templateDisplay.TemplateModel;
@@ -50,8 +50,12 @@ import llnl.gnem.core.correlation.CorrelationTraceData;
 import llnl.gnem.core.waveform.seismogram.CssSeismogram;
 import llnl.gnem.apps.detection.core.dataObjects.StreamSegment;
 import llnl.gnem.apps.detection.core.dataObjects.WaveformSegment;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
+import llnl.gnem.apps.detection.sdBuilder.configuration.DetectorCreationOption;
+import llnl.gnem.apps.detection.sdBuilder.dataSelection.ClassifyDetectionWorker;
 import llnl.gnem.apps.detection.sdBuilder.dataSelection.DeleteDetectorWorker;
 import llnl.gnem.apps.detection.sdBuilder.dataSelection.ReplaceTemplateWorker;
+import llnl.gnem.core.gui.util.ProgressDialog;
 
 /**
  *
@@ -59,14 +63,18 @@ import llnl.gnem.apps.detection.sdBuilder.dataSelection.ReplaceTemplateWorker;
  */
 public class DetectorCreator {
 
+    private static final String BUILDER_CREATE_STRING = "Created by Builder";
+
     public static void writeNewDetector() throws Exception {
 
         double latestStart = -Double.MAX_VALUE;
         double earliestEnd = Double.MAX_VALUE;
 
+        ProgressDialog.getInstance().setText("Determining window bounds...");
+
         CorrelatedTracesModel ctModel = CorrelatedTracesModel.getInstance();
         for (CorrelationComponent cc : ctModel.getMatchingTraces()) {
-            CorrelationTraceData td = (CorrelationTraceData) cc.getTraceData();
+            CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
             float[] plotData = td.getPlotData();
             double traceStart = td.getTime().getEpochTime();
             double nominalPickTime = td.getNominalPick().getTime();
@@ -81,29 +89,31 @@ public class DetectorCreator {
                 earliestEnd = end;
             }
         }
-
         Collection<StreamSegment> downSampledSegments = new ArrayList<>();
 
         int detectorid = ctModel.getCurrentDetectorid();
-        int streamid = StreamDAO.getInstance().getStreamidForDetector(detectorid);
+        int streamid = DetectionDAOFactory.getInstance().getStreamDAO().getStreamidForDetector(detectorid);
         double maxTemplateLengthSeconds = 200;
 
         double windowStart = ParameterModel.getInstance().getWindowStart();
         boolean triggerOnlyOnCorrelators = false;
+        ProgressDialog.getInstance().setText("Creating Stream Processor...");
 
-        ConcreteStreamProcessor processor = ConcreteStreamProcessorDAO.getInstance().createStreamProcessor(streamid, maxTemplateLengthSeconds, triggerOnlyOnCorrelators);
+        ConcreteStreamProcessor processor = DetectionDAOFactory.getInstance().getStreamProcessorDAO().createStreamProcessor(streamid, maxTemplateLengthSeconds, triggerOnlyOnCorrelators);
         double traceLength = ParameterModel.getInstance().getTraceLength();
         double tmpBlockSize = 2 * (traceLength);
         processor = processor.changeBlockSize(tmpBlockSize);
 
+        ProgressDialog.getInstance().setText("Getting Component Map...");
         Map<CorrelationComponent, DetectionWaveforms> components = ctModel.getComponentMap();
+        ProgressDialog.getInstance().setText("Building WaveformSegment collection...");
         for (CorrelationComponent cc : components.keySet()) {
             DetectionWaveforms dw = components.get(cc);
             Collection<WaveformSegment> segments = new ArrayList<>();
             int minLength = Integer.MAX_VALUE;
             int maxLength = 0;
             for (CorrelationComponent cc2 : dw.getSegments()) {
-                CorrelationTraceData td = (CorrelationTraceData) cc2.getTraceData();
+                CorrelationTraceData td = (CorrelationTraceData) cc2.getCorrelationTraceData();
                 CssSeismogram tmp = new CssSeismogram(td.getBackupSeismogram());
 
                 float[] theData = td.getBackupSeismogram().getData();
@@ -151,71 +161,100 @@ public class DetectorCreator {
             case SUBSPACE: {
 
                 SubspaceParameters params = new SubspaceParameters(mod.getDetectionThreshold(), mod.getEnergyCapture(), mod.getBlackoutSeconds());
-                SubspaceDetector detector = SubspaceDetectorDAO.getInstance().createAndSaveSubspaceDetector(processor,
+                SubspaceDetector detector = DetectionDAOFactory.getInstance().getSubspaceDetectorDAO().createAndSaveSubspaceDetector(processor,
                         downSampledSegments,
                         offsetSecondsToWindowStart,
                         correlationWindowLength,
                         params,
-                        produceTriggers,
                         mod.isFixSubspaceDimension(),
-                        mod.getSubspaceDimension());
-                TemplateDisplayFrame.getInstance().setVisible(true);
-                TemplateModel.getInstance().setDetectorInfo("Newly created in Builder");
-                TemplateModel.getInstance().setTemplate(detector.getTemplate(), detector.getdetectorid());
-                Object[] options = {"Replace Current",
-                    "Add",
-                    "Discard"};
-                int result = JOptionPane.showOptionDialog(ClusterBuilderFrame.getInstance(),
-                        "Created: " + detector.toString(), "New Detector",
-                        JOptionPane.YES_NO_CANCEL_OPTION,
-                        JOptionPane.QUESTION_MESSAGE,
-                        null,
-                        options,
-                        options[0]);
+                        mod.isCapSubspaceDimension(),
+                        mod.getSubspaceDimension(), 
+                        BUILDER_CREATE_STRING,
+                        ProgressDialog.getInstance());
+                if (mod.isDisplayNewTemplates()) {
+                    TemplateDisplayFrame.getInstance().setVisible(true);
+                    TemplateModel.getInstance().setDetectorInfo("Newly created in Builder");
+                    TemplateModel.getInstance().setTemplate(detector.getTemplate(), detector.getdetectorid());
+                }
+                ProgressDialog.getInstance().setVisible(false);
+                int result = getCreationAction(mod, detector);
+                //               int result = JOptionPane.YES_OPTION;
+                switch (result) {
+                    case JOptionPane.YES_OPTION:
+                        //Switch templates, update times, reload
+                        double currentWindowStart = ParameterModel.getInstance().getWindowStart();
+                        //Detections are always loaded so that the template start is at relative time 0.
+                        // Therefore, currentWindowStart is the required shift for all triggers.
+                        int newDetectorid = detector.getdetectorid();
+                        int oldDetectorid = CorrelatedTracesModel.getInstance().getCurrentDetectorid();
+                        double windowLength = ParameterModel.getInstance().getCorrelationWindowLength();
 
-            switch (result) {
-                case JOptionPane.YES_OPTION:
-                    //Switch templates, update times, reload
-                    double currentWindowStart = ParameterModel.getInstance().getWindowStart();
-                    //Detections are always loaded so that the template start is at relative time 0.
-                    // Therefore, currentWindowStart is the required shift for all triggers.
-                    int newDetectorid = detector.getdetectorid();
-                    int oldDetectorid = CorrelatedTracesModel.getInstance().getCurrentDetectorid();
-                    double windowLength = ParameterModel.getInstance().getCorrelationWindowLength();
-                    new ReplaceTemplateWorker(oldDetectorid,
-                            newDetectorid,
-                            currentWindowStart,
-                            windowLength).execute();
-                    TemplateModel.getInstance().clear();
-                    break;
-            // Add to database. Already done so nothing more to do.
-                case JOptionPane.NO_OPTION:
-                    break;
-                case JOptionPane.CANCEL_OPTION:
-                    // Discard new detector
-                    new DeleteDetectorWorker(detector.getdetectorid(), null).execute();
-                    TemplateModel.getInstance().clear();
-                    break;
-                default:
-                    break;
-            }
+                        new ReplaceTemplateWorker(oldDetectorid,
+                                newDetectorid,
+                                currentWindowStart,
+                                windowLength, BUILDER_CREATE_STRING).execute();
+                        if (mod.isDisplayNewTemplates()) {
+                            TemplateModel.getInstance().setDetectorInfo("Created by Builder");
+                            TemplateModel.getInstance().setTemplate(detector.getTemplate(), oldDetectorid);
+                        }
+
+                        //                       TemplateModel.getInstance().clear();
+                        break;
+                    // Add to database. Already done so just update classification if one exists.
+                    case JOptionPane.NO_OPTION:
+                        TriggerClassification tc = CorrelatedTracesModel.getInstance().getCommonTriggerClassification();
+                        String status = tc.getStatus();
+                        new ClassifyDetectionWorker(detector.getdetectorid(), status).execute();
+                        break;
+                    case JOptionPane.CANCEL_OPTION:
+                        // Discard new detector
+                        new DeleteDetectorWorker(detector.getdetectorid(), null).execute();
+                        TemplateModel.getInstance().clear();
+                        break;
+                    default:
+                        break;
+                }
                 break;
             }
             case ARRAY_CORRELATION: {
                 ArrayCorrelationParams params = new ArrayCorrelationParams(mod.getDetectionThreshold(), mod.getEnergyCapture(), mod.getBlackoutSeconds(),
                         (float) mod.getStaDuration(), (float) mod.getLtaDuration(), (float) mod.getGapDuration());
-                ArrayCorrelationDetector detector = ArrayCorrelationDetectorDAO.getInstance().createAndSaveArrayCorrelationDetector(processor,
+                ArrayCorrelationDetector detector = DetectionDAOFactory.getInstance().getArrayCorrelationDetectorDAO().createAndSaveArrayCorrelationDetector(processor,
                         downSampledSegments,
                         offsetSecondsToWindowStart,
                         correlationWindowLength,
-                        params,
-                        produceTriggers);
+                        params, BUILDER_CREATE_STRING);
                 JOptionPane.showMessageDialog(ClusterBuilderFrame.getInstance(), "Created: " + detector.toString());
                 break;
             }
 
         }
 
+    }
+
+    private static int getCreationAction(ParameterModel mod, SubspaceDetector detector) throws HeadlessException {
+        DetectorCreationOption dco = mod.getDetectorCreationOption();
+        switch (dco) {
+            case REPLACE:
+                return JOptionPane.YES_OPTION;
+            case ADD:
+                return JOptionPane.NO_OPTION;
+            case DELETE:
+                return JOptionPane.CANCEL_OPTION;
+            case PROMPT:
+            default: {
+        Object[] options = {"Replace Current",
+            "Add",
+            "Discard"};
+        return JOptionPane.showOptionDialog(ClusterBuilderFrame.getInstance(),
+                "Created: " + detector.toString(), "New Detector",
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]);
+            }
+        }
     }
 
     private static Collection<WaveformSegment> adjustSegmentLengths(Collection<WaveformSegment> segments, int minLength) {

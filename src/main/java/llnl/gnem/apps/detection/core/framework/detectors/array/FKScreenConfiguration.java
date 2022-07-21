@@ -25,8 +25,8 @@
  */
 package llnl.gnem.apps.detection.core.framework.detectors.array;
 
-import llnl.gnem.apps.detection.core.dataObjects.ArrayElement;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.core.dataObjects.FKScreenParams;
 import llnl.gnem.apps.detection.core.dataObjects.FKScreenRange;
 import llnl.gnem.apps.detection.core.dataObjects.SlownessRangeSpecification;
@@ -39,6 +39,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import llnl.gnem.apps.detection.core.dataObjects.StreamSegment;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayElementInfo;
 import llnl.gnem.core.util.StreamKey;
 import llnl.gnem.core.util.TimeT;
 import llnl.gnem.core.waveform.seismogram.BasicSeismogram;
@@ -51,11 +53,12 @@ public class FKScreenConfiguration implements Serializable {
 
     private static final long serialVersionUID = -1209009891713213762L;
 
-    private final HashMap<StreamKey, ArrayElement> ourElements;
+    private final HashMap<StreamKey, ArrayElementInfo> ourElements;
     private transient ArrayList<float[]> waveforms;
     private transient float[] dNorth;
     private transient float[] dEast;
     private transient double delta;
+    private transient ArrayList<StreamKey> orderedKeys; // Stream keys ordered by buildArrays
     private FKScreenParams screenParams;
     private SlownessRangeSpecification srs;
 
@@ -77,7 +80,7 @@ public class FKScreenConfiguration implements Serializable {
         int numElements = s.readInt();
         for (int j = 0; j < numElements; ++j) {
             StreamKey sck = (StreamKey) s.readObject();
-            ArrayElement ae = (ArrayElement) s.readObject();
+            ArrayElementInfo ae = (ArrayElementInfo) s.readObject();
             ourElements.put(sck, ae);
         }
     }
@@ -98,7 +101,7 @@ public class FKScreenConfiguration implements Serializable {
             double avgSlow = 0;
             int num = 0;
             FKScreenParams commonScreenParams = null;
-            HashMap<StreamKey, ArrayElement> elements = null;
+            HashMap<StreamKey, ArrayElementInfo> elements = null;
             for (FKScreenConfiguration fkConfig : fkConfigs) {
                 commonScreenParams = fkConfig.screenParams;
                 elements = fkConfig.ourElements;
@@ -150,7 +153,7 @@ public class FKScreenConfiguration implements Serializable {
 
     public FKScreenConfiguration(FKScreenParams screenParams,
             SlownessRangeSpecification srs,
-            Map<StreamKey, ArrayElement> ourElements) {
+            Map<StreamKey, ArrayElementInfo> ourElements) {
         this.screenParams = screenParams;
         this.srs = srs;
         this.ourElements = new HashMap<>(ourElements);
@@ -160,16 +163,18 @@ public class FKScreenConfiguration implements Serializable {
     }
 
     public void buildArrays(Collection<? extends BasicSeismogram> traces, TimeT triggerTime) {
+        orderedKeys = new ArrayList<>();
         waveforms = new ArrayList<>();
         dNorth = new float[traces.size()];
         dEast = new float[traces.size()];
         int j = 0;
         for (BasicSeismogram seis : traces) {
             StreamKey key = seis.getStreamKey();
-            ArrayElement element = ourElements.get(key);
+            ArrayElementInfo element = ourElements.get(key);
             if (element == null) {
                 throw new IllegalStateException("Failed to retrieve ArrayElement for key: " + key);
             }
+            orderedKeys.add(key);
             dEast[j] = (float) element.getDeast();
             dNorth[j++] = (float) element.getDnorth();
             waveforms.add(buildSingleWaveform(seis, triggerTime));
@@ -213,6 +218,14 @@ public class FKScreenConfiguration implements Serializable {
         return srs.getNominal().getSlownessVector();
     }
 
+    public double getBackAzimuth() {
+        return srs.getNominal().getBackAzimuth();
+    }
+
+    public double getVelocity() {
+        return srs.getNominal().getVelocity();
+    }
+
     private float[] buildSingleWaveform(BasicSeismogram seis, TimeT triggerTime) {
         BasicSeismogram tmp = new BasicSeismogram(seis);
         TimeT end = new TimeT(triggerTime.getEpochTime() + screenParams.getfKWindowLength());
@@ -225,6 +238,24 @@ public class FKScreenConfiguration implements Serializable {
      */
     public ArrayList<float[]> getWaveforms() {
         return waveforms;
+    }
+
+    public float[][] getWaveformsAsFloatArray() {
+        float[][] result = new float[waveforms.size()][];
+        for (int j = 0; j < waveforms.size(); ++j) {
+            result[j] = waveforms.get(j).clone();
+        }
+        return result;
+    }
+    
+    public float[][] getWaveformsFromStreamSegment(StreamSegment stream){
+        float[][] result = new float[orderedKeys.size()][];
+        int j = 0;
+        for( StreamKey key : orderedKeys){
+            float[] channel = stream.getChannelData(key);
+            result[j++] = channel.clone();
+        }
+        return result;
     }
 
     /**
@@ -240,6 +271,32 @@ public class FKScreenConfiguration implements Serializable {
     public float[] getdEast() {
         return dEast;
     }
+    
+    public double[][] getChannelCoordinates()
+    {
+        double[][] result = new double[dNorth.length][2];
+        for(int j = 0; j < dNorth.length; ++j){
+            result[j][0] = dNorth[j];
+            result[j][1] = dEast[j];
+        }
+        return result;
+    }
+
+    public double getDnorth(StreamKey key) {
+        ArrayElementInfo element = ourElements.get(key);
+        if (element == null) {
+            throw new IllegalStateException("Failed to retrieve ArrayElement for key: " + key);
+        }
+        return element.getDnorth();
+    }
+
+    public double getDeast(StreamKey key) {
+        ArrayElementInfo element = ourElements.get(key);
+        if (element == null) {
+            throw new IllegalStateException("Failed to retrieve ArrayElement for key: " + key);
+        }
+        return element.getDeast();
+    }
 
     /**
      * @return the delta
@@ -251,9 +308,8 @@ public class FKScreenConfiguration implements Serializable {
     public boolean isRequireMinimumVelocity() {
         return screenParams.isRequireMinimumVelocity();
     }
-    
-    public boolean isRequireMaximumVelocity()
-    {
+
+    public boolean isRequireMaximumVelocity() {
         return screenParams.isRequireMaximumVelocity();
     }
 

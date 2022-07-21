@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
 import llnl.gnem.core.correlation.CorrelationComponent;
@@ -61,25 +62,27 @@ public class ApplyFilterWorker extends SwingWorker<Void, Void> {
 
     @Override
     protected Void doInBackground() throws Exception {
-        int processed = 0;
         int max = components.size();
         ProgressDialog.getInstance().setMinMax(0, max);
-        for (CorrelationComponent comp : components) {
-            comp.applyFilter(filter);
-            ProgressDialog.getInstance().setValue(++processed);
-        }
+        AtomicLong counter = new AtomicLong();
+        counter.getAndSet(0);
+        components.parallelStream().forEach(t->applyOneFilter(t,counter));
 
         return null;
     }
+    
+    private void applyOneFilter(CorrelationComponent comp, AtomicLong counter){
+        comp.applyFilter(filter);
+            ProgressDialog.getInstance().setValue((int)counter.getAndIncrement()+1);
+    }
+    
 
     @Override
     public void done() {
         ProgressDialog.getInstance().setVisible(false);
         try {
             get();
-            for (SeismogramViewer viewer : viewers) {
-                viewer.updateForChangedTrace();
-            }
+            CorrelatedTracesModel.getInstance().updateForChangedTrace();
         } catch (InterruptedException | ExecutionException e) {
             if (!(e instanceof CancellationException)) {
                 ApplicationLogger.getInstance().log(Level.WARNING, "Error applying filters.", e);

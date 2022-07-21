@@ -32,7 +32,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
 import javax.swing.tree.DefaultMutableTreeNode;
-import llnl.gnem.apps.detection.database.FrameworkRunDAO;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
+
 import llnl.gnem.apps.detection.util.FrameworkRun;
 import llnl.gnem.core.util.ApplicationLogger;
 
@@ -56,7 +57,7 @@ public class GetRunCollectionWorker extends SwingWorker<Void, Void> {
     @Override
     protected Void doInBackground() throws Exception {
        
-        result.addAll(FrameworkRunDAO.getInstance().getConfigRunCollection(configid));
+        result.addAll(DetectionDAOFactory.getInstance().getFrameworkRunDAO().getConfigRunCollection(configid));
         return null;
 
     }

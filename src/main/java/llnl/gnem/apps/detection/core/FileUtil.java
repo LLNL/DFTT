@@ -31,6 +31,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
 
 
@@ -80,5 +83,16 @@ public class FileUtil {
             out.close();
         }
 
+    }
+    
+    public void writeArrayAsTextFile(float[] data, String filename){
+        try(PrintWriter pw = new PrintWriter(filename)){
+            for(float v : data){
+                pw.println(v);
+            }
+            
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(FileUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

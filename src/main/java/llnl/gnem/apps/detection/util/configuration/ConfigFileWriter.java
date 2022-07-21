@@ -25,14 +25,16 @@
  */
 package llnl.gnem.apps.detection.util.configuration;
 
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
-import llnl.gnem.apps.detection.core.dataObjects.FKScreenParams;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+
+import llnl.gnem.apps.detection.core.dataObjects.FKScreenParams;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
+import llnl.gnem.core.dataAccess.SeismogramSourceInfo;
 import llnl.gnem.core.util.FileUtils;
 import llnl.gnem.core.util.StreamKey;
 
@@ -67,28 +69,9 @@ public class ConfigFileWriter {
     private final int decimationRate;
     private final boolean spawnCorrelationDetectors;
 
-    public ConfigFileWriter(String refSta,
-            String configName,
-            File configDirectory,
-            Integer minDate,
-            Integer maxDate,
-            Collection<StreamKey> staChansToUse,
-            double minTemplateLength,
-            double maxTemplateLength,
-            double minFrequency,
-            double maxFrequency,
-            double ssThresh,
-            double staLtaThresh,
-            int numThreads,
-            DetectorType bootDetectorType,
-            Double beamAzimuth,
-            Double beamVelocity,
-            File bulletinFile,
-            double snrThreshold,
-            double minEventDuration,
-            double blockSizeSeconds,
-            int decimationRate,
-            boolean spawnCorrelationDetectors) throws IOException {
+    public ConfigFileWriter(String refSta, String configName, File configDirectory, Integer minDate, Integer maxDate, Collection<StreamKey> staChansToUse, double minTemplateLength,
+            double maxTemplateLength, double minFrequency, double maxFrequency, double ssThresh, double staLtaThresh, int numThreads, DetectorType bootDetectorType, Double beamAzimuth,
+            Double beamVelocity, File bulletinFile, double snrThreshold, double minEventDuration, double blockSizeSeconds, int decimationRate, boolean spawnCorrelationDetectors) throws IOException {
         this.refSta = refSta;
         this.configName = configName;
         this.configDirectory = configDirectory;
@@ -117,15 +100,14 @@ public class ConfigFileWriter {
 
     public void create() throws IOException {
         buildCleanBaseDir();
-        File streamFile = createStream1();
-        File streamsFile = createStreamsTxtFile(streamFile);
-        File detStatDirFile = createDetStatDir();
-        File rawTracesDirFile = createRawTraceDir();
-        File rawTraceSpecFile = createRawTraceSpecFile();
-        File modifiedTracesDirFile = createModifiedTraceDir();
-        File modifiedTraceSpecFile = createModifiedTraceSpecFile();
-        File channelSubstitutionFile = createChannelSubstitutionTxtFile();
-        writeConfigFile(streamsFile, detStatDirFile, rawTracesDirFile, rawTraceSpecFile, modifiedTracesDirFile, modifiedTraceSpecFile, channelSubstitutionFile);
+        File streamFile = createStream1().toPath().normalize().toFile();
+        File streamsFile = createStreamsTxtFile(streamFile).toPath().normalize().toFile();
+        File detStatDirFile = createDetStatDir().toPath().normalize().toFile();
+        File rawTracesDirFile = createRawTraceDir().toPath().normalize().toFile();
+        File rawTraceSpecFile = createRawTraceSpecFile().toPath().normalize().toFile();
+        File modifiedTracesDirFile = createModifiedTraceDir().toPath().normalize().toFile();
+        File modifiedTraceSpecFile = createModifiedTraceSpecFile().toPath().normalize().toFile();
+        writeConfigFile(streamsFile, detStatDirFile, rawTracesDirFile, rawTraceSpecFile, modifiedTracesDirFile, modifiedTraceSpecFile);
     }
 
     private void buildCleanBaseDir() throws IOException, IllegalStateException {
@@ -147,18 +129,16 @@ public class ConfigFileWriter {
         if (!created) {
             throw new IllegalStateException("Failed to create directory: " + stream1Dir);
         }
-        File bootDetectorFile = new BootDetectorCreator(stream1Dir, refSta,
-                staLtaThresh,
-                staChansToUse,
-                bootDetectorType,
-                beamAzimuth,
-                beamVelocity).createBootDetectors(bulletinFile);
+        File bootDetectorFile = new BootDetectorCreator(stream1Dir, staLtaThresh, staChansToUse, bootDetectorType, beamAzimuth, beamVelocity).createBootDetectors(bulletinFile)
+                .toPath()
+                .normalize()
+                .toFile();
 
         ExampleTemplateCreator etc = new ExampleTemplateCreator(stream1Dir, staChansToUse);
         Collection<File> templates = etc.makeTemplateDirectories();
-        File templatesFile = makeTemplatesFile(templates);
+        File templatesFile = makeTemplatesFile(templates).toPath().normalize().toFile();
 
-        File streamChannelFile = createStreamChannelFile();
+        File streamChannelFile = createStreamChannelFile().toPath().normalize().toFile();
 
         return createStreamFile(bootDetectorFile, streamChannelFile, templatesFile);
     }
@@ -179,7 +159,12 @@ public class ConfigFileWriter {
         File streamChannelsFile = new File(stream1Dir, "Stream_Channels.txt");
         try (PrintWriter writer = new PrintWriter(streamChannelsFile)) {
             for (StreamKey sc : staChansToUse) {
-                writer.print(String.format("%s	%s %s", sc.getSta(), sc.getChan(), sep));
+                writer.print(sc.getAgency() != null ? sc.getAgency() + " " : "");
+                writer.print(sc.getNet() != null ? sc.getNet() + " " : "");
+                writer.print(sc.getSta() != null ? sc.getSta() + " " : "");
+                writer.print(sc.getChan() != null ? sc.getChan() + " " : "");
+                writer.print(sc.getLocationCode() != null ? sc.getLocationCode() + " " : "");
+                writer.print(sep);
             }
             return streamChannelsFile;
         }
@@ -194,10 +179,14 @@ public class ConfigFileWriter {
 
             writer.print(String.format("%s", sep));
             writer.print(String.format("Passband             = %f %f%s", minFrequency, maxFrequency, sep));
+            writer.print(String.format("PreprocessorFilterOrder = 4%s", sep));
             writer.print(String.format("# The BlockSizeSeconds is the length in seconds of the detection statistic it must be longer than the maximum template length. %s", sep));
             writer.print(String.format("# If BlockSizeSeconds is set to -1, then the code will compute a blocksize = 1.5 * max template length. %s", sep));
             writer.print(String.format("BlockSizeSeconds = %f%s", blockSizeSeconds, sep));
-            writer.print(String.format("# The decimation rate controls the down-sampling of the data. DecimationRate * Fmax must be less than 1/2 the data sample rate and must be an even divisor of (int)(BlockSize * sample rate). %s", sep));
+            writer.print(
+                    String.format(
+                            "# The decimation rate controls the down-sampling of the data. DecimationRate * Fmax must be less than 1/2 the data sample rate and must be an even divisor of (int)(BlockSize * sample rate). %s",
+                            sep));
             writer.print(String.format("# If DecimationRate is set to -1, then the code will compute the max possible decimation rate. %s", sep));
             writer.print(String.format("DecimationRate = %d%s", decimationRate, sep));
             writer.print(String.format("%s", sep));
@@ -215,18 +204,11 @@ public class ConfigFileWriter {
             writer.print(String.format("# StatsRefreshIntervalInBlocks is the number of blocks processed between statistics refreshes.%s", sep));
             writer.print(String.format("StatsRefreshIntervalInBlocks   = 1000%s%s", sep, sep));
 
-            writer.print(String.format("# To specify detectors using user-supplied templates use a line like the following where the path is the name of the file with the specification file list..%s", sep));
+            writer.print(
+                    String.format(
+                            "# To specify detectors using user-supplied templates use a line like the following where the path is the name of the file with the specification file list..%s",
+                            sep));
             writer.print(String.format("#DetectorSpecificationFileList = %s%s%s", templatesFile.getAbsoluteFile(), sep, sep));
-
-            ExampleCancellationTemplateCreator ectc = new ExampleCancellationTemplateCreator(stream1Dir, staChansToUse);
-            File templateDir = ectc.makeTemplateDirectory();
-            String paramFileName = "cancellation_params.txt";
-            File cancelFile = ectc.makeTemplateDescriptorFile(templateDir, paramFileName, minFrequency, maxFrequency);
-            writer.print(String.format("ApplyStreamCancellation = false%s", sep));
-            writer.print(String.format("CancellorParamsFile = %s%s", cancelFile.getAbsolutePath(), sep));
-            writer.print(String.format("CancellationTemplateSource = SUBSPACE_TEMPLATES\n"));
-            File detidFile = new File(configDirectory, "detectorids.txt");
-            writer.print(String.format("CancellationTemplateDetectoridFile = %s", detidFile.getAbsolutePath(), sep));
 
             writer.print(String.format("\nSpawnCorrelationDetectors = %s%s", spawnCorrelationDetectors ? "true" : "false", sep));
             writer.print(String.format("# If next line is true, then although spawners will run, they will not produce triggers.%s", sep));
@@ -235,6 +217,14 @@ public class ConfigFileWriter {
             writer.print(String.format("%s", sep));
             writer.print(String.format("LoadCorrelatorsFromDb = true%s", sep));
             writer.print(String.format("%s", sep));
+
+            writer.print(String.format("%s", sep));
+            writer.print(
+                    String.format(
+                            "# If next line is true, then any bulletin detectors in the specified STREAMID are replaced with new bulletin detectors defined in the current config files.%s",
+                            sep));
+            writer.print(String.format("replaceBulletinDetector = false%s", sep));
+            writer.print(String.format("targetBulletinDetectorStreamid   = -1%s%s", sep, sep));
 
             writer.print(String.format("# SNR Trigger Screening----------------------------%s", sep));
             writer.print(String.format("# Lengths are in seconds%s", sep));
@@ -246,7 +236,7 @@ public class ConfigFileWriter {
 
             writer.print(String.format("# Other Trigger screening ----------------------%s", sep));
 
-            FKScreenParams.writeDefaultConfigInfo(writer, sep);
+            FKScreenParams.writeDefaultConfigInfo(writer, bootDetectorType, sep);
 
             writer.print(String.format("%s", sep));
             writer.print(String.format("# The framework can be run with detectors installed and producing detection statistics but with no triggers produced.%s", sep));
@@ -254,22 +244,11 @@ public class ConfigFileWriter {
             writer.print(String.format("ProduceTriggers = true%s", sep));
             writer.print(String.format("%s", sep));
             String tmp = streamChannelFile.getAbsolutePath();
-            writer.print(String.format("StreamChannelFile = %s%s", tmp.replace("\\", "\\\\"), sep));
+            writer.print(String.format("StreamChannelFile = %s%s", tmp, sep));
             tmp = bootDetectorFile.getAbsolutePath();
-            writer.print(String.format("BootDetectorsFile = %s%s%s", tmp.replace("\\", "\\\\"), sep, sep));
+            writer.print(String.format("BootDetectorsFile = %s%s%s", tmp, sep, sep));
 
             return streamFile;
-        }
-    }
-
-    private File createChannelSubstitutionTxtFile() throws FileNotFoundException {
-        File streamsFile = new File(configDirectory, "channelSubstitution.txt");
-        try (PrintWriter writer = new PrintWriter(streamsFile)) {
-            writer.print("SHZ BHZ\n");
-            writer.print("SHZ HHZ\n");
-            writer.print("SHE BHE\n");
-            writer.print("SHN BHN\n");
-            return streamsFile;
         }
     }
 
@@ -302,7 +281,12 @@ public class ConfigFileWriter {
         File file = new File(configDirectory, "rawTraces.txt");
         try (PrintWriter writer = new PrintWriter(file)) {
             for (StreamKey sc : staChansToUse) {
-                writer.print(String.format("%s	%s %s", sc.getSta(), sc.getChan(), sep));
+                writer.print(sc.getAgency() != null ? sc.getAgency() + " " : "");
+                writer.print(sc.getNet() != null ? sc.getNet() + " " : "");
+                writer.print(sc.getSta() != null ? sc.getSta() + " " : "");
+                writer.print(sc.getChan() != null ? sc.getChan() + " " : "");
+                writer.print(sc.getLocationCode() != null ? sc.getLocationCode() + " " : "");
+                writer.print(sep);
             }
             return file;
         }
@@ -321,15 +305,20 @@ public class ConfigFileWriter {
         File file = new File(configDirectory, "modifiedTraces.txt");
         try (PrintWriter writer = new PrintWriter(file)) {
             for (StreamKey sc : staChansToUse) {
-                writer.print(String.format("%s	%s %s", sc.getSta(), sc.getChan(), sep));
+                writer.print(sc.getAgency() != null ? sc.getAgency() + " " : "");
+                writer.print(sc.getNet() != null ? sc.getNet() + " " : "");
+                writer.print(sc.getSta() != null ? sc.getSta() + " " : "");
+                writer.print(sc.getChan() != null ? sc.getChan() + " " : "");
+                writer.print(sc.getLocationCode() != null ? sc.getLocationCode() + " " : "");
+                writer.print(sep);
             }
             return file;
         }
 
     }
 
-    private void writeConfigFile(File streamsFile, File detStatDirFile, File rawTracesDirFile, File rawTraceSpecFile,
-            File modifiedTracesDirFile, File modifiedTraceSpecFile, File channelSubstitutionFile) throws FileNotFoundException {
+    private void writeConfigFile(File streamsFile, File detStatDirFile, File rawTracesDirFile, File rawTraceSpecFile, File modifiedTracesDirFile, File modifiedTraceSpecFile)
+            throws FileNotFoundException {
         File file = new File(configDirectory, "config.txt");
         try (PrintWriter writer = new PrintWriter(file)) {
             writer.print(String.format("#This is a comment%s", sep));
@@ -354,27 +343,23 @@ public class ConfigFileWriter {
             writer.print(String.format("# To prevent adaptation of template lengths to detected signals set the following to true.%s", sep));
             writer.print(String.format("ForceFixedTemplateLengths = false%s", sep));
 
-            writer.print(String.format("%s", sep));
-            writer.println(String.format("#Stations operated for very long time periods may have instrument changes that result in different sample rates; e.g. BHZ may be 20Hz initially and change to 40 Hz later.", sep));
-            writer.println(String.format("#In these cases, the raw sample rate must be fixed for correct operation. To accomplish this, set the raw rate as shown below.", sep));
-            writer.println(String.format("#SetRawSampRateTo = 20", sep));
-            writer.print(String.format("%s", sep));
-
-            writer.print(String.format("%s", sep));
-            String tmp = channelSubstitutionFile.getAbsolutePath();
-            writer.println(String.format("#Stations operated for very long time periods may have instrument changes that result in different channel codes; e.g. SHZ may be replaced by BHZ.", sep));
-            writer.println(String.format("#In these cases, the framework can substitute one channel for another: e.g. if SHZ is requested but not found, use BHZ instead. To accomplish this, specify a substitution file as shown below.", sep));
-            writer.println(String.format("#ChannelSubstitutionFile = %s%s", tmp.replace("\\", "\\\\"), sep));
+            SeismogramSourceInfo seismogramSourceInfo = ConfigCreatorParameters.getInstance().getSeismogramSourceInfo();
+            writer.print(String.format("# The framework supports seismogram source type of CssDatabase, Type2Database, FDSN). One of these should be specified on the next line.%s", sep));
+            writer.println(String.format("SourceType = %s", seismogramSourceInfo.getSourceType()));
+            writer.println(
+                    String.format(
+                            "# You must also specify the SourceIdentifier. When source_type is CssDatabase this is the name of the continuous_wfdisc table. \n# When source_type is FDSN this is the agency string. When source_type is Type2Database this field is ignored."));
+            writer.println(String.format("SourceIdentifier = %s", seismogramSourceInfo.getSourceIdentifier()));
             writer.print(String.format("%s", sep));
 
             writer.print(String.format("# The streams file contains pointers to one or more streams that make up this configuration.%s", sep));
-            tmp = streamsFile.getAbsolutePath();
-            writer.print(String.format("StreamsFile = %s%s", tmp.replace("\\", "\\\\"), sep));
+            String tmp = streamsFile.getAbsolutePath();
+            writer.print(String.format("StreamsFile = %s%s", tmp, sep));
             writer.print(String.format("%s", sep));
             writer.print(String.format("# By default, all processing is done in a single thread. However, if multiple cores are available, it may be advantageous%s", sep));
             writer.print(String.format("# to use more than one thread. In some cases, having more threads than processors may still gain a performance increase.%s", sep));
             writer.print(String.format("# For example, if processes are waiting on I/O for a significant amount of time it may help to run another unblocked process%s", sep));
-            writer.print(String.format("# on that thread. The code is parallelized on the stream group processing tasks and on the calculate detection statistic tasks.%s", sep));
+            writer.print(String.format("# on that thread. The code is parallelized on the calculate detection statistic tasks.%s", sep));
             writer.print(String.format("NumberOfThreads = %d%s", numThreads, sep));
             writer.print(String.format("%s", sep));
             writer.print(String.format("%s", sep));
@@ -386,26 +371,54 @@ public class ConfigFileWriter {
             writer.print(String.format("LoadOnlyDetectorsFromSpecifiedRunid = false%s", sep));
             writer.print(String.format("RunidForDetectorRetrieval = -1%s", sep));
             writer.print(String.format("%s", sep));
+
+            writer.print(String.format("%s", sep));
+            writer.print(String.format("# The next set of parameters control detector re-windowing. This process attempts to adjust the detector template windows%s", sep));
+            writer.print(String.format("# to most closely align with the signal most coherent across all detections for each detector.%s", sep));
+            writer.print(String.format("# When operative, newly-created detectors are subject to re-windowing when their detection count reaches RewindowDetectionCountThreshold.%s", sep));
+            writer.print(String.format("# During re-windowing a moving window SVD is used to produce an energy capture function. That function is then evalued to%s", sep));
+            writer.print(String.format("# estimate the onset and duration of coherent signal. These values are used to produce a new template.%s", sep));
+            writer.print(String.format("RewindowDetectors = true%s", sep));
+            writer.print(String.format("# The RewindowDetectionCountThreshold is the number of detections required before re-windowing occurs. The greater the value the more stable%s", sep));
+            writer.print(String.format("# the computation. However compute time varies as the square of this number.%s", sep));
+            writer.print(String.format("RewindowDetectionCountThreshold = 8%s", sep));
+            writer.print(
+                    String.format(
+                            "# The RewindowSlidingWindowLengthSeconds value sets the length of the sliding window. Small values increase the resolution at the expense of computation time.%s",
+                            sep));
+            writer.print(String.format("RewindowSlidingWindowLengthSeconds = 2%s", sep));
+            writer.print(
+                    String.format("# The algorithm uses an analysis window which should be long enough to include the entirety of the desired signals as well as the offsets likely to occur.%s", sep));
+            writer.print(
+                    String.format("# Computation time is linearly related to changes in the analysis window length. The analysis window starts RewindowPreTriggerSeconds before the trigger%s", sep));
+            writer.print(String.format("# times and extends RewindowAnalysisWindowLengthSeconds  past that point.%s", sep));
+            writer.print(String.format("RewindowPreTriggerSeconds = 50%s", sep));
+            writer.print(String.format("RewindowAnalysisWindowLengthSeconds = 400%s", sep));
+
+            writer.print(String.format("# As a sanity check on the algorithm's results, the user can specify minimum and maximum values for the generated template window lengths.%s", sep));
+            writer.print(String.format("ReWindowMinWindowLengthSeconds = 20%s", sep));
+            writer.print(String.format("ReWindowMaxWindowLengthSeconds = 150%s", sep));
+
             writer.print(String.format("%s", sep));
             writer.print(String.format("%s", sep));
             writer.print(String.format("writeDetectionStatistics = false%s", sep));
             tmp = detStatDirFile.getAbsolutePath();
-            writer.print(String.format("DetectionStatisticDirectory = %s%s", tmp.replace("\\", "\\\\"), sep));
+            writer.print(String.format("DetectionStatisticDirectory = %s%s", tmp, sep));
             writer.print(String.format("%s", sep));
             writer.print(String.format("%s", sep));
             writer.print(String.format("WriteRawTraces = false%s", sep));
             tmp = rawTracesDirFile.getAbsolutePath();
-            writer.print(String.format("RawTraceDirectory = %s%s", tmp.replace("\\", "\\\\"), sep));
+            writer.print(String.format("RawTraceDirectory = %s%s", tmp, sep));
             tmp = rawTraceSpecFile.getAbsolutePath();
-            writer.print(String.format("RawTraceChannelFile = %s%s", tmp.replace("\\", "\\\\"), sep));
+            writer.print(String.format("RawTraceChannelFile = %s%s", tmp, sep));
 
             writer.print(String.format("%s", sep));
             writer.print(String.format("%s", sep));
             writer.print(String.format("WriteModifiedTraces = false%s", sep));
             tmp = modifiedTracesDirFile.getAbsolutePath();
-            writer.print(String.format("ModifiedTraceDirectory = %s%s", tmp.replace("\\", "\\\\"), sep));
+            writer.print(String.format("ModifiedTraceDirectory = %s%s", tmp, sep));
             tmp = modifiedTraceSpecFile.getAbsolutePath();
-            writer.print(String.format("ModifiedTraceChannelFile = %s%s", tmp.replace("\\", "\\\\"), sep));
+            writer.print(String.format("ModifiedTraceChannelFile = %s%s", tmp, sep));
         }
     }
 }

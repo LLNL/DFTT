@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,10 +25,8 @@
  */
 package llnl.gnem.core.correlation;
 
-import Jama.Matrix;
-import Jama.SingularValueDecomposition;
-import com.oregondsp.signalProcessing.fft.RDFT;
 import static java.lang.Math.min;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -39,6 +37,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+
+import org.ojalgo.matrix.Primitive32Matrix;
+import org.ojalgo.matrix.Primitive32Matrix.DenseReceiver;
+import org.ojalgo.matrix.Primitive64Matrix;
+import org.ojalgo.matrix.decomposition.SingularValue;
+import org.ojalgo.random.Deterministic;
+
+import com.oregondsp.signalProcessing.fft.RDFT;
+
 import llnl.gnem.core.correlation.util.CorrelationMax;
 import llnl.gnem.core.correlation.util.ShiftType;
 import llnl.gnem.core.gui.util.ProgressDialog;
@@ -55,7 +62,7 @@ public class RealSequenceCorrelator {
 
     private static final float ALMOST_ONE = 0.9999f;
     private static final double MIN_ALLOWABLE_CORRELATION = 0.2;
-//    private static final double OUTPUT_WRITER_THRESHOLD = 0;
+    //    private static final double OUTPUT_WRITER_THRESHOLD = 0;
     private static final double OUTPUT_WRITER_THRESHOLD = 0.9;
     private static final double eps = Math.pow(2, -52);
     private ExecutorCompletionService<CorrelationMaxResult> correlationCompService = null;
@@ -94,8 +101,7 @@ public class RealSequenceCorrelator {
         if (progress != null) {
             progress.setText("Creating Cross-correlation Arrays...");
         }
-        CorrelationResults mccr = computeCrossCorrelations(data.getData(), power, order,
-                rdft, sequenceLength, progress);
+        CorrelationResults mccr = computeCrossCorrelations(data.getData(), power, order, rdft, sequenceLength, progress);
         return mccr;
     }
 
@@ -158,22 +164,24 @@ public class RealSequenceCorrelator {
      * implemented here.
      * </p>
      *
-     * @param nTraces The number of traces to be adjusted
+     * @param nTraces
+     *            The number of traces to be adjusted
      * @param shifts
      * @param correlations
      * @param shiftType
      * @param progress
      * @param fixToZeroShifts
-     * @return An adjustment matrix containing fractional adjustments.
+     * @return An adjustment Primitive32Matrix containing fractional
+     *         adjustments.
      */
-    public Matrix getAdjustmentVector(int nTraces, Matrix shifts, Matrix correlations, ShiftType shiftType, boolean fixToZeroShifts, ProgressDialog progress) {
+    public Primitive32Matrix getAdjustmentVector(int nTraces, Primitive32Matrix shifts, Primitive32Matrix correlations, ShiftType shiftType, boolean fixToZeroShifts, ProgressDialog progress) {
         switch (shiftType) {
-            case LEAST_SQUARES:
-                return getLeastSquaresAdjustmentMatrix(nTraces, shifts, correlations, fixToZeroShifts, progress);
-            case DIRECT:
-                return shifts.getMatrix(0, shifts.getRowDimension() - 1, 0, 0);
-            default:
-                throw new IllegalStateException("Unknown shift type: " + shiftType);
+        case LEAST_SQUARES:
+            return getLeastSquaresAdjustmentMatrix(nTraces, shifts, correlations, fixToZeroShifts, progress);
+        case DIRECT:
+            return shifts.select(new long[] { 0, shifts.getRowDim() - 1 }, new long[] { 0, 0 });
+        default:
+            throw new IllegalStateException("Unknown shift type: " + shiftType);
         }
 
     }
@@ -192,10 +200,10 @@ public class RealSequenceCorrelator {
         return result;
     }
 
-    public Matrix getSigmaMatrix(Matrix shifts, Matrix adjustments) {
-        int numCols = shifts.getColumnDimension();
-        Matrix S = new Matrix(numCols, 1);
-        for (int i = 0; i < adjustments.getRowDimension(); ++i) {
+    public Primitive32Matrix getSigmaMatrix(Primitive32Matrix shifts, Primitive32Matrix adjustments) {
+        int numCols = shifts.getColDim();
+        DenseReceiver S = Primitive32Matrix.FACTORY.makeDense(numCols, 1);
+        for (int i = 0; i < adjustments.getRowDim(); ++i) {
             double sum1 = 0;
             double sum2 = 0;
             for (int j = 0; j < i - 1; ++j) {
@@ -211,7 +219,7 @@ public class RealSequenceCorrelator {
             double sigma = Math.sqrt(1.0 / factor * (sum1 + sum2));
             S.set(i, 0, sigma);
         }
-        return S;
+        return S.get();
     }
 
     public CorrelationResults optimizeShifts(ChannelDataCollection data, ShiftType shiftType, ProgressDialog progress) throws InterruptedException, ExecutionException {
@@ -220,12 +228,12 @@ public class RealSequenceCorrelator {
         if (progress != null) {
             progress.setText("Computing Adjustment Vector...");
         }
-        Matrix adjustments = getAdjustmentVector(data.size(), cmp.getShifts(), cmp.getCorrelations(), shiftType, false, progress);
+        Primitive32Matrix adjustments = getAdjustmentVector(data.size(), cmp.getShifts(), cmp.getCorrelations(), shiftType, false, progress);
         if (progress != null) {
             progress.setText("Adjustment Vector Computed.");
         }
-        Matrix shifts = cmp.getShifts();
-        Matrix S = getSigmaMatrix(shifts, adjustments);
+        Primitive32Matrix shifts = cmp.getShifts();
+        Primitive32Matrix S = getSigmaMatrix(shifts, adjustments);
         int idx = 0;
         for (StationEventChannelData secd : data.getData()) {
             secd.addSigma(S.get(idx, 0));
@@ -242,8 +250,8 @@ public class RealSequenceCorrelator {
         exec = null;
     }
 
-    private Matrix buildATWAMatrix(int nTraces, int nt, float[] w) {
-        Matrix ATWA = new Matrix(nTraces, nTraces);
+    private Primitive64Matrix buildATWAMatrix(int nTraces, int nt, float[] w) {
+        Primitive64Matrix.DenseReceiver ATWA = Primitive64Matrix.FACTORY.makeDense(nTraces, nTraces);
         for (int j = 0; j < nTraces; ++j) {
             for (int k = 0; k < nTraces; ++k) {
                 ATWA.set(j, k, 0);
@@ -278,11 +286,11 @@ public class RealSequenceCorrelator {
                 ATWA.set(j, k, ATWA.get(j, k) + w[nt - 1]);
             }
         }
-        return ATWA;
+        return ATWA.get();
     }
 
-    private Matrix buildATWDTMatrix(int nTraces, float[] w, Matrix CCshift) {
-        Matrix ATWDT = new Matrix(nTraces, 1);
+    private Primitive32Matrix buildATWDTMatrix(int nTraces, float[] w, Primitive32Matrix CCshift) {
+        DenseReceiver ATWDT = Primitive32Matrix.FACTORY.makeDense(nTraces, 1);
         int index = 0;
         for (int j = 0; j < nTraces - 1; ++j) {
             for (int k = j + 1; k < nTraces; ++k) {
@@ -310,7 +318,7 @@ public class RealSequenceCorrelator {
                 ++index;
             }
         }
-        return ATWDT;
+        return ATWDT.get();
     }
 
     private static void computeCorrelation(RDFT rdft, float[] x, float[] y) {
@@ -328,13 +336,14 @@ public class RealSequenceCorrelator {
         rdft.evaluateInverse(x, x);
     }
 
-    private CorrelationResults computeCrossCorrelations(List<StationEventChannelData> secdList, int power, int order, RDFT RDFT, int sequenceLength, ProgressDialog progress) throws InterruptedException, ExecutionException {
+    private CorrelationResults computeCrossCorrelations(List<StationEventChannelData> secdList, int power, int order, RDFT RDFT, int sequenceLength, ProgressDialog progress)
+            throws InterruptedException, ExecutionException {
         // Now for each event-station pair compute the cross-correlation sequence for each channel
         // and sum those to produce the cross correlation sum.
 
         int N = secdList.size();
-        Matrix correlations = new Matrix(N, N);
-        Matrix shifts = new Matrix(N, N);
+        DenseReceiver correlations = Primitive32Matrix.FACTORY.makeDense(N, N);
+        DenseReceiver shifts = Primitive32Matrix.FACTORY.makeDense(N, N);
         int m = N * (N - 1) / 2;
         if (progress != null) {
             progress.setProgressBarIndeterminate(false);
@@ -379,7 +388,7 @@ public class RealSequenceCorrelator {
             correlations.set(j, j, 1);
             shifts.set(j, j, 0);
         }
-        return new CorrelationResults(shifts, correlations, secdList);
+        return new CorrelationResults(shifts.get(), correlations.get(), secdList);
     }
 
     private void computeFFTs(StationEventChannelData secd, double prePickSeconds, double postPickSeconds, TimeSeries seis, int power, RDFT RDFT) {
@@ -414,12 +423,12 @@ public class RealSequenceCorrelator {
         return getCCMax(xData.getMaxCC(), yData.getMaxCC(), xy, sequenceLength);
     }
 
-    private Matrix getLeastSquaresAdjustmentMatrix(int nTraces, Matrix shifts, Matrix correlations, boolean FixToZeroShift, ProgressDialog progress) {
+    private Primitive32Matrix getLeastSquaresAdjustmentMatrix(int nTraces, Primitive32Matrix shifts, Primitive32Matrix correlations, boolean FixToZeroShift, ProgressDialog progress) {
         if (nTraces == 1) {
-            return new Matrix(1, 1, 0);
+            return Primitive32Matrix.FACTORY.makeFilled(1, 1, new Deterministic());
         }
         if (nTraces == 2) {
-            return shifts.getMatrix(0, 1, 0, 0);
+            return shifts.select(new long[] { 0, 1 }, new long[] { 0, 0 });
         }
         int nt = (nTraces * (nTraces - 1)) / 2 + 1;
 
@@ -432,7 +441,7 @@ public class RealSequenceCorrelator {
         int windex = 0;
         for (int j = 0; j < nTraces - 1; ++j) {
             for (int k = j + 1; k < nTraces; ++k) {
-                float ccTmp = (float) correlations.get(j, k);
+                float ccTmp = correlations.get(j, k).floatValue();
                 if (ccTmp >= 1) {
                     ccTmp = ALMOST_ONE;
                 }
@@ -449,31 +458,34 @@ public class RealSequenceCorrelator {
             progress.setProgressBarIndeterminate(true);
             progress.setText("Building matrices (ATWA)...");
         }
-        Matrix ATWA = buildATWAMatrix(nTraces, nt, w);
+        Primitive64Matrix atwa = buildATWAMatrix(nTraces, nt, w);
+
         if (progress != null) {
             progress.setProgressBarIndeterminate(true);
             progress.setText("Building matrices (ATWDT)...");
         }
-        Matrix ATWDT = buildATWDTMatrix(nTraces, w, shifts);
+        Primitive32Matrix ATWDT = buildATWDTMatrix(nTraces, w, shifts);
+
+        Primitive64Matrix atwdt = Primitive64Matrix.FACTORY.rows(ATWDT).transpose();
         if (progress != null) {
             progress.setText("Solving system for adjustments...");
         }
-        Matrix result = pinv(ATWA,progress).times(ATWDT);
+        Primitive64Matrix aresult = atwa.invert().multiply(atwdt);
         if (progress != null) {
             progress.setText("Inversion complete.");
         }
-        if (result.getRowDimension() > 1) {
-            double shift0 = result.get(0, 0);
-            for (int j = 0; j < result.getRowDimension(); ++j) {
+        DenseReceiver result = Primitive32Matrix.FACTORY.makeDense((int) aresult.countRows(), (int) aresult.countColumns());
+        if (aresult.countRows() > 1) {
+            double shift0 = aresult.get(0, 0);
+            for (int j = 0; j < aresult.countRows(); ++j) {
                 if (FixToZeroShift) {
                     result.set(j, 0, 0);
                 } else {
-                    result.set(j, 0, result.get(j, 0) - shift0);
+                    result.set(j, 0, aresult.get(j, 0) - shift0);
                 }
-
             }
         }
-        return result;
+        return result.get();
     }
 
     private static float getTransform(float[] x, RDFT rdft, float[] transform) {
@@ -482,22 +494,22 @@ public class RealSequenceCorrelator {
         return getAutocorrelationMax(transform, rdft);
     }
 
-    private static Matrix pinv(Matrix A, ProgressDialog progress) {
+    private static Primitive32Matrix pinv(Primitive32Matrix A, ProgressDialog progress) {
         if (progress != null) {
             progress.setProgressBarIndeterminate(true);
             progress.setText("Computing pinv (SVD)...");
         }
-        SingularValueDecomposition svd = A.svd();
+        SingularValue<Double> svd = SingularValue.PRIMITIVE.make(A);
         if (progress != null) {
             progress.setProgressBarIndeterminate(true);
             progress.setText("Computing pinv (determine effective rank)...");
         }
-        Matrix S = svd.getS();
-        Matrix U = svd.getU();
-        Matrix V = svd.getV();
-        double norm2 = svd.norm2();
-        double[] sv = svd.getSingularValues();
-        int maxA = Math.max(A.getRowDimension(), A.getColumnDimension());
+        DenseReceiver S = Primitive32Matrix.FACTORY.makeWrapper(svd.getD()).copy();
+        Primitive32Matrix U = Primitive32Matrix.FACTORY.make(svd.getU());
+        Primitive32Matrix V = Primitive32Matrix.FACTORY.make(svd.getV());
+        double norm2 = svd.getOperatorNorm();
+        double[] sv = svd.getSingularValues().toRawCopy1D();
+        int maxA = Math.max(A.getRowDim(), A.getColDim());
         double tolerance = maxA * norm2 * eps;
         for (int j = 0; j < sv.length; ++j) {
             if (sv[j] >= tolerance) {
@@ -510,7 +522,7 @@ public class RealSequenceCorrelator {
             progress.setProgressBarIndeterminate(true);
             progress.setText("Computing pinv (re-compose)...");
         }
-        return (U.times(S)).times(V.transpose());
+        return (U.multiply(S.get())).multiply(V.transpose());
     }
 
     private void preventSingularMatrix(float[] w) {
@@ -552,7 +564,7 @@ public class RealSequenceCorrelator {
         }
     }
 
-    private void retrieveTaskResults(int blockSize, Matrix correlations, Matrix shifts, List<StationEventChannelData> secdList) throws InterruptedException, ExecutionException {
+    private void retrieveTaskResults(int blockSize, DenseReceiver correlations, DenseReceiver shifts, List<StationEventChannelData> secdList) throws InterruptedException, ExecutionException {
         for (int l = 0; l < blockSize; ++l) {
             Future<CorrelationMaxResult> future = correlationCompService.take();
             CorrelationMaxResult result = future.get();
@@ -564,7 +576,7 @@ public class RealSequenceCorrelator {
         }
     }
 
-    private void updateMatrices(CorrelationMax correlationResult, Matrix correlations, int j, int k, Matrix shifts, StationEventChannelData xData, StationEventChannelData yData) {
+    private void updateMatrices(CorrelationMax correlationResult, DenseReceiver correlations, int j, int k, DenseReceiver shifts, StationEventChannelData xData, StationEventChannelData yData) {
         double maxCC = min(1.0, correlationResult.getCcMax());
         correlations.set(j, k, maxCC);
         correlations.set(k, j, maxCC);
@@ -573,10 +585,19 @@ public class RealSequenceCorrelator {
         shifts.set(k, j, -1 * shift);
         double shiftSeconds = shifts.get(j, k) / xData.getSampleRate();
         if (maxCC >= OUTPUT_WRITER_THRESHOLD) {
-            ApplicationLogger.getInstance().log(Level.FINE, String.format("\nSta: %s, Phase: %s, Evid1: %d, Pick1: %f, Evid2: %d, Pick2: %f, MaxCC: %f, Shift: %f",
-                    xData.getSta(), xData.getPhase(), xData.getEvid(),
-                    xData.getNominalPickTime(), yData.getEvid(),
-                    yData.getNominalPickTime(), maxCC, shiftSeconds));
+            ApplicationLogger.getInstance()
+                             .log(
+                                     Level.FINE,
+                                         String.format(
+                                                 "\nSta: %s, Phase: %s, Evid1: %d, Pick1: %f, Evid2: %d, Pick2: %f, MaxCC: %f, Shift: %f",
+                                                     xData.getSta(),
+                                                     xData.getPhase(),
+                                                     xData.getEvid(),
+                                                     xData.getNominalPickTime(),
+                                                     yData.getEvid(),
+                                                     yData.getNominalPickTime(),
+                                                     maxCC,
+                                                     shiftSeconds));
         }
     }
 

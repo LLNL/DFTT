@@ -25,24 +25,24 @@
  */
 package llnl.gnem.apps.detection.streams;
 
-import com.oregondsp.util.TimeStamp;
-import llnl.gnem.apps.detection.core.dataObjects.Detection;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 
-import llnl.gnem.apps.detection.core.dataObjects.Trigger;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Trigger;
 
 import llnl.gnem.apps.detection.core.framework.StreamProcessor;
 import llnl.gnem.apps.detection.core.framework.detectors.Detector;
 import llnl.gnem.apps.detection.core.framework.detectors.array.FKScreenConfiguration;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceDetector;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -59,11 +59,7 @@ import llnl.gnem.apps.detection.core.framework.DetectionStatistic;
 import llnl.gnem.apps.detection.core.framework.DownSampler;
 import llnl.gnem.apps.detection.core.framework.StreamTransformer;
 import llnl.gnem.apps.detection.core.framework.detectors.arrayCorrelation.ArrayCorrelationSpecification;
-import llnl.gnem.apps.detection.core.framework.detectors.subspace.Projection;
-import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceTemplate;
-import llnl.gnem.apps.detection.database.DetectionDAO;
-import llnl.gnem.apps.detection.database.SubspaceDetectorDAO;
-import llnl.gnem.apps.detection.database.TriggerDAO;
+
 import llnl.gnem.apps.detection.statistics.fileWriting.DetectionStatisticWriter;
 import llnl.gnem.apps.detection.tasks.CalculateDetectionStatisticTask;
 import llnl.gnem.apps.detection.tasks.ComputationService;
@@ -73,7 +69,8 @@ import llnl.gnem.apps.detection.triggerProcessing.TriggerManager;
 import llnl.gnem.apps.detection.triggerProcessing.TriggerProcessor;
 import llnl.gnem.apps.detection.util.DetectorSubstitution;
 import llnl.gnem.apps.detection.util.StreamDataWriter;
-import llnl.gnem.apps.detection.util.SubstitutionReason;
+import llnl.gnem.apps.detection.util.TimeStamp;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.SubstitutionReason;
 import llnl.gnem.apps.detection.util.initialization.ProcessingPrescription;
 import llnl.gnem.apps.detection.util.initialization.StreamsConfig;
 import llnl.gnem.core.util.ApplicationLogger;
@@ -82,9 +79,10 @@ import llnl.gnem.core.util.StreamKey;
 import llnl.gnem.core.util.TimeT;
 import llnl.gnem.apps.detection.core.dataObjects.StreamSegment;
 import llnl.gnem.apps.detection.core.dataObjects.WaveformSegment;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.sdBuilder.histogramDisplay.HistogramModel;
 import llnl.gnem.apps.detection.util.RunInfo;
-import llnl.gnem.apps.detection.util.SubspaceUpdateParams;
+import llnl.gnem.core.dataAccess.DataAccessException;
 
 /**
  * Created by dodge1 Date: Oct 1, 2010 COPYRIGHT NOTICE Copyright (C) 2007
@@ -106,10 +104,12 @@ public class ConcreteStreamProcessor implements StreamProcessor {
     private final StreamTransformer streamTransformer;
     private final StreamDataWriter rawDataWriter;
     private final StreamDataWriter modifiedDataWriter;
+    private final Map<Integer, Collection<Detection>> rewindowCandidateMap;
 
     private long blocksProcessedCount = 0;
     Collection<Detector> mfDetectors;
     private final double blackoutSeconds;
+    private final DetectorReWindowProcessor reWindowProcessor;
 
     public ConcreteStreamProcessor(PreprocessorParams params,
             int streamid,
@@ -122,6 +122,7 @@ public class ConcreteStreamProcessor implements StreamProcessor {
         accumulator = new TreeMap<>();
         this.streamid = streamid;
         detectors = new ConcurrentHashMap<>();
+        rewindowCandidateMap = new ConcurrentHashMap<>();
         this.params = params;
         this.streamName = streamName;
         statisticScanner = new DetectionStatisticScanner(triggerOnlyOnCorrelators, streamName);
@@ -137,6 +138,7 @@ public class ConcreteStreamProcessor implements StreamProcessor {
 
         mfDetectors = new ArrayList<>();
         blackoutSeconds = StreamsConfig.getInstance().getSubspaceBlackoutPeriod(streamName);
+        reWindowProcessor = new DetectorReWindowProcessor(this);
     }
 
     public ConcreteStreamProcessor changeBlockSize(double blockSizeSeconds) {
@@ -182,13 +184,13 @@ public class ConcreteStreamProcessor implements StreamProcessor {
         ++blocksProcessedCount;
         if (blocksProcessedCount % StreamsConfig.getInstance().getStatsRefreshIntervalInBlocks(streamName) == 0) {
             ApplicationLogger.getInstance().log(Level.INFO, "Writing detection histogram data...");
-            SubspaceDetectorDAO.getInstance().writeHistograms(getSubspaceDetectors());
+            DetectionDAOFactory.getInstance().getSubspaceDetectorDAO().writeHistograms(getSubspaceDetectors());
             ApplicationLogger.getInstance().log(Level.INFO, "Done writing detection histogram data.");
             if (StreamsConfig.getInstance().isUseDynamicThresholds(streamName)) {
                 ApplicationLogger.getInstance().log(Level.INFO, "Updating subspace detector thresholds...");
                 TimeT blockStart = block.getStartTime();
                 int runid = RunInfo.getInstance().getRunid();
-                updateSubspaceDetectorThresholds(getSubspaceDetectors(), blockStart,runid);
+                updateSubspaceDetectorThresholds(getSubspaceDetectors(), blockStart, runid);
                 ApplicationLogger.getInstance().log(Level.INFO, "Done updating subspace detector thresholds.");
             }
         }
@@ -280,6 +282,27 @@ public class ConcreteStreamProcessor implements StreamProcessor {
                 detections.stream().forEach((detection) -> {
                     ApplicationLogger.getInstance().log(Level.INFO, detection.toString());
                 });
+                if (ProcessingPrescription.getInstance().isRewindowDetectors()) {
+                    Set<Integer> detectorsToRemove = new HashSet<>();
+                    for (Detection detection : detections) {
+                        Collection<Detection> candidateDetections = rewindowCandidateMap.get(detection.getDetectorid());
+                        if (candidateDetections != null) {
+                            candidateDetections.add(detection);
+                            if (candidateDetections.size() >= ProcessingPrescription.getInstance().getRewindowDetectionCountThreshold()) {
+                                SubspaceDetector newDetector = reWindowProcessor.rewindowOneDetector(detection.getDetectorid(), candidateDetections);
+                                if (newDetector != null) {
+                                    addDetector(newDetector);
+                                    detectorsToRemove.add(detection.getDetectorid());
+                                }
+                                rewindowCandidateMap.remove(detection.getDetectorid());
+                            }
+                        }
+                    }
+                    for (Integer detectorid : detectorsToRemove) {
+                        detectors.remove(detectorid);
+                        statisticScanner.removeDetector(detectorid);
+                    }
+                }
                 maybeSpawnNewdetectors(detections, compatibleStream);
             }
         } catch (Exception ex) {
@@ -317,9 +340,9 @@ public class ConcreteStreamProcessor implements StreamProcessor {
 
     private Trigger getDbTrigger(EvaluatedTrigger evaluatedTrigger) {
         try {
-            Trigger dbTrigger = TriggerDAO.getInstance().writeNewTrigger(evaluatedTrigger);
+            Trigger dbTrigger = DetectionDAOFactory.getInstance().getTriggerDAO().writeNewTrigger(evaluatedTrigger);
             return evaluatedTrigger.isUsable() ? dbTrigger : null;
-        } catch (SQLException ex) {
+        } catch (DataAccessException ex) {
             ApplicationLogger.getInstance().log(Level.WARNING, "Failed inserting new Trigger!", ex);
             return null;
         }
@@ -361,16 +384,12 @@ public class ConcreteStreamProcessor implements StreamProcessor {
 
     private void maybeSpawnOneDetector(Detection detection, StreamSegment compatibleStream) {
         Detector detector = getDetector(detection);
-        if (detector == null) {
-            ApplicationLogger.getInstance().log(Level.WARNING, String.format("Failed to get detector for detection: %s", detection.toString()));
-        } else {
+        if (detector != null) {
             try {
                 if (detector.getDetectorType().isSpawning()) {
                     if (StreamsConfig.getInstance().isSpawnCorrelationDetectors(streamName)) {
                         spawnNewCorrelator(detection, compatibleStream);
                     }
-                } else if (detector instanceof SubspaceDetector && SubspaceUpdateParams.getInstance().isUpdateOnDetection()) {
-                    updateDetector((SubspaceDetector) detector, detection, compatibleStream);
                 }
             } catch (Exception ex) {
                 ApplicationLogger.getInstance().log(Level.WARNING, "Failed creating new detector!", ex);
@@ -436,13 +455,6 @@ public class ConcreteStreamProcessor implements StreamProcessor {
         return result;
     }
 
-    public Detector removeDetector(int detectorid) {
-        Detector result = detectors.get(detectorid);
-        detectors.remove(detectorid);
-
-        return result;
-    }
-
     @Override
     public Detector getDetector(Detection detection) {
         int detectorid = detection.getDetectorid();
@@ -475,7 +487,7 @@ public class ConcreteStreamProcessor implements StreamProcessor {
             //Then associate the detection with the new trigger.
             //The effect is that power detectorList never end up with detections.
             if (substitute != null) {
-                DetectionDAO.getInstance().reassignDetection(detection, substitute);
+                DetectionDAOFactory.getInstance().getDetectionDAO().reassignDetection(detection, substitute);
             } else {
                 ApplicationLogger.getInstance().log(Level.INFO, String.format(
                         "Detection (%s) could not be reassigned and remains with originating detector.",
@@ -494,76 +506,19 @@ public class ConcreteStreamProcessor implements StreamProcessor {
         double duration = signalDuration == 0 ? templateLagSeconds : signalDuration;
 
         TimeStamp triggerTime = detection.getTriggerTime();
-        SubspaceDetector detector = SubspaceDetectorDAO.getInstance().createDetectorFromStreamSegment(segment, triggerTime, templateLeadSeconds, duration, this);
-
+        SubspaceDetector detector = DetectionDAOFactory.getInstance().getSubspaceDetectorDAO().createDetectorFromStreamSegment(segment, triggerTime, templateLeadSeconds, duration, this);
+        if (ProcessingPrescription.getInstance().isRewindowDetectors()) {
+            rewindowCandidateMap.put(detector.getdetectorid(), new ArrayList<>());
+        }
         ApplicationLogger.getInstance().log(Level.INFO, "Created new detector: " + detector);
         this.addDetector(detector);
         Double shift = 0.0;
         return new DetectorSubstitution(detector, shift, 1.0, detection.getDetectorid(), SubstitutionReason.INITIAL_PATTERN_INSTANCE);
     }
 
-    public void updateDetector(SubspaceDetector detector, Detection detection, StreamSegment segment) throws Exception {
-
-        double updateThreshold = SubspaceUpdateParams.getInstance().getUpdateThreshold();
-        if (detection.getMaxDetStat() < updateThreshold) {
-            ApplicationLogger.getInstance().log(Level.FINE, String.format("Detector %d was not "
-                    + "updated because detection statistic (%f) was less than update threshold of %f.",
-                    detector.getdetectorid(), detection.getMaxDetStat(), updateThreshold));
-            return;
-        }
-
-        int numPadSamples = 10;
-        TimeStamp triggerTime = detection.getTriggerTime();
-        SubspaceTemplate template = detector.getTemplate();
-
-        int templateLength = template.getTemplateLength();
-
-        TimeT segmentStart = segment.getStartTime();
-        double sampleInterval = segment.getSampleInterval();
-        int startIndex = (int) Math.round((triggerTime.epochAsDouble() - segmentStart.getEpochTime()) / sampleInterval) - numPadSamples;
-        if (startIndex < 0) {
-            throw new IllegalStateException("Requested template data starts before segment start!");
-        }
-        int endIndex = templateLength + startIndex - 1 + numPadSamples;
-        if (endIndex >= segment.size()) {
-            throw new IllegalStateException("Requested template data ends after segment end!");
-        }
-
-        int N = endIndex - startIndex + 1;
-
-        int nch = segment.getNumChannels();
-        float[][] preprocessedDataFromStream = createCompatibleRepresentation(template.getStaChanList(), N, segment, startIndex);
-
-        ArrayList< float[]> registered = Projection.getRegisteredSegment(template, preprocessedDataFromStream);
-        double lambda = SubspaceUpdateParams.getInstance().getLambda();
-        double energyCapture = SubspaceUpdateParams.getInstance().getEnergyCapture();
-        template.update(registered, energyCapture, lambda);
-        SubspaceDetectorDAO.getInstance().updateTemplateInDB(detector.getdetectorid(), template);
-    }
-
-    private float[][] createCompatibleRepresentation(ArrayList< StreamKey> requestedChans, int N, StreamSegment segment, int startIndex) {
-
-        int nch = requestedChans.size();
-        float[][] preprocessedDataFromStream = new float[nch][N];
-
-        int ich = 0;
-        for (StreamKey key : requestedChans) {
-            float[] streamData = segment.getChannelData(key);
-            for (int i = 0; i < N; i++) {
-                preprocessedDataFromStream[ich][i] = streamData[startIndex + i];
-            }
-            ich++;
-        }
-
-        return preprocessedDataFromStream;
-    }
-
     public static ArrayCorrelationSpecification createArrayCorrelationSpecification(ConcreteStreamProcessor processor, ArrayCorrelationParams params, Collection<StreamSegment> eventSegments, double prepickSeconds, double correlationWindowLength) {
 
         ArrayList<StreamKey> streamChannels = new ArrayList<>(processor.getChannels());
-
-        PreprocessorParams pparams = processor.getParams();
-
         ArrayCorrelationSpecification spec = new ArrayCorrelationSpecification(
                 (float) params.getDetectionThreshold(),
                 (float) params.getBlackoutSeconds(),
@@ -578,9 +533,9 @@ public class ConcreteStreamProcessor implements StreamProcessor {
         return spec;
     }
 
-    private void updateSubspaceDetectorThresholds(Collection<SubspaceDetector> subspaceDetectors,final TimeT blockStart, final int runid) {
+    private void updateSubspaceDetectorThresholds(Collection<SubspaceDetector> subspaceDetectors, final TimeT blockStart, final int runid) {
         final HistogramModel hm = HistogramModel.getInstance();
-        subspaceDetectors.parallelStream().forEach(t -> hm.updateSingleDetectorThreshold(t, blockStart,runid));
+        subspaceDetectors.parallelStream().forEach(t -> hm.updateSingleDetectorThreshold(t, blockStart, runid));
     }
 
 }

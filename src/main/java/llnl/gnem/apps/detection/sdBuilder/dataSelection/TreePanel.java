@@ -32,6 +32,7 @@ import java.awt.KeyboardFocusManager;
 import java.awt.Toolkit;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -39,6 +40,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.swing.InputMap;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -51,8 +53,9 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
-import llnl.gnem.apps.detection.core.dataObjects.Detection;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.classify.TriggerClassification;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.sdBuilder.actions.AdvanceAction;
 import llnl.gnem.apps.detection.sdBuilder.actions.ClassifyAllDetectionsAction;
 import llnl.gnem.apps.detection.sdBuilder.actions.CreateTemplateAction;
@@ -76,6 +79,7 @@ import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ComputeCorrelationsWork
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.WindowAdjustmentDirection;
 import llnl.gnem.apps.detection.util.Configuration;
 import llnl.gnem.apps.detection.util.FrameworkRun;
+import llnl.gnem.apps.detection.util.KeyPhaseMapper;
 import llnl.gnem.core.gui.plotting.MouseMode;
 
 /**
@@ -101,6 +105,12 @@ public class TreePanel extends JPanel implements TreeSelectionListener {
 
         tree = new JTree(treeModel);
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        InputMap im = tree.getInputMap();
+        im.clear();
+        KeyListener[] kl = tree.getKeyListeners();
+        for (KeyListener kli : kl) {
+            tree.removeKeyListener(kli);
+        }
 
         tree.addTreeSelectionListener(this);
         tree.addMouseListener(new MyMouseListener());
@@ -128,17 +138,10 @@ public class TreePanel extends JPanel implements TreeSelectionListener {
                     return true;
                 }
             } else if (e.getID() == KeyEvent.KEY_PRESSED) {
-                switch (e.getKeyChar()) {
-                    case 'p':
-                    case 'P':
-                        DetectionPhasePickModel.getInstance().setCurrentPhase("P");
-                        ClusterBuilderFrame.getInstance().setMouseMode(MouseMode.CREATE_PICK);
-                        break;
-                    case 's':
-                    case 'S':
-                        DetectionPhasePickModel.getInstance().setCurrentPhase("S");
-                        ClusterBuilderFrame.getInstance().setMouseMode(MouseMode.CREATE_PICK);
-                        break;
+                String phase = KeyPhaseMapper.getInstance().getMappedPhase(e.getKeyChar());
+                if (phase != null) {
+                    DetectionPhasePickModel.getInstance().setCurrentPhase(phase);
+                    ClusterBuilderFrame.getInstance().setMouseMode(MouseMode.CREATE_PICK);
                 }
                 if ((e.getKeyCode() == KeyEvent.VK_S) && ((e.getModifiers() & KeyEvent.CTRL_MASK) != 0)) {
                     CorrelatedTracesModel.getInstance().savePicks();
@@ -198,11 +201,11 @@ public class TreePanel extends JPanel implements TreeSelectionListener {
                 Configuration configuration = (Configuration) nodeInfo;
                 int configid = configuration.getConfigid();
                 new GetRunCollectionWorker(configid, node).execute();
-
             } else if (nodeInfo instanceof FrameworkRun) {
                 FrameworkRun frameworkRun = (FrameworkRun) nodeInfo;
                 int runid = frameworkRun.getRunid();
                 new GetDetectorStatsWorker(runid, node).execute();
+
             } else if (nodeInfo instanceof DetectorStats) {
                 DetectorStats stats = (DetectorStats) nodeInfo;
                 int runid = stats.getRunid();
@@ -351,21 +354,11 @@ public class TreePanel extends JPanel implements TreeSelectionListener {
     private class TreeKeyListener extends KeyAdapter {
 
         public void KeyPressed(KeyEvent e) {
-            switch (e.getKeyChar()) {
-                case 'p':
-                case 'P':
-                    System.out.println("P");
-                    DetectionPhasePickModel.getInstance().setCurrentPhase("P");
-                    ClusterBuilderFrame.getInstance().setMouseMode(MouseMode.CREATE_PICK);
-                    break;
-                case 's':
-                case 'S':
-                    System.out.println("S");
-                    DetectionPhasePickModel.getInstance().setCurrentPhase("S");
-                    ClusterBuilderFrame.getInstance().setMouseMode(MouseMode.CREATE_PICK);
-                    break;
+            String phase = KeyPhaseMapper.getInstance().getMappedPhase(e.getKeyChar());
+            if (phase != null) {
+                DetectionPhasePickModel.getInstance().setCurrentPhase(phase);
+                ClusterBuilderFrame.getInstance().setMouseMode(MouseMode.CREATE_PICK);
             }
-
         }
 
         @Override
@@ -425,6 +418,24 @@ public class TreePanel extends JPanel implements TreeSelectionListener {
                 case 'U':
                     classifyAndNext("u", true);
                     break;
+                case 'r':
+                    classifyAndNext("r", false);
+                    break;
+                case 'R':
+                    classifyAndNext("r", true);
+                    break;
+                case 'l':
+                    classifyAndNext("l", false);
+                    break;
+                case 'L':
+                    classifyAndNext("l", true);
+                    break;
+                case 'e':
+                    classifyAndNext("e", false);
+                    break;
+                case 'E':
+                    classifyAndNext("e", true);
+                    break;
                 case 'c':
                 case 'C':
                     correlateCurrent();
@@ -444,8 +455,14 @@ public class TreePanel extends JPanel implements TreeSelectionListener {
                 if (userObject instanceof DetectorStats) {
                     DetectorStats stats = (DetectorStats) userObject;
                     int detectorid = stats.getDetectorid();
+                    TriggerClassification tc = TriggerClassification.createFromSingleStatusString(status);
+                    stats.updateClassification(tc);
+                    CorrelatedTracesModel.getInstance().resetTriggerClassification(tc, detectorid);
                     new ClassifyDetectionWorker(detectorid, status).execute();
-                    if (!status.equals("g")) {
+
+                    if (ParameterModel.getInstance().isSuppressBadDetectors()
+                            && !(status.equals("g") || status.equals("l") || status.equals("r") || status.equals("e"))) {
+                        CorrelatedTracesModel.getInstance().clear();
                         DefaultMutableTreeNode next = currentSelection.getNextSibling();
                         removeNode(currentSelection);
                         if (next != null && next.getUserObject() != null && next.getUserObject() instanceof DetectorStats) {
@@ -700,5 +717,10 @@ public class TreePanel extends JPanel implements TreeSelectionListener {
 
     public void returnFocusToTree() {
         tree.requestFocusInWindow();
+        if (currentSelection != null) {
+            TreePath path = new TreePath(currentSelection.getPath());
+            tree.setSelectionPath(path);
+        }
+        tree.grabFocus();
     }
 }

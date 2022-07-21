@@ -25,7 +25,14 @@
  */
 package llnl.gnem.apps.detection.dataAccess.interfaces;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
+import llnl.gnem.apps.detection.core.framework.detectors.Detector;
+import llnl.gnem.apps.detection.core.framework.detectors.TemplateNormalization;
+import llnl.gnem.apps.detection.sdBuilder.dataSelection.DetectorStats;
+import llnl.gnem.apps.detection.streams.ConcreteStreamProcessor;
 import llnl.gnem.core.dataAccess.DataAccessException;
 import llnl.gnem.core.util.StreamKey;
 import llnl.gnem.core.util.TimeT;
@@ -41,4 +48,40 @@ public interface DetectorDAO {
     List<StreamKey> getDetectorChannelsFromConfig(long configid) throws DataAccessException;
 
     void writeChangedThreshold(int runid, int detectorid, TimeT streamTime, double newThreshold) throws DataAccessException;
+
+    /**
+     * Replaces the template of a subspace detector with a compatible template
+     * from another detector (assumed to be for same signal) but with a possible
+     * shift and improved SNR from stacking or other enhancement. Also updates
+     * the times and signal_durations in trigger_record if the offset is
+     * non-zero. Does not update any other statistics. The source detector is
+     * deleted upon completion.
+     *
+     * @param oldDetectorid The detector whose template will be replaced
+     * @param newDetectorid The detector whos template will be used
+     * @param templateOffset The offset in seconds of the new template start
+     * relative to the old
+     * @param templateDuration The duration of the new template
+     * @param sourceInfo
+     * @throws llnl.gnem.core.dataAccess.DataAccessException
+     */    void replaceSubspaceTemplate(int oldDetectorid,
+            int newDetectorid,
+            double templateOffset,
+            double templateDuration,
+            String sourceInfo) throws DataAccessException;
+     
+     void deleteDetector(int detectorid) throws DataAccessException;
+     
+     ArrayList<Integer> getSubspaceDetectorIDsWithDetections(int runid) throws DataAccessException;
+     
+     String getDetectorSourceInfo(int detectorid) throws DataAccessException;
+     
+     Collection<DetectorStats> getDetectorStats(int runid, boolean suppressBadDetectors) throws DataAccessException;
+     
+     int getNewDetectorid() throws DataAccessException;
+     
+     Collection<? extends Detector> retrieveSubspaceDetectors(ConcreteStreamProcessor processor,
+            TemplateNormalization normalizationType, DetectorType type) throws DataAccessException;
+     
+     Collection<Integer> getBootDetectorIds(int streamid) throws DataAccessException;
 }

@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import llnl.gnem.apps.detection.core.dataObjects.AbstractSpecification;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.core.dataObjects.TriggerPositionType;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -40,6 +40,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
+import llnl.gnem.core.util.FileUtil.DriveMapper;
 
 import llnl.gnem.core.util.StreamKey;
 
@@ -127,7 +128,8 @@ public class BulletinSpecification extends AbstractSpecification implements Seri
     }
 
     private Bulletin readBulletinFile(String bulletinFile) throws IOException {
-        Path path = Paths.get(bulletinFile);
+        String reMapped = DriveMapper.getInstance().maybeMapPath(bulletinFile);
+        Path path = Paths.get(reMapped);
 
         ArrayList<BulletinRecord> records = new ArrayList<>();
 

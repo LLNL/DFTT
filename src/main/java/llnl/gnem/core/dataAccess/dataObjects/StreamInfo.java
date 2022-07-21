@@ -27,6 +27,7 @@ package llnl.gnem.core.dataAccess.dataObjects;
 
 import java.io.Serializable;
 import java.util.Objects;
+import javax.annotation.Nonnull;
 import llnl.gnem.core.util.StreamKey;
 
 /**
@@ -60,7 +61,7 @@ public class StreamInfo implements Serializable {
         this.description = description;
     }
 
-    public StreamInfo(StreamInfo other) {
+    public StreamInfo(@Nonnull StreamInfo other) {
         this.streamId = other.streamId;
         this.stationId = other.stationId;
         this.streamKey = other.streamKey;

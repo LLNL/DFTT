@@ -365,7 +365,7 @@ public class JAzimuthalPlotMouseListener extends MouseInputAdapter implements Ke
         if (!keyIsDown) {
             keyIsDown = true;
             int keyCode = e.getKeyCode();
-            MouseMode mouseMode = controlKeyMapper.getMouseMode(keyCode);
+            MouseMode mouseMode = controlKeyMapper.getMouseMode(e);
             if (mouseMode != null) {
                 modeChangeOccurred = true;
                 plot.setMouseMode(mouseMode);

@@ -25,6 +25,8 @@
  */
 package llnl.gnem.apps.detection.core.signalProcessing;
 
+import llnl.gnem.core.signalprocessing.Sequence;
+
 /**
  *
  * @author User Name

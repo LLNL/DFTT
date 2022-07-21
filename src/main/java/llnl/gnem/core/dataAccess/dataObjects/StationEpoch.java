@@ -33,6 +33,22 @@ import java.util.Objects;
  */
 public class StationEpoch {
 
+    private final String stationSource;
+    private final String networkCode;
+    private final int netStartDate;
+    private final String stationCode;
+    private final String description;
+    private final double lat;
+    private final double lon;
+    private final Double elev;
+    private final double beginTime;
+    private final double endTime;
+    private final long networkId;
+    private final long stationId;
+    private final String locationCode;
+    private final Long arrayId;
+    private final Long arrayElementId;
+
     /**
      * @return the arrayId
      */
@@ -47,41 +63,23 @@ public class StationEpoch {
         return arrayElementId;
     }
     
-    public boolean isSingleStation()
-    {
+    public boolean isSingleStation() {
         return arrayId == null;
     }
 
-     
-    private final String stationSource;
-    private final String networkCode;
-    private final int netStartDate;
-    private final String stationCode;
-    private final String description;
-    private final double lat;
-    private final double lon;
-    private final Double elev;
-    private final double beginTime;
-    private final double endTime;
-    private final long networkId;
-    private final long stationId;
-    private final long stationEpochId;
-    private final Long arrayId;
-    private final Long arrayElementId;
-
-    public StationEpoch(String stationSource, 
-            String networkCode, 
-            int netStartDate, 
+    public StationEpoch(String stationSource,
+            String networkCode,
+            int netStartDate,
             String stationCode,
-            String description, 
-            double lat, 
-            double lon, 
-            Double elev, 
-            double beginTime, 
-            double endTime, 
-            long networkId, 
-            long stationId, 
-            long stationEpochId,
+            String description,
+            double lat,
+            double lon,
+            Double elev,
+            double beginTime,
+            double endTime,
+            long networkId,
+            long stationId,
+            Long stationEpochId,
             Long arrayId,
             Long arrayElementId) {
         this.stationSource = stationSource;
@@ -96,9 +94,41 @@ public class StationEpoch {
         this.endTime = endTime;
         this.networkId = networkId;
         this.stationId = stationId;
-        this.stationEpochId = stationEpochId;
         this.arrayId = arrayId;
-        this.arrayElementId=arrayElementId;
+        this.arrayElementId = arrayElementId;
+        locationCode = null;
+    }
+     
+    public StationEpoch(String stationSource, 
+            String networkCode, 
+            int netStartDate, 
+            String stationCode,
+            String locationCode,
+            String description, 
+            double lat, 
+            double lon, 
+            Double elev, 
+            double beginTime, 
+            double endTime, 
+            long networkId, 
+            long stationId, 
+            Long arrayId,
+            Long arrayElementId) {
+        this.stationSource = stationSource;
+        this.networkCode = networkCode;
+        this.netStartDate = netStartDate;
+        this.stationCode = stationCode;
+        this.description = description;
+        this.lat = lat;
+        this.lon = lon;
+        this.elev = elev;
+        this.beginTime = beginTime;
+        this.endTime = endTime;
+        this.networkId = networkId;
+        this.stationId = stationId;
+        this.arrayId = arrayId;
+        this.arrayElementId = arrayElementId;
+        this.locationCode = locationCode;
     }
 
     /**
@@ -121,6 +151,7 @@ public class StationEpoch {
     public int getNetStartDate() {
         return netStartDate;
     }
+
    /**
      * @return the stationCode
      */
@@ -184,30 +215,33 @@ public class StationEpoch {
         return stationId;
     }
 
-    /**
-     * @return the stationEpochId
-     */
-    public long getStationEpochId() {
-        return stationEpochId;
+    public String getLocationCode() {
+        return locationCode;
     }
 
+    @Override
+    public String toString() {
+        return "StationEpoch{" + "stationSource=" + stationSource + ", networkCode=" + networkCode + ", netStartDate=" + netStartDate + ", stationCode=" + stationCode + ", description=" + description + ", lat=" + lat + ", lon=" + lon + ", elev=" + elev + ", beginTime=" + beginTime + ", endTime=" + endTime + ", networkId=" + networkId + ", stationId=" + stationId + ", locationCode=" + locationCode + ", arrayId=" + arrayId + ", arrayElementId=" + arrayElementId + '}';
+    }
 
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 89 * hash + Objects.hashCode(this.stationSource);
-        hash = 89 * hash + Objects.hashCode(this.networkCode);
-        hash = 89 * hash + this.netStartDate;
-        hash = 89 * hash + Objects.hashCode(this.stationCode);
-        hash = 89 * hash + Objects.hashCode(this.description);
-        hash = 89 * hash + (int) (Double.doubleToLongBits(this.lat) ^ (Double.doubleToLongBits(this.lat) >>> 32));
-        hash = 89 * hash + (int) (Double.doubleToLongBits(this.lon) ^ (Double.doubleToLongBits(this.lon) >>> 32));
-        hash = 89 * hash + Objects.hashCode(this.elev);
-        hash = 89 * hash + (int) (Double.doubleToLongBits(this.beginTime) ^ (Double.doubleToLongBits(this.beginTime) >>> 32));
-        hash = 89 * hash + (int) (Double.doubleToLongBits(this.endTime) ^ (Double.doubleToLongBits(this.endTime) >>> 32));
-        hash = 89 * hash + (int)this.networkId;
-        hash = 89 * hash + (int)this.stationId;
-        hash = 89 * hash + (int)this.stationEpochId;
+        hash = 71 * hash + Objects.hashCode(this.stationSource);
+        hash = 71 * hash + Objects.hashCode(this.networkCode);
+        hash = 71 * hash + this.netStartDate;
+        hash = 71 * hash + Objects.hashCode(this.stationCode);
+        hash = 71 * hash + Objects.hashCode(this.description);
+        hash = 71 * hash + (int) (Double.doubleToLongBits(this.lat) ^ (Double.doubleToLongBits(this.lat) >>> 32));
+        hash = 71 * hash + (int) (Double.doubleToLongBits(this.lon) ^ (Double.doubleToLongBits(this.lon) >>> 32));
+        hash = 71 * hash + Objects.hashCode(this.elev);
+        hash = 71 * hash + (int) (Double.doubleToLongBits(this.beginTime) ^ (Double.doubleToLongBits(this.beginTime) >>> 32));
+        hash = 71 * hash + (int) (Double.doubleToLongBits(this.endTime) ^ (Double.doubleToLongBits(this.endTime) >>> 32));
+        hash = 71 * hash + (int) (this.networkId ^ (this.networkId >>> 32));
+        hash = 71 * hash + (int) (this.stationId ^ (this.stationId >>> 32));
+        hash = 71 * hash + Objects.hashCode(this.locationCode);
+        hash = 71 * hash + Objects.hashCode(this.arrayId);
+        hash = 71 * hash + Objects.hashCode(this.arrayElementId);
         return hash;
     }
 
@@ -244,9 +278,6 @@ public class StationEpoch {
         if (this.stationId != other.stationId) {
             return false;
         }
-        if (this.stationEpochId != other.stationEpochId) {
-            return false;
-        }
         if (!Objects.equals(this.stationSource, other.stationSource)) {
             return false;
         }
@@ -259,18 +290,19 @@ public class StationEpoch {
         if (!Objects.equals(this.description, other.description)) {
             return false;
         }
+        if (!Objects.equals(this.locationCode, other.locationCode)) {
+            return false;
+        }
         if (!Objects.equals(this.elev, other.elev)) {
+            return false;
+        }
+        if (!Objects.equals(this.arrayId, other.arrayId)) {
+            return false;
+        }
+        if (!Objects.equals(this.arrayElementId, other.arrayElementId)) {
             return false;
         }
         return true;
     }
 
-    @Override
-    public String toString() {
-        return "StationEpoch{" + "stationSource=" + stationSource + ", networkCode=" + networkCode +
-                ", netStartDate=" + netStartDate + ", stationCode=" + stationCode + ", description=" +
-                description + ", lat=" + lat + ", lon=" + lon + ", elev=" + elev + ", beginTime=" + beginTime + ", endTime=" + endTime +
-                ", networkId=" + networkId + ", stationId=" + stationId + ", stationEpochId=" + stationEpochId  + '}';
     }
-    
-}

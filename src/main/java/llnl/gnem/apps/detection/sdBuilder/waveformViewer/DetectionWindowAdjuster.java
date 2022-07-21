@@ -57,7 +57,7 @@ public class DetectionWindowAdjuster {
         int count = 0;
         double averageOffset = 0;
         for (CorrelationComponent cc : data) {
-            CorrelationTraceData td = (CorrelationTraceData) cc.getTraceData();
+            CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
             float[] plotData = td.getPlotData();
 
             double offset = td.getNominalPick().getTime() - td.getTime().getEpochTime();
@@ -119,7 +119,7 @@ public class DetectionWindowAdjuster {
     private double getDelta(Collection<CorrelationComponent> data) {
         double delta = -1;
         for (CorrelationComponent cc : data) {
-            CorrelationTraceData td = (CorrelationTraceData) cc.getTraceData();
+            CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
             delta = td.getDelta();
             return delta;
         }

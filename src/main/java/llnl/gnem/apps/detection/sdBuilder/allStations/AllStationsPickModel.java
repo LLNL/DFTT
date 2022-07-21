@@ -53,7 +53,7 @@ public class AllStationsPickModel {
         EventSeismogramData esd = getDataFor(btd);
         if (esd != null) {
             int configid = esd.getStationInfo().getConfigid();
-            PhasePick dpp = new PhasePick(-1, configid, null, currentPhase, pickEpochTime, pickStd);
+            PhasePick dpp = new PhasePick(-1, configid, null,btd.getStreamKey(), currentPhase, pickEpochTime, pickStd);
             esd.addPick(dpp);
             return dpp;
         }
@@ -73,9 +73,7 @@ public class AllStationsPickModel {
         for (EventSeismogramData esd : seismograms) {
             for (PhasePick pick : esd.getPicks()) {
                 if (pick.equals(dpp)) {
-                    esd.addPick(new PhasePick(dpp.getPickid(), dpp.getConfigid(), dpp.getDetectionid(),
-                            dpp.getPhase(), dpp.getTime() + deltaT, dpp.getStd()));
-                    esd.removePick(pick);
+                    pick.adjustPickTime(deltaT);
                     return;
                 }
             }

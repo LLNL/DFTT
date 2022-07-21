@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,20 +25,22 @@
  */
 package llnl.gnem.apps.detection.core.framework.detectors.arrayCorrelation;
 
-import Jama.Matrix;
-import Jama.SingularValueDecomposition;
-import com.oregondsp.io.SACFileWriter;
-import llnl.gnem.apps.detection.core.framework.detectors.EmpiricalTemplate;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.logging.Level;
+
+import org.ojalgo.matrix.Primitive32Matrix;
+import org.ojalgo.matrix.decomposition.SingularValue;
+import org.ojalgo.matrix.store.RawStore;
+
 import llnl.gnem.apps.detection.core.dataObjects.PreprocessorParams;
+import llnl.gnem.apps.detection.core.framework.detectors.EmpiricalTemplate;
+import llnl.gnem.apps.detection.util.io.SACFileWriter;
 import llnl.gnem.core.util.ApplicationLogger;
 import llnl.gnem.core.util.FileSystemException;
 import llnl.gnem.core.util.StreamKey;
-
 
 /**
  *
@@ -49,8 +51,8 @@ public class ArrayCorrelationTemplate extends EmpiricalTemplate implements Seria
     static final long serialVersionUID = 2502597330729162426L;
     private static final float FLOAT_TOL = 0.000001f;
 
-    private ArrayList< float[][]> representation;
-    private ArrayList< double[]> singularValues;
+    private ArrayList<float[][]> representation;
+    private ArrayList<double[]> singularValues;
     private int templateLength;
 
     @Override
@@ -124,18 +126,12 @@ public class ArrayCorrelationTemplate extends EmpiricalTemplate implements Seria
         }
         return true;
     }
-    
-    
 
-    public ArrayCorrelationTemplate( ArrayList< float[][]>         eventData,
-                                     ArrayCorrelationSpecification spec,
-                                     PreprocessorParams            parameters ) {
+    public ArrayCorrelationTemplate(ArrayList<float[][]> eventData, ArrayCorrelationSpecification spec, PreprocessorParams parameters) {
 
-        super( parameters, spec, eventData.size() );                  // TODO:  Shouldn't there be a rank estimator?
-        createRepresentationFromData( eventData, spec );
+        super(parameters, spec, eventData.size()); // TODO:  Shouldn't there be a rank estimator?
+        createRepresentationFromData(eventData, spec);
     }
-    
-    
 
     /**
      * ArrayCorrelationTemplate constructor intended to construct a template
@@ -146,31 +142,32 @@ public class ArrayCorrelationTemplate extends EmpiricalTemplate implements Seria
      * ranges over the channels of the network or array supplying the data and
      * the second index ranges over time.
      *
-     * @param spec Specification object.
+     * @param spec
+     *            Specification object.
      * @param parameters
      * @throws IOException
      */
-    public ArrayCorrelationTemplate( ArrayCorrelationSpecification spec, PreprocessorParams parameters ) throws IOException {
+    public ArrayCorrelationTemplate(ArrayCorrelationSpecification spec, PreprocessorParams parameters) throws IOException {
 
-        super( parameters, spec, 1 );
+        super(parameters, spec, 1);
 
-        ArrayList< float[][]> eventData = readTrainingData( spec.getEventDirectoryList(), spec.getEventFilePattern() );
+        ArrayList<float[][]> eventData = readTrainingData(spec.getEventDirectoryList(), spec.getEventFilePattern());
         createRepresentationFromData(eventData, spec);
     }
-    
-    
 
     /**
      * The guts of creating a representation from event data
      *
-     * @param eventData ArrayList< float[][] > containing the trace data of
-     * design events
-     * @param spec Specification object containing parameters required to create
-     * template
+     * @param eventData
+     *            ArrayList< float[][] > containing the trace data of design
+     *            events
+     * @param spec
+     *            Specification object containing parameters required to create
+     *            template
      */
-    private void createRepresentationFromData( ArrayList< float[][] > eventData, ArrayCorrelationSpecification spec ) {
+    private void createRepresentationFromData(ArrayList<float[][]> eventData, ArrayCorrelationSpecification spec) {
 
-        int nevents   = eventData.size();
+        int nevents = eventData.size();
         int nchannels = getnchannels();
 
         int start = (int) (spec.getOffsetSecondsToWindowStart() * getProcessingParameters().samplingRate / getProcessingParameters().decrate);
@@ -189,8 +186,8 @@ public class ArrayCorrelationTemplate extends EmpiricalTemplate implements Seria
         }
 
         // scale event waveforms to prevent any one event from dominating the others
-        Matrix[] U = new Matrix[nchannels];
-        singularValues = new ArrayList< >();
+        Primitive32Matrix[] U = new Primitive32Matrix[nchannels];
+        singularValues = new ArrayList<>();
         double[] s2 = new double[nevents];
         double E = 0.0;
 
@@ -207,18 +204,18 @@ public class ArrayCorrelationTemplate extends EmpiricalTemplate implements Seria
                 }
             }
 
-            Matrix dataMatrix = new Matrix(data[ich]);
+            Primitive32Matrix dataMatrix = Primitive32Matrix.FACTORY.makeWrapper(RawStore.wrap(data[ich]));
 
             // estimate dimension
-            SingularValueDecomposition svd = new SingularValueDecomposition(dataMatrix);
-            double[] s = svd.getSingularValues();
+            SingularValue<Double> svd = SingularValue.PRIMITIVE.make(dataMatrix);
+            double[] s = svd.getSingularValues().toRawCopy1D();
             singularValues.add(s);
             for (int i = 0; i < s.length; i++) {
                 s2[i] += s[i] * s[i];
                 E += s[i] * s[i];
             }
 
-            U[ich] = svd.getU();
+            U[ich] = Primitive32Matrix.FACTORY.make(svd.getU());
         }
 
         dimension = 0;
@@ -241,13 +238,13 @@ public class ArrayCorrelationTemplate extends EmpiricalTemplate implements Seria
         ApplicationLogger.getInstance().log(Level.FINE, "Template dimension = " + dimension);
 
         // extract template
-        representation = new ArrayList< >();
+        representation = new ArrayList<>();
         for (int ich = 0; ich < nchannels; ich++) {
 
             float[][] tmp = new float[dimension][templateLength];
             for (int i = 0; i < templateLength; i++) {
                 for (int id = 0; id < dimension; id++) {
-                    tmp[id][i] = (float) U[ich].get(i, id);
+                    tmp[id][i] = U[ich].get(i, id).floatValue();
                 }
             }
 
@@ -256,151 +253,140 @@ public class ArrayCorrelationTemplate extends EmpiricalTemplate implements Seria
 
     }
 
-    
-    
     /**
      * Array correlation template constructor intended for use with a single
      * event cut from a preprocessed data stream.
      *
      * @param parameters
-     * @param preprocessedDataFromStream float[][] containing unnormalized,
-     * decimated stream data. The first index ranges over channels and the
-     * second over time.
-     * @param channelIDs ArrayList< StaChan > containing channel identifiers
+     * @param preprocessedDataFromStream
+     *            float[][] containing unnormalized, decimated stream data. The
+     *            first index ranges over channels and the second over time.
+     * @param channelIDs
+     *            ArrayList< StaChan > containing channel identifiers
      */
-//    public ArrayCorrelationTemplate( PreprocessorParams parameters, float[][] preprocessedDataFromStream, ArrayList< StaChanKey> channelIDs ) {
-//
-//        super( parameters, channelIDs, 1 );
-//
-//        nchannels = preprocessedDataFromStream.length;
-//        if (nchannels != chanIDs.size()) {
-//            throw new IllegalStateException("Channel ID list length not equal to number of channels in preprocessed data segment");
-//        }
-//
-//        chanIDs = new ArrayList< >(channelIDs);
-//        singularValues = new ArrayList< >();
-//        templateLength = preprocessedDataFromStream[0].length;
-//        dimension = 1;
-//        representation = new ArrayList< >();
-//
-//        for (int ich = 0; ich < nchannels; ich++) {
-//
-//            float[] trace = preprocessedDataFromStream[ ich];
-//
-//            float scale = 0.0f;
-//            for (int i = 0; i < templateLength; i++) {
-//                scale += trace[i] * trace[i];
-//            }
-//            scale = (float) Math.sqrt(scale);
-//
-//            double[] s = new double[1];
-//            s[0] = scale;
-//            singularValues.add(s);
-//
-//            float[][] tmp = new float[1][templateLength];
-//            for (int i = 0; i < templateLength; i++) {
-//                tmp[0][i] = trace[i] / scale;
-//            }
-//            representation.add(tmp);
-//        }
-//
-//    }
+    //    public ArrayCorrelationTemplate( PreprocessorParams parameters, float[][] preprocessedDataFromStream, ArrayList< StaChanKey> channelIDs ) {
+    //
+    //        super( parameters, channelIDs, 1 );
+    //
+    //        nchannels = preprocessedDataFromStream.length;
+    //        if (nchannels != chanIDs.size()) {
+    //            throw new IllegalStateException("Channel ID list length not equal to number of channels in preprocessed data segment");
+    //        }
+    //
+    //        chanIDs = new ArrayList< >(channelIDs);
+    //        singularValues = new ArrayList< >();
+    //        templateLength = preprocessedDataFromStream[0].length;
+    //        dimension = 1;
+    //        representation = new ArrayList< >();
+    //
+    //        for (int ich = 0; ich < nchannels; ich++) {
+    //
+    //            float[] trace = preprocessedDataFromStream[ ich];
+    //
+    //            float scale = 0.0f;
+    //            for (int i = 0; i < templateLength; i++) {
+    //                scale += trace[i] * trace[i];
+    //            }
+    //            scale = (float) Math.sqrt(scale);
+    //
+    //            double[] s = new double[1];
+    //            s[0] = scale;
+    //            singularValues.add(s);
+    //
+    //            float[][] tmp = new float[1][templateLength];
+    //            for (int i = 0; i < templateLength; i++) {
+    //                tmp[0][i] = trace[i] / scale;
+    //            }
+    //            representation.add(tmp);
+    //        }
+    //
+    //    }
 
-    
-    
     /**
      * Copy constructor
      *
-     * @param template SubspaceTemplate to be copied
+     * @param template
+     *            SubspaceTemplate to be copied
      */
-    public ArrayCorrelationTemplate( ArrayCorrelationTemplate template ) {
+    public ArrayCorrelationTemplate(ArrayCorrelationTemplate template) {
 
-        super( template.parameters, template.specification, template.dimension );
+        super(template.parameters, template.specification, template.dimension);
 
-        singularValues = new ArrayList< >();
+        singularValues = new ArrayList<>();
         for (double[] sv : template.singularValues) {
             singularValues.add(sv.clone());
         }
 
         this.templateLength = template.templateLength;
 
-        representation = new ArrayList< >();
+        representation = new ArrayList<>();
         for (float[][] T : template.representation) {
             representation.add(T.clone());
         }
     }
-    
-    
 
     /**
      * Subspace template constructor that takes an archive template expressed as
      * an ArrayList< float[][] >.
      *
-     * @param archiveTemplate The float[] contains the channel-multiplexed data.
-     * @param channelIDs ArrayList of station channel IDs.
-     * @param singularValues The array of singular values determined during
-     * creation of the input template.
+     * @param archiveTemplate
+     *            The float[] contains the channel-multiplexed data.
+     * @param channelIDs
+     *            ArrayList of station channel IDs.
+     * @param singularValues
+     *            The array of singular values determined during creation of the
+     *            input template.
      */
-//    public ArrayCorrelationTemplate( PreprocessorParams    parameters,
-//                                     ArrayList< float[][]> archiveTemplate,
-//                                     ArrayList<StaChanKey> channelIDs,
-//                                     ArrayList< double[]>  singularValues) {
-//
-//        super( parameters, channelIDs, archiveTemplate.size() );
-//
-//        this.singularValues = new ArrayList< >();
-//        for (double[] sv : singularValues) {
-//            this.singularValues.add(sv.clone());
-//        }
-//        templateLength = archiveTemplate.get(0).length;
-//
-//        representation = new ArrayList< >();
-//        for (float[][] T : archiveTemplate) {
-//            representation.add(T.clone());
-//        }
-//
-//    }
+    //    public ArrayCorrelationTemplate( PreprocessorParams    parameters,
+    //                                     ArrayList< float[][]> archiveTemplate,
+    //                                     ArrayList<StaChanKey> channelIDs,
+    //                                     ArrayList< double[]>  singularValues) {
+    //
+    //        super( parameters, channelIDs, archiveTemplate.size() );
+    //
+    //        this.singularValues = new ArrayList< >();
+    //        for (double[] sv : singularValues) {
+    //            this.singularValues.add(sv.clone());
+    //        }
+    //        templateLength = archiveTemplate.get(0).length;
+    //
+    //        representation = new ArrayList< >();
+    //        for (float[][] T : archiveTemplate) {
+    //            representation.add(T.clone());
+    //        }
+    //
+    //    }
 
-    
-    
     public int getTemplateLength() {
         return templateLength;
     }
 
-    
-    
-    public ArrayList< float[][]> getRepresentation() {
+    public ArrayList<float[][]> getRepresentation() {
         return representation;
     }
 
-    
-    
-    public ArrayList< double[]> getSingularValues() {
+    public ArrayList<double[]> getSingularValues() {
         return singularValues;
     }
 
-    
-    
     public void writeTemplateToSACFiles(String directory, String detectorID) throws IOException {
 
-        ArrayList< float[][]> rep = getRepresentation();
-        
+        ArrayList<float[][]> rep = getRepresentation();
+
         int nchannels = getnchannels();
 
         String path = directory + File.separator + detectorID;
         File dir = new File(path);
-        if (!dir.exists()) {
-            if (!dir.mkdirs()) {
-                throw new FileSystemException("Failed to create directory: " + dir.getAbsolutePath());
-            }
+        if (!dir.exists() && !dir.mkdirs()) {
+            throw new FileSystemException("Failed to create directory: " + dir.getAbsolutePath());
         }
 
         for (int id = 0; id < rep.size(); id++) {
 
-            String dimName = (new Integer(id)).toString().trim();
+            String dimName = Integer.toString(id).trim();
             float[][] traces = rep.get(id);
 
-            for ( int ic = 0;  ic < nchannels;  ic++ ) {
+            for (int ic = 0; ic < nchannels; ic++) {
                 StreamKey stachan = getStaChanKey(ic);
                 String filename = path + File.separator + stachan.getSta().trim() + "_" + stachan.getChan().trim() + "_" + dimName + ".sac";
                 SACFileWriter writer = new SACFileWriter(filename);

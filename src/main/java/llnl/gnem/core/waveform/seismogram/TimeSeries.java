@@ -27,9 +27,11 @@ package llnl.gnem.core.waveform.seismogram;
 
 import com.google.common.base.Objects;
 import java.io.BufferedOutputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,11 +43,14 @@ import llnl.gnem.core.correlation.util.CorrelationMax;
 import llnl.gnem.core.database.row.StoredFilterRow;
 import llnl.gnem.core.signalprocessing.FFT;
 import llnl.gnem.core.signalprocessing.filter.ButterworthFilter;
+import llnl.gnem.core.signalprocessing.filter.ChebyshevIIFilter;
+import llnl.gnem.core.signalprocessing.filter.FilterDesign;
 import llnl.gnem.core.signalprocessing.filter.IIRFilter;
 import llnl.gnem.core.util.Epoch;
 import llnl.gnem.core.util.PairT;
 import llnl.gnem.core.util.Passband;
 import llnl.gnem.core.util.SeriesMath;
+import llnl.gnem.core.util.TaperType;
 import llnl.gnem.core.util.TimeT;
 import llnl.gnem.core.util.randomNumbers.RandomAlgorithm;
 import llnl.gnem.core.util.randomNumbers.RandomAlgorithmFactory;
@@ -430,6 +435,36 @@ public class TimeSeries implements Comparable<TimeSeries>, Serializable, Cloneab
     public void Taper(double TaperPercent) {
         SeriesMath.Taper(data, TaperPercent);
         onModify();
+    }
+
+    public void applyTaper(double TaperPercent, TaperType taperType) {
+        switch (taperType) {
+            case Cosine:
+                SeriesMath.Taper(data, TaperPercent);
+                break;
+            case Hann:
+            case Hanning:
+                SeriesMath.applyHanningWindow(data, TaperPercent);
+                break;
+            case Hamming:
+                SeriesMath.applyHammingWindow(data, TaperPercent);
+                break;
+            default:
+                throw new IllegalStateException("Unsupported taper type: " + taperType);
+        }
+        onModify();
+    }
+
+    public void applyTaper(double TaperPercent) {
+        applyTaper(TaperPercent, TaperType.Cosine);
+    }
+    
+    public static void writeASCIIfile(String filename, float[] data, double dt) throws FileNotFoundException{
+        PrintWriter pw = new PrintWriter(filename);
+        for(int j = 0; j < data.length; ++j){
+            pw.println(String.format("%f  %f", j*dt, data[j]));
+        }
+        pw.close();
     }
 
     public void WriteASCIIfile(String filename) throws IOException {
@@ -835,6 +870,10 @@ public class TimeSeries implements Comparable<TimeSeries>, Serializable, Cloneab
     public void filter(int order, Passband passband, double cutoff1, double cutoff2, boolean two_pass) {
         double dt = 1.0 / samprate;
         IIRFilter filt = new ButterworthFilter(order, passband, cutoff1, cutoff2, dt);
+        apply(filt, two_pass);
+    }
+
+    private void apply(IIRFilter filt, boolean two_pass) {
         filt.initialize();
         filt.filter(data);
         if (two_pass) {
@@ -844,6 +883,30 @@ public class TimeSeries implements Comparable<TimeSeries>, Serializable, Cloneab
             SeriesMath.ReverseArray(data);
         }
         onModify();
+    }
+
+    public void filter(FilterDesign design, int order, Passband passband, double cutoff1, double cutoff2, double atten, double omegaR, boolean twoPass) {
+        double dt = 1.0 / samprate;
+        IIRFilter filt = null;
+        switch (design) {
+            case Butterworth:
+                filt = new ButterworthFilter(order, passband, cutoff1, cutoff2, dt);
+                break;
+            case Chebyshev2:
+                filt = new ChebyshevIIFilter(order,
+                        atten,
+                        omegaR,
+                        passband,
+                        cutoff1,
+                        cutoff2,
+                        dt);
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported design: " + design);
+        }
+        if (filt != null) {
+            apply(filt, twoPass);
+        }
     }
 
     @Override

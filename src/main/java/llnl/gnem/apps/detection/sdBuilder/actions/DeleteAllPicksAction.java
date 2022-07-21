@@ -57,7 +57,7 @@ public class DeleteAllPicksAction extends AbstractAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        DetectionPhasePickModel.getInstance().clear();
+        DetectionPhasePickModel.getInstance().deleteAllPicks();
     }
 
 }

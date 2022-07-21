@@ -27,7 +27,7 @@ package llnl.gnem.apps.detection.core.framework;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import llnl.gnem.apps.detection.core.dataObjects.Detection;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
 
 import llnl.gnem.apps.detection.core.dataObjects.TransformedStreamSegment;
 

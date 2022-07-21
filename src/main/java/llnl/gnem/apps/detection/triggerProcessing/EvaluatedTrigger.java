@@ -28,7 +28,7 @@ package llnl.gnem.apps.detection.triggerProcessing;
 import java.util.ArrayList;
 import java.util.Collection;
 import llnl.gnem.apps.detection.classify.LabeledFeature;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.core.framework.FKScreenResults;
 import llnl.gnem.core.waveform.qc.DataDefect;
 

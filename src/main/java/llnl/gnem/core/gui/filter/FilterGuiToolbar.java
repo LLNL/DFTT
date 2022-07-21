@@ -35,6 +35,7 @@ import llnl.gnem.core.gui.filter.actions.*;
  * @author dodge1
  */
 public class FilterGuiToolbar extends JToolBar {
+
     public FilterGuiToolbar(FilterGuiContainer owner) {
         super();
 
@@ -44,7 +45,6 @@ public class FilterGuiToolbar extends JToolBar {
         button = new JButton(RemoveFilterAction.getInstance(this));
         addButton(button);
         this.addSeparator();
-
 
         button = new JButton(new ApplyFilterAction(owner));
         addButton(button);

@@ -26,27 +26,29 @@
 package llnl.gnem.apps.detection.dataAccess.dataobjects;
 
 import java.util.Objects;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.core.util.StreamKey;
 
 /**
  *
  * @author dodge1
  */
 public class PhasePick {
-    private final int pickid;
+    private  int pickid;
     private final int configid;
     private final Integer detectionid;
-    private final String phase;
-    private final double time;
-    private final double std;
+     private final String phase;
+    private  double time;
+    private  double std;
+    private final StreamKey key;
 
-    public PhasePick(int pickid, int detectorid, Integer configid, String phase, double time, double std) {
+    public PhasePick(int pickid, int configid, Integer detectionid, StreamKey key, String phase, double time, double std) {
         this.pickid = pickid;
-        this.configid = detectorid;
-        this.detectionid = configid;
-        this.phase = phase;
+        this.configid = configid;
+        this.detectionid = detectionid;
+        this.key = key;
+         this.phase = phase;
         this.time = time;
-        this.std = std;
+        this.std = Math.abs(std);
     }
 
     public int getPickid() {
@@ -68,20 +70,39 @@ public class PhasePick {
     public double getTime() {
         return time;
     }
+    
+    public void adjustPickTime(double deltaT){
+        time += deltaT;
+    }
 
     public double getStd() {
         return std;
     }
+    
+    public void adjustStd(double deltaStd){
+        std += deltaStd;
+        if(std < 0)std = 0;
+    }
+
+    public StreamKey getKey() {
+        return key;
+    }
+
+    @Override
+    public String toString() {
+        return "PhasePick{" + "pickid=" + pickid + ", configid=" + configid + ", detectionid=" + detectionid + ", phase=" + phase + ", time=" + time + ", std=" + std + ", key=" + key + '}';
+    }
 
     @Override
     public int hashCode() {
-        int hash = 7;
+        int hash = 3;
         hash = 97 * hash + this.pickid;
         hash = 97 * hash + this.configid;
         hash = 97 * hash + Objects.hashCode(this.detectionid);
         hash = 97 * hash + Objects.hashCode(this.phase);
         hash = 97 * hash + (int) (Double.doubleToLongBits(this.time) ^ (Double.doubleToLongBits(this.time) >>> 32));
         hash = 97 * hash + (int) (Double.doubleToLongBits(this.std) ^ (Double.doubleToLongBits(this.std) >>> 32));
+        hash = 97 * hash + Objects.hashCode(this.key);
         return hash;
     }
 
@@ -115,13 +136,17 @@ public class PhasePick {
         if (!Objects.equals(this.detectionid, other.detectionid)) {
             return false;
         }
+        if (!Objects.equals(this.key, other.key)) {
+            return false;
+        }
         return true;
     }
 
-    @Override
-    public String toString() {
-        TimeT tmp = new TimeT(time);
-        return "PhasePick{" + "pickid=" + pickid + ", configid=" + configid + ", detectionid=" + detectionid + ", phase=" + phase + ", time=" + tmp + ", std=" + std + '}';
+   
+
+
+    public void setPickid(long pickid) {
+        this.pickid = (int)pickid;
     }
-    
+
 }

@@ -339,10 +339,15 @@ public class ComponentSetPlot<T extends BaseSingleComponent> extends WaveformPlo
 //        parent.getPlotContainer().zoomToNewXLimits(zisc);
 //    }
 
-//    @Override
-//    public void handleZoomOut() {
-//        parent.getPlotContainer().unzoomTraces();
-//    }
+    @Override
+    public void handleZoomIn(ZoomInStateChange zisc) {
+        parent.getPlotContainer().zoomToNewXLimits(zisc);
+    }
+
+    @Override
+    public void handleZoomOut() {
+        parent.getPlotContainer().unzoomTraces();
+    }
 
     private void plotComponents(ComponentSet<T> set) {
         EventModel<? extends AbstractEventInfo> eventModel = getDataModel().getEventModel();
@@ -480,7 +485,7 @@ public class ComponentSetPlot<T extends BaseSingleComponent> extends WaveformPlo
         subplot.clearText();
         double vOffset = 4;
         StreamKey key = component.getStreamEpochInfo().getStreamInfo().getStreamKey();
-        String text = String.format("Source = %s", key.getSource());
+        String text = String.format("Source = %s", key.getAgency());
         plotText(subplot, text, vOffset);
         vOffset += 6;
         text = String.format("Network = %s (%d)", key.getNet(), key.getNetJdate());

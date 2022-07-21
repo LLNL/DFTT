@@ -29,9 +29,7 @@ import java.util.ArrayList;
 import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
-import javax.swing.tree.DefaultMutableTreeNode;
-import llnl.gnem.apps.detection.core.dataObjects.Detection;
-import llnl.gnem.apps.detection.database.DetectionDAO;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.core.util.ApplicationLogger;
 
 /**
@@ -50,7 +48,7 @@ public class DeleteDetectionsWorker extends SwingWorker<Void, Void> {
     @Override
     protected Void doInBackground() throws Exception {
        
-       DetectionDAO.getInstance().deleteDetections(detectionIdValues);
+       DetectionDAOFactory.getInstance().getDetectionDAO().deleteDetections(detectionIdValues);
         return null;
 
     }

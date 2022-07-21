@@ -26,19 +26,19 @@
 package llnl.gnem.core.gui.plotting.keymapper;
 
 
+import java.util.ArrayList;
 import llnl.gnem.core.gui.util.SpringUtilities;
 
 import javax.swing.*;
-import java.util.Vector;
 
 
 public class KeyMapperGui extends JPanel {
-    private Vector<LabeledComboBox> components;
+    private final ArrayList<LabeledComboBox> components;
 
     public KeyMapperGui()
     {
         super( new SpringLayout() );
-        components = new Vector<LabeledComboBox>();
+        components = new ArrayList<>();
     }
 
     public void addLabeledCombo( LabeledComboBox lcb )
@@ -60,7 +60,7 @@ public class KeyMapperGui extends JPanel {
     }
 
 
-    public void update( Vector<Integer> codes )
+    public void update( ArrayList<Integer> codes )
     {
         for (LabeledComboBox lcb : components) {
             lcb.update(codes);

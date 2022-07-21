@@ -573,6 +573,95 @@ public class SeriesMath {
         }
     }
 
+    public static void applyHanningWindow(float[] data) {
+        int nsamps = data.length - 1;
+        for (int j = 0; j < nsamps; ++j) {
+            double v = Math.sin(Math.PI * j / nsamps);
+            v *= v;
+            data[j] = (float) (data[j] * v);
+        }
+        data[nsamps] = 0;
+    }
+
+    public static float[] getHanningWindow(int length) {
+        float[] result = new float[length];
+        int nsamps = length - 1;
+        for (int j = 0; j < nsamps; ++j) {
+            double v = Math.sin(Math.PI * j / nsamps);
+            v *= v;
+            result[j] = (float) v;
+        }
+        result[nsamps] = 0.0F;
+        return result;
+    }
+
+    public static void applyHanningWindow(float[] data, double taperPercent) {
+        int dataLength = data.length;
+        double fraction = Math.min(0.5, taperPercent / 100);
+        int taperPoints = (int) (dataLength * fraction);
+        if (taperPoints % 2 != 0) {
+            if (2 * taperPoints >= dataLength - 2) {
+                taperPoints -= 1;
+            } else {
+                taperPoints += 1;
+            }
+        }
+        float[] taper = getHanningWindow(taperPoints * 2);
+        for (int j = 0; j < taperPoints; ++j) {
+            data[j] *= taper[j];
+            data[dataLength - 1 - j] *= taper[j];
+        }
+    }
+
+    public static void applyHammingWindow(float[] data) {
+        int nsamps = data.length - 1;
+
+        for (int j = 0; j < nsamps; ++j) {
+            double v = 0.54 - 0.46 * Math.cos(2.0 * Math.PI * j / nsamps);
+            data[j] = (float) (data[j] * v);
+        }
+        data[nsamps] *= (0.08F);
+    }
+
+    public static float[] getHammingWindow(int length) {
+        float[] result = new float[length];
+        int nsamps = length - 1;
+        for (int j = 0; j < nsamps; ++j) {
+            double v = 0.54 - 0.46 * Math.cos(2.0 * Math.PI * j / nsamps);
+            result[j] = (float) v;
+        }
+        result[nsamps] = (0.08F);
+        return result;
+    }
+
+   public static void applyHammingWindow(float[] data, double taperPercent) {
+        int dataLength = data.length;
+        double fraction = Math.min(0.5, taperPercent / 100);
+        int taperPoints = (int) (dataLength * fraction);
+        if (taperPoints % 2 != 0) {
+            if (2 * taperPoints >= dataLength - 2) {
+                taperPoints -= 1;
+            } else {
+                taperPoints += 1;
+            }
+        }
+        float[] taper = getHammingWindow(taperPoints * 2);
+        for (int j = 0; j < taperPoints; ++j) {
+            data[j] *= taper[j];
+            data[dataLength - 1 - j] *= taper[j];
+        }
+    }
+    
+    
+    public static void main(String[] args) {
+        float[] data = new float[20];
+        Arrays.fill(data, 1);
+        applyHammingWindow(data, 40);
+        for (int j = 0; j < 20; ++j) {
+            System.out.println(data[j]);
+        }
+    }
+
     /**
      * convert all the elements of the data series to their absolute value
      *
@@ -2578,9 +2667,10 @@ public class SeriesMath {
         }
 
         float result[] = new float[xinterp.length];
-        for (int j = 0; j < xinterp.length; ++j) {
+        for (int j = 0; j < xinterp.length-1; ++j) {
             result[j] = (float) Wigint(x, Y, dx, EPS, xinterp[j]);
         }
+        result[result.length-1] =y[y.length-1];
         return result;
     }
 

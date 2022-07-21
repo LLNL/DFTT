@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,20 +25,22 @@
  */
 package llnl.gnem.apps.detection.classify;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import llnl.gnem.apps.detection.database.FeatureDAO;
-import llnl.gnem.core.database.ConnectionManager;
+
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
+import llnl.gnem.apps.detection.dataAccess.interfaces.FeatureDAO;
 import llnl.gnem.core.gui.util.ProgressDialog;
 import llnl.gnem.core.util.ApplicationLogger;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;
-import weka.core.FastVector;
+import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 
@@ -48,15 +50,15 @@ import weka.core.Instances;
  */
 public class ClassifyAllInstancesRunner {
 
-    private static Instance createInstance(List<Double> values, FastVector attributes, LabeledFeature.Status label) {
-        Instance instance = new Instance(attributes.size());
+    private static Instance createInstance(List<Double> values, ArrayList<Attribute> attributes, LabeledFeature.Status label) {
+        Instance instance = new DenseInstance(attributes.size());
 
         int i = 0;
         for (double value : values) {
-            instance.setValue((Attribute) attributes.elementAt(i++), value);
+            instance.setValue(attributes.get(i++), value);
         }
         if (label != null) {
-            instance.setValue((Attribute) attributes.elementAt(i++), label.ordinal());
+            instance.setValue(attributes.get(i++), label.ordinal());
         }
 
         return instance;
@@ -86,21 +88,18 @@ public class ClassifyAllInstancesRunner {
         try {
             ApplicationLogger.getInstance().log(Level.INFO, "Retrieving unlabeled features...");
             ProgressDialog.getInstance().setTitle("Retrieving unlabeled features...");
-            List<DbLabeledFeature> toBeClassified = FeatureDAO.getInstance().getAllUnLabeledFeatures(runid);
+            List<DbLabeledFeature> toBeClassified = DetectionDAOFactory.getInstance().getFeatureDAO().getAllUnLabeledFeatures(runid);
 
             ApplicationLogger.getInstance().log(Level.INFO, "Retrieving labeled artifact features...");
             ProgressDialog.getInstance().setTitle("Retrieving labeled artifact features...");
-            List<LabeledFeature> artifactExamples = FeatureDAO.getInstance().getAllLabeledFeatures(runid,
-                    FeatureDAO.ClassificationType.ARTIFACT_CLASSIFICATION);
+            List<LabeledFeature> artifactExamples = DetectionDAOFactory.getInstance().getFeatureDAO().getAllLabeledFeatures(runid, FeatureDAO.ClassificationType.ARTIFACT_CLASSIFICATION);
 
             ApplicationLogger.getInstance().log(Level.INFO, "Retrieving labeled usability features...");
             ProgressDialog.getInstance().setTitle("Retrieving labeled usability features...");
-            List<LabeledFeature> usabilityExamples = FeatureDAO.getInstance().getAllLabeledFeatures(runid,
-                    FeatureDAO.ClassificationType.USABILITY_CLASSIFICATION);
-            FastVector attributes = LabeledFeature.getAttributes();
+            List<LabeledFeature> usabilityExamples = DetectionDAOFactory.getInstance().getFeatureDAO().getAllLabeledFeatures(runid, FeatureDAO.ClassificationType.USABILITY_CLASSIFICATION);
+            ArrayList<Attribute> attributes = LabeledFeature.getAttributes();
 
-            Map<Integer, TriggerClassification> triggeridClassificationMap
-                    = FeatureDAO.getInstance().getClassificationFromTrainingData(runid);
+            Map<Integer, TriggerClassification> triggeridClassificationMap = DetectionDAOFactory.getInstance().getFeatureDAO().getClassificationFromTrainingData(runid);
 
             Instances template = createInstancesTemplate(attributes, artifactExamples);
             ApplicationLogger.getInstance().log(Level.INFO, "Training artifact model...");
@@ -141,7 +140,7 @@ public class ClassifyAllInstancesRunner {
                 } else {
                     artifact++;
                 }
-                FeatureDAO.getInstance().writeClassification(triggerid, status, usabilityStatus);
+                DetectionDAOFactory.getInstance().getFeatureDAO().writeClassification(triggerid, status, usabilityStatus);
                 ProgressDialog.getInstance().setValue(++done);
             }
 
@@ -157,25 +156,28 @@ public class ClassifyAllInstancesRunner {
                 //valid, invalid,unset
                 TriggerClassification tc = triggeridClassificationMap.get(triggerid);
                 switch (tc) {
-                    case UNSET:
-                        status = LabeledFeature.Status.unset;
-                        usabilityStatus = LabeledFeature.Status.unset;
-                        break;
-                    case ARTIFACT:
-                        status = LabeledFeature.Status.invalid;
-                        usabilityStatus = LabeledFeature.Status.unset;
-                        break;
-                    case UNUSABLE:
-                        status = LabeledFeature.Status.valid;
-                        usabilityStatus = LabeledFeature.Status.invalid;
-                        break;
-                    case GOOD:
-                        status = LabeledFeature.Status.valid;
-                        usabilityStatus = LabeledFeature.Status.valid;
-                        break;
-
+                case UNSET:
+                    status = LabeledFeature.Status.unset;
+                    usabilityStatus = LabeledFeature.Status.unset;
+                    break;
+                case ARTIFACT:
+                    status = LabeledFeature.Status.invalid;
+                    usabilityStatus = LabeledFeature.Status.unset;
+                    break;
+                case UNUSABLE:
+                    status = LabeledFeature.Status.valid;
+                    usabilityStatus = LabeledFeature.Status.invalid;
+                    break;
+                case GOOD:
+                    status = LabeledFeature.Status.valid;
+                    usabilityStatus = LabeledFeature.Status.valid;
+                    break;
+                default:
+                    status = LabeledFeature.Status.unset;
+                    usabilityStatus = LabeledFeature.Status.unset;
+                    break;
                 }
-                FeatureDAO.getInstance().writeClassification(triggerid, status, usabilityStatus);
+                DetectionDAOFactory.getInstance().getFeatureDAO().writeClassification(triggerid, status, usabilityStatus);
                 ProgressDialog.getInstance().setValue(++done);
             }
             ApplicationLogger.getInstance().log(Level.INFO, String.format("%d artifact, %d unusable, %d good", artifact, unusable, good));
@@ -186,7 +188,7 @@ public class ClassifyAllInstancesRunner {
         }
     }
 
-    private static RandomForest createModel(FastVector attributes, List<LabeledFeature> examples) throws Exception {
+    private static RandomForest createModel(ArrayList<Attribute> attributes, List<LabeledFeature> examples) throws Exception {
         Collections.shuffle(examples);
         System.out.println("Full dataset: " + examples.size());
 
@@ -201,7 +203,7 @@ public class ClassifyAllInstancesRunner {
         return model;
     }
 
-    private static Instances createInstances(FastVector attributes, List<LabeledFeature> examples) {
+    private static Instances createInstances(ArrayList<Attribute> attributes, List<LabeledFeature> examples) {
         Instances instances = new Instances("Data", attributes, examples.size());
         for (LabeledFeature example : examples) {
             instances.add(createInstance(example.getValues(), attributes, example.getLabel()));
@@ -210,7 +212,7 @@ public class ClassifyAllInstancesRunner {
         return instances;
     }
 
-    private static Instances createInstancesTemplate(FastVector attributes, List<LabeledFeature> examples) {
+    private static Instances createInstancesTemplate(ArrayList<Attribute> attributes, List<LabeledFeature> examples) {
         Instances instances = new Instances("Data", attributes, examples.size());
         for (LabeledFeature example : examples) {
             instances.add(createInstance(example.getValues(), attributes, example.getLabel()));

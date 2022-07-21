@@ -28,13 +28,11 @@ package llnl.gnem.core.waveform.merge;
 import edu.iris.dmc.timeseries.model.Segment;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import llnl.gnem.core.metadata.Channel;
 import llnl.gnem.core.waveform.qc.DataDefect;
 import llnl.gnem.core.util.Epoch;
+import llnl.gnem.core.util.SeriesMath;
 import llnl.gnem.core.util.StreamKey;
 import llnl.gnem.core.util.TimeT;
 import net.jcip.annotations.ThreadSafe;
@@ -47,12 +45,11 @@ import net.jcip.annotations.ThreadSafe;
 public class NamedIntWaveform extends IntWaveform {
 
     private final StreamKey key;
-    private final double calib;
-    private final double calper;
+    private final Double calib;
+    private final Double calper;
     private final String clip;
     private final String segtype;
     private final String instype;
-    private final ArrayList<DataDefect> defects;
 
     public NamedIntWaveform(long wfid,
             String sta,
@@ -62,12 +59,11 @@ public class NamedIntWaveform extends IntWaveform {
             int[] data) {
         super(wfid, start, rate, data);
         key = new StreamKey(sta, chan);
-        calib = 1.0;
-        calper = -1.0;
+        calib = null;
+        calper = null;
         clip = "-";
         segtype = "-";
         instype = "-";
-        defects = new ArrayList<>();
     }
 
     public NamedIntWaveform(long wfid,
@@ -77,14 +73,34 @@ public class NamedIntWaveform extends IntWaveform {
             double rate,
             int[] data,
             Collection<DataDefect> defects) {
-        super(wfid, start, rate, data);
+        super(wfid, start, rate, data, new ArrayList<>(defects));
         key = new StreamKey(sta, chan);
-        calib = 1.0;
-        calper = -1.0;
+        calib = null;
+        calper = null;
         clip = "-";
         segtype = "-";
         instype = "-";
-        this.defects = new ArrayList<>(defects);
+    }
+
+    public NamedIntWaveform(IntWaveform waveform, String sta, String chan, Double calib, Double calper, String clip,
+            String segtype, String instype, Collection<DataDefect> defects) {
+        super(waveform, defects);
+        key = new StreamKey(sta, chan);
+        this.calib = calib;
+        this.calper = calper;
+        this.clip = clip;
+        this.segtype = segtype;
+        this.instype = instype;
+    }
+
+    public NamedIntWaveform(IntWaveform waveform, String sta, String chan) {
+        super(waveform);
+        key = new StreamKey(sta, chan);
+        calib = null;
+        calper = null;
+        clip = "-";
+        segtype = "-";
+        instype = "-";
     }
 
     public NamedIntWaveform(long wfid,
@@ -93,8 +109,8 @@ public class NamedIntWaveform extends IntWaveform {
             double start,
             double rate,
             int[] data,
-            double calib,
-            double calper,
+            Double calib,
+            Double calper,
             String clip,
             String segtype,
             String instype) {
@@ -105,50 +121,35 @@ public class NamedIntWaveform extends IntWaveform {
         this.clip = clip;
         this.segtype = segtype;
         this.instype = instype;
-        defects = new ArrayList<>();
     }
 
-    public NamedIntWaveform(IntWaveform waveform, String sta, String chan) {
-        super(waveform);
-        key = new StreamKey(sta, chan);
-        calib = 1.0;
-        calper = -1.0;
-        clip = "-";
-        segtype = "-";
-        instype = "-";
-        defects = new ArrayList<>();
-    }
-    
-    private NamedIntWaveform(IntWaveform waveform, StreamKey aKey, List<DataDefect> defects) {
+    private NamedIntWaveform(IntWaveform waveform, StreamKey aKey) {
         super(waveform);
         key = aKey;
-        calib = 1.0;
-        calper = -1.0;
+        calib = null;
+        calper = null;
         clip = "-";
         segtype = "-";
         instype = "-";
-        this.defects = new ArrayList<>(defects);
     }
 
     private NamedIntWaveform(IntWaveform waveform, String sta, String chan, List<DataDefect> defects) {
-        super(waveform);
+        super(waveform, defects);
         key = new StreamKey(sta, chan);
-        calib = 1.0;
-        calper = -1.0;
+        calib = null;
+        calper = null;
         clip = "-";
         segtype = "-";
         instype = "-";
-        this.defects = new ArrayList<>(defects);
     }
 
     public NamedIntWaveform(IntWaveform waveform,
             StreamKey aKey,
-            double calib,
-            double calper,
+            Double calib,
+            Double calper,
             String clip,
             String segtype,
-            String instype,
-            Collection<DataDefect> defects) {
+            String instype) {
         super(waveform);
         this.key = aKey;
         this.calib = calib;
@@ -156,18 +157,16 @@ public class NamedIntWaveform extends IntWaveform {
         this.clip = clip;
         this.segtype = segtype;
         this.instype = instype;
-        this.defects = defects != null ? new ArrayList<>(defects) : new ArrayList<>();
     }
 
     public NamedIntWaveform(IntWaveform waveform,
             String sta,
             String chan,
-            double calib,
-            double calper,
+            Double calib,
+            Double calper,
             String clip,
             String segtype,
-            String instype,
-            Collection<DataDefect> defects) {
+            String instype) {
         super(waveform);
         key = new StreamKey(sta, chan);
         this.calib = calib;
@@ -175,7 +174,6 @@ public class NamedIntWaveform extends IntWaveform {
         this.clip = clip;
         this.segtype = segtype;
         this.instype = instype;
-        this.defects = defects != null ? new ArrayList<>(defects) : new ArrayList<>();
     }
 
     /*
@@ -190,39 +188,55 @@ public class NamedIntWaveform extends IntWaveform {
     public NamedIntWaveform(long wfid, String sta, String chan, Segment segment) {
         super(wfid, segment);
         key = new StreamKey(sta, chan);
-        calib = 1.0;
-        calper = -1.0;
+        calib = null;
+        calper = null;
         clip = "-";
         segtype = "-";
         instype = "-";
-        defects = new ArrayList<>();
     }
-    
-    public NamedIntWaveform(StreamKey key, Segment segment){
-        super(-1,segment);
+
+    public NamedIntWaveform(StreamKey key, Segment segment) {
+        super(-1, segment);
         this.key = key;
-        calib = 1.0;
-        calper = -1.0;
+        calib = null;
+        calper = null;
         clip = "-";
         segtype = "-";
         instype = "-";
-        defects = new ArrayList<>();
     }
 
     public NamedIntWaveform(String sta, String chan, double start, double rate,
             List<int[]> records) {
         super(start, rate, records);
         key = new StreamKey(sta, chan);
-        calib = 1.0;
-        calper = -1.0;
+        calib = null;
+        calper = null;
         clip = "-";
         segtype = "-";
         instype = "-";
-        defects = new ArrayList<>();
     }
-    
-    public StreamKey getKey()
-    {
+
+    public NamedIntWaveform(StreamKey key, long wfid, int[] data, double start, double rate, Double calib, Double calper) {
+        super(wfid, start, rate, data, new ArrayList<>());
+        this.key = key;
+        this.calib = calib;
+        this.calper = calper;
+        clip = "-";
+        segtype = "-";
+        instype = "-";
+    }
+
+    public NamedIntWaveform(StreamKey key, long wfid, int[] data, double start, double rate, Double calib, Double calper, Collection<DataDefect> defects) {
+        super(wfid, start, rate, data, new ArrayList<>(defects));
+        this.key = key;
+        this.calib = calib;
+        this.calper = calper;
+        clip = "-";
+        segtype = "-";
+        instype = "-";
+    }
+
+    public StreamKey getKey() {
         return key;
     }
 
@@ -238,11 +252,11 @@ public class NamedIntWaveform extends IntWaveform {
         return new Channel(key.getChan());
     }
 
-    public double getCalib() {
+    public Double getCalib() {
         return calib;
     }
 
-    public double getCalper() {
+    public Double getCalper() {
         return calper;
     }
 
@@ -272,11 +286,7 @@ public class NamedIntWaveform extends IntWaveform {
     public NamedIntWaveform getSubset(Epoch epoch) {
         IntWaveform waveform = super.getSubset(epoch);
 
-        List<DataDefect> tmp = defects.
-                stream().
-                filter(d -> d.getEpoch().intersects(waveform.getEpoch())).
-                collect(Collectors.toList());
-        return new NamedIntWaveform(waveform, key, tmp);
+        return new NamedIntWaveform(waveform, key);
     }
 
     public float[] getDataAsFloatArray() {
@@ -287,28 +297,25 @@ public class NamedIntWaveform extends IntWaveform {
         }
         return result;
     }
-    
-    public static NamedIntWaveform combine( NamedIntWaveform wv1, NamedIntWaveform wv2){
+
+    public static NamedIntWaveform combine(NamedIntWaveform wv1, NamedIntWaveform wv2) {
         if (!wv1.key.equals(wv2.key)) {
             throw new IllegalArgumentException(String.format("Waveform 1 = %s but other waveform = %s!", wv1.key, wv2.key));
         }
-        if ( wv1.calib!=wv2.calib) {
+        if (wv1.calib != wv2.calib) {
             throw new IllegalArgumentException(String.format("Waveform 1 calib = %f but other waveform  calib = %f!", wv1.calib, wv2.calib));
         }
-        if ( wv1.calper!=wv2.calper) {
+        if (wv1.calper != wv2.calper) {
             throw new IllegalArgumentException(String.format("Waveform 1 calper = %f but other waveform  calper = %f!", wv1.calper, wv2.calper));
         }
-        IntWaveform result =  unionOf(wv1,wv2);
-        Set<DataDefect> tmp = new HashSet<>(wv1.defects);
-        tmp.addAll(wv2.getDefects());
+        IntWaveform result = unionOf(wv1, wv2);
         return new NamedIntWaveform(result,
                 wv1.key,
                 wv1.calib,
                 wv1.calper,
                 wv1.clip,
                 wv1.segtype,
-                wv1.instype,
-                tmp);
+                wv1.instype);
     }
 
     public NamedIntWaveform union(NamedIntWaveform other, boolean ignoreMismatch) throws MergeException {
@@ -317,16 +324,13 @@ public class NamedIntWaveform extends IntWaveform {
         }
 
         IntWaveform result = super.union(other, ignoreMismatch);
-        Set<DataDefect> tmp = new HashSet<>(this.defects);
-        tmp.addAll(other.getDefects());
         return new NamedIntWaveform(result,
                 this.key,
                 calib,
                 calper,
                 clip,
                 segtype,
-                instype,
-                tmp);
+                instype);
 
     }
 
@@ -334,11 +338,16 @@ public class NamedIntWaveform extends IntWaveform {
         super.scaleBy(calib);
     }
 
-    /**
-     * @return the defects
-     */
-    public ArrayList<DataDefect> getDefects() {
-        return new ArrayList<>(defects);
+    @Override
+    public NamedIntWaveform interpolateTo(double newRate) {
+        IntWaveform tmp = super.interpolateTo(newRate);
+        return new NamedIntWaveform(tmp, key);
+    }
+
+    @Override
+    public NamedIntWaveform ensureCompleteEpoch(Epoch epoch) {
+        IntWaveform tmp = super.ensureCompleteEpoch(epoch);
+         return new NamedIntWaveform(tmp, key);
     }
 
 }

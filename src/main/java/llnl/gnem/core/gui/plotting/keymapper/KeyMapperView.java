@@ -30,8 +30,8 @@ import java.util.Iterator;
 
 public class KeyMapperView {
     private static KeyMapperView instance = null;
-    private KeyMapperModel model;
-    private KeyMapperGui gui;
+    private final KeyMapperModel model;
+    private final KeyMapperGui gui;
 
     public static KeyMapperView getInstance()
     {

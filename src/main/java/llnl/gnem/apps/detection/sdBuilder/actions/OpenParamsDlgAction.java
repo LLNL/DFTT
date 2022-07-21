@@ -25,12 +25,11 @@
  */
 package llnl.gnem.apps.detection.sdBuilder.actions;
 
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
-import llnl.gnem.apps.detection.database.TableNames;
+import llnl.gnem.apps.detection.dataAccess.database.MutableTableNames;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParamPanel;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
@@ -42,23 +41,23 @@ import llnl.gnem.core.gui.util.Utility;
  */
 @SuppressWarnings({"NonThreadSafeLazyInitialization"})
 public class OpenParamsDlgAction extends AbstractAction {
-    
+
     private static OpenParamsDlgAction ourInstance;
     private static final long serialVersionUID = -4175581073357966469L;
-    
+
     public static OpenParamsDlgAction getInstance(Object owner) {
         if (ourInstance == null) {
             ourInstance = new OpenParamsDlgAction(owner);
         }
         return ourInstance;
     }
-    
+
     private OpenParamsDlgAction(Object owner) {
         super("Params", Utility.getIcon(owner, "miscIcons/editDlg32.gif"));
         putValue(SHORT_DESCRIPTION, "Open Params Dialog");
         putValue(MNEMONIC_KEY, KeyEvent.VK_P);
     }
-    
+
     @Override
     public void actionPerformed(ActionEvent e) {
         ParameterModel mod = ParameterModel.getInstance();
@@ -76,8 +75,7 @@ public class OpenParamsDlgAction extends AbstractAction {
                 mod.isEnableSpawning(),
                 mod.getTraceLength(),
                 mod.isFixShiftsToZero(),
-                TableNames.getInstance().getSiteTableName(),
-                TableNames.getInstance().getOriginTableName(),
+                 MutableTableNames.getInstance().getOriginTableName(),
                 mod.getMinDetectionCountForRetrieval(),
                 mod.getPrepickSeconds(),
                 mod.getMinDetStatThreshold(),
@@ -85,12 +83,27 @@ public class OpenParamsDlgAction extends AbstractAction {
                 mod.isSuppressBadDetectors(),
                 mod.isRequireCorrelation(),
                 mod.isFixSubspaceDimension(),
+                mod.isCapSubspaceDimension(),
                 mod.getSubspaceDimension(),
                 mod.isAutoApplyFilter(),
-                mod.isRequireWindowPositionConfirmation(), 
-                mod.isRetrieveByBlocks(), 
-                mod.getBlockSize());
-        
+                mod.isRequireWindowPositionConfirmation(),
+                mod.isRetrieveByBlocks(),
+                mod.getBlockSize(),
+                mod.isDisplayNewTemplates(),
+                mod.getDetectorCreationOption(),
+                mod.isDisplayAllStationPredictedPicks(),
+                mod.isDisplayAllStationEventIDs(),
+                mod.isDisplayAllStationDetectionMarkers(),
+                mod.getFKMaxSlowness(),
+                mod.getFKNumSlowness(),
+                mod.getFKMinFrequency(),
+                mod.getFKMaxFrequency(),
+                mod.getFloorFactor(),
+                mod.isRefineWindow(),
+                mod.getSNRThreshold(),
+                mod.getAnalysisWindowLength(),
+                mod.getMinimumWindowLength());
+
         Object[] options2 = {"Accept Changes", "Cancel"};
         int answer = JOptionPane.showOptionDialog(ClusterBuilderFrame.getInstance(),
                 panel,
@@ -102,7 +115,7 @@ public class OpenParamsDlgAction extends AbstractAction {
                 options2[0]); //default button title
 
         if (answer == JOptionPane.YES_OPTION) {
-            
+
             mod.setCorrelationThreshold(panel.getClusterThreshold());
             mod.setDetectionThreshold(panel.getDetectionThreshold());
             mod.setEnergyCapture(panel.getEnergyCapture());
@@ -114,21 +127,36 @@ public class OpenParamsDlgAction extends AbstractAction {
             mod.setTraceLength(panel.getTraceLength());
             mod.setFixShiftsToZero(panel.isFixShiftsToZero());
             mod.setMinDetectionCountForRetrieval(panel.getMinDetectionCount());
-            TableNames.getInstance().setSiteTableName(panel.getSiteTableName());
-            TableNames.getInstance().setOriginTableName(panel.getOriginTableName());
+             MutableTableNames.getInstance().setOriginTableName(panel.getOriginTableName());
             mod.setPrepickSeconds(panel.getPrePickSeconds());
             mod.setMinDetStatThreshold(panel.getMinDetStatThreshold());
             mod.setMaxDetStatThreshold(panel.getMaxDetStatThreshold());
             mod.setSuppressBadDetectors(panel.isSuppressBadDetectors());
             mod.setRequireCorrelation(panel.isRequireCorrelation());
             mod.setFixSubspaceDimension(panel.isFixSubspaceDimension());
+            mod.setCapSubspaceDimension(panel.isCapSubspaceDimension());
             mod.setSubspaceDimension(panel.getSubspaceDimension());
             mod.setAutoApplyFilter(panel.isAutoApplyFilter());
             mod.setRequireWindowPositionConfirmation(panel.isRequireWindowPositionConfirmation());
             mod.setRetrieveByBlocks(panel.isRetrieveByBlocks());
             mod.setBlockSize(panel.getBlockSize());
-            
+            mod.setDisplayNewTemplates(panel.isDisplayNewTemplates());
+            mod.setDetectorCreationOption(panel.getDetectorCreationOption());
+            mod.setDisplayAllStationDetectionMarkers(panel.isDisplayDetectionLabels());
+            mod.setDisplayAllStationEventIDs(panel.isDisplayEventIDLabels());
+            mod.setDisplayAllStationPredictedPicks(panel.isDisplayPredictedPicks());
+
+            mod.setFKMaxSlowness(panel.getMaxSlowness());
+            mod.setFKNumSlowness(panel.getNumSlowness());
+            mod.setFKMinFrequency(panel.getMinFrequency());
+            mod.setKMaxFrequency(panel.getMaxFrequency());
+            mod.setRWFloorFactor(panel.getRWFloorFactor());
+            mod.setRefineWindow(panel.isRefineWindow());
+            mod.setRWSNRThreshold(panel.getRWSNRThreshold());
+            mod.setRWAnalysisWindowLength(panel.getRWAnalysisWindowLength());
+            mod.setRWMinimumWindowLength(panel.getRWMinimumWindowLength());
         }
-        
+        ClusterBuilderFrame.getInstance().returnFocusToTree();
+
     }
 }

@@ -25,12 +25,10 @@
  */
 package llnl.gnem.apps.detection.util;
 
-import llnl.gnem.apps.detection.database.ChannelSubstitutionDAO;
-import llnl.gnem.apps.detection.database.ConfigurationDAO;
-import llnl.gnem.apps.detection.database.DbOps;
-import llnl.gnem.apps.detection.database.FrameworkRunDAO;
+import llnl.gnem.apps.detection.ConfigurationInfo;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
+
 import llnl.gnem.apps.detection.source.SourceData;
-import llnl.gnem.apps.detection.source.WfdiscTableSourceData;
 
 /**
  *
@@ -48,27 +46,27 @@ public class SourceDataHolder {
         return SourceDataHolderHolder.INSTANCE;
     }
 
+    public void setSource(SourceData source) {
+        this.source = source;
+    }
+
     private static class SourceDataHolderHolder {
 
         private static final SourceDataHolder INSTANCE = new SourceDataHolder();
     }
 
-    public SourceData getSourceData(int runid) throws Exception {
+    public SourceData getSourceData()
+    {
+        return source;
+    }
+    
+    public SourceData getSourceData(int runid, boolean scaleByCalib) throws Exception {
         if (currentRunid == runid) {
             return source;
         } else {
-            if (source != null) {
-                source.close();
-            }
-            FrameworkRun fr = FrameworkRunDAO.getInstance().getFrameworkRun(runid);
-            String sourceWfdiscTable = fr.getWfdisc();
-            double fixedRawRate = fr.getFixedRawSampleRate();
-            String configName = ConfigurationDAO.getInstance().getConfigNameForRun(runid);
-            int configid = ConfigurationDAO.getInstance().getConfigid(configName);
-            source = new WfdiscTableSourceData(sourceWfdiscTable, configName, false);
-            source.setFixedRawRate(fixedRawRate);
-            source.setChannelSubstitutions(ChannelSubstitutionDAO.getInstance().getChannelSubstitutions(configid));
-            source.setStaChanArrays();
+             String configName = DetectionDAOFactory.getInstance().getConfigurationDAO().getConfigNameForRun(runid);
+             source = new SourceData(configName, scaleByCalib);
+            ConfigurationInfo.getInstance().setStreamKeys(configName);
             currentRunid = runid;
             return source;
         }

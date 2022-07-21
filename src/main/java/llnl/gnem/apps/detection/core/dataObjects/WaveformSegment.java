@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 import llnl.gnem.core.util.ApplicationLogger;
 import llnl.gnem.core.waveform.qc.DataDefect;
 import llnl.gnem.core.util.Epoch;
+import llnl.gnem.core.util.StreamKey;
 import llnl.gnem.core.util.TimeT;
 import llnl.gnem.core.waveform.merge.NamedIntWaveform;
 import llnl.gnem.core.waveform.seismogram.BasicSeismogram;
@@ -58,8 +59,8 @@ public class WaveformSegment extends BasicSeismogram {
     public Set<DataDefect> getDefects() {
         return new HashSet<>(defects);
     }
-    
-    public void appendToDefectCollection(Collection<? extends DataDefect> additionalDefects){
+
+    public void appendToDefectCollection(Collection<? extends DataDefect> additionalDefects) {
         defects.addAll(additionalDefects);
     }
 
@@ -79,8 +80,7 @@ public class WaveformSegment extends BasicSeismogram {
 
     public WaveformSegment(NamedIntWaveform waveform, double commonRate) {
         super(null,
-                waveform.getSta(),
-                waveform.getChan(),
+                waveform.getKey(),
                 waveform.getDataAsFloatArray(),
                 waveform.getRate(),
                 new TimeT(waveform.getStart()));
@@ -114,12 +114,23 @@ public class WaveformSegment extends BasicSeismogram {
         this.defects = new HashSet<>(defects);
     }
 
+
+    public WaveformSegment(StreamKey key,
+            double start,
+            double rate,
+            float[] inData,
+            List<DataDefect> defects) {
+        super(null, key, inData, rate, new TimeT(start));
+        this.defects = new HashSet<>(defects);
+    }
+    
+    
     public WaveformSegment(BasicSeismogram seis) {
         super(seis);
         defects = new HashSet<>();
     }
 
-    public WaveformSegment(BasicSeismogram seis,  Collection<DataDefect> defects) {
+    public WaveformSegment(BasicSeismogram seis, Collection<DataDefect> defects) {
         super(seis);
         this.defects = new HashSet<>(defects);
     }
@@ -172,7 +183,7 @@ public class WaveformSegment extends BasicSeismogram {
         }
         float[] data2 = new float[blockSize];
         System.arraycopy(getData(), startOffset, data2, 0, npts);
-        return new WaveformSegment(getSta(), getChan(), epoch.getTime().getEpochTime(), getSamprate(), data2, tmp);
+        return new WaveformSegment(this.getStreamKey(), epoch.getTime().getEpochTime(), getSamprate(), data2, tmp);
     }
 
     public boolean includes(Epoch epoch) {
@@ -211,5 +222,5 @@ public class WaveformSegment extends BasicSeismogram {
     public WaveformSegment trimToLength(int minNpts) {
         return crop(0, minNpts - 1);
     }
-    
+
 }

@@ -38,6 +38,7 @@ public class ApplicationStationInfo extends StationInfo {
     private static final String PUBLICATION_HEADER = "Publication: ";
 
     private final boolean waveformStation;
+    private final String locationCode;
     private final Long arrayId;
     private final Long arrayElementId;
     private final Collection<SensitivityInfo> sensitivities;
@@ -61,6 +62,7 @@ public class ApplicationStationInfo extends StationInfo {
         this.hasTrackLines = true;
         this.arrayId = arrayId;
         this.arrayElementId = arrayElementId;
+        locationCode = null;
     }
 
     public ApplicationStationInfo(StationEpoch se) {
@@ -76,13 +78,14 @@ public class ApplicationStationInfo extends StationInfo {
                 se.getEndTime(),
                 se.getNetworkId(),
                 se.getStationId(),
-                se.getStationEpochId());
+                null);
         waveformStation = true;
         this.sensitivities = new ArrayList<>();
         sensitivities.add(new SensitivityInfo(SensitivityInfoTypes.UNSENSITIVE.getType(), "YES", "YES"));
         this.hasTrackLines = true;
         this.arrayId = se.getArrayId();
         this.arrayElementId = se.getArrayElementId();
+        locationCode = se.getLocationCode();
     }
 
     public ApplicationStationInfo(String stationSource,
@@ -121,7 +124,51 @@ public class ApplicationStationInfo extends StationInfo {
         this.hasTrackLines = hasTrackLines;
         this.arrayId = arrayId;
         this.arrayElementId = arrayElementId;
+        locationCode = null;
     }
+    
+ 
+    public ApplicationStationInfo(String stationSource,
+            String networkCode,
+            int netStartDate,
+            String stationCode,
+            String locationCode,
+            String description,
+            double lat,
+            double lon,
+            Double elev,
+            double beginTime,
+            double endTime,
+            long networkId,
+            long stationId,
+            long stationEpochId,
+            Long arrayId,
+            Long arrayElementId,
+            boolean waveformStation,
+            Collection<SensitivityInfo> sensitivities,
+            boolean hasTrackLines) {
+        super(stationSource,
+                networkCode,
+                netStartDate,
+                stationCode,
+                description,
+                lat,
+                lon,
+                elev,
+                beginTime,
+                endTime,
+                networkId,
+                stationId,
+                stationEpochId);
+        this.waveformStation = waveformStation;
+        this.sensitivities = new ArrayList<>(sensitivities);
+        this.hasTrackLines = hasTrackLines;
+        this.arrayId = arrayId;
+        this.arrayElementId = arrayElementId;
+        this.locationCode = locationCode;
+    }   
+    
+    
     
     public ApplicationStationInfo(String stationSource,
             String networkCode,
@@ -156,6 +203,7 @@ public class ApplicationStationInfo extends StationInfo {
         this.hasTrackLines = true;
         this.arrayId = arrayId;
         this.arrayElementId = arrayElementId;
+        locationCode = null;
     }
 
     void addSensitivityInfo(SensitivityInfo sensitivity) {
@@ -260,6 +308,7 @@ public class ApplicationStationInfo extends StationInfo {
                 this.getNetworkCode(),
                 this.getNetStartDate(),
                 this.getStationCode(),
+                locationCode,
                 this.getDescription(),
                 this.getLat(),
                 this.getLon(),
@@ -284,4 +333,28 @@ public class ApplicationStationInfo extends StationInfo {
     public Collection<SensitivityInfo> getSensitivity() {
         return new ArrayList<>(sensitivities);
     }
+
+    public SensitivityInfoTypes highestSensitivity() {
+        SensitivityInfoTypes highestLevel = SensitivityInfoTypes.UNKNOWN;
+        for (SensitivityInfo sensitivity : sensitivities) {
+            SensitivityInfoTypes currentLevel = SensitivityInfoTypes.getSensitivity(sensitivity.getSensitivityType());
+            if (currentLevel.getLevel() > highestLevel.getLevel()) {
+                highestLevel = currentLevel;
+}
+            if (highestLevel == SensitivityInfoTypes.SENSITIVE) {
+                break;
+            }
+        }
+        return highestLevel == SensitivityInfoTypes.UNKNOWN ? SensitivityInfoTypes.SENSITIVE : highestLevel;
+    }
+
+    public boolean isStationSensitive() {
+        return !(highestSensitivity() == SensitivityInfoTypes.UNSENSITIVE);
+    }
+
+    public String getLocationCode() {
+        return locationCode;
+    }
+    
+    
 }

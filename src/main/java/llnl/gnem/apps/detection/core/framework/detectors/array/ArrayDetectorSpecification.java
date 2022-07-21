@@ -26,8 +26,8 @@
 package llnl.gnem.apps.detection.core.framework.detectors.array;
 
 import llnl.gnem.apps.detection.core.dataObjects.AbstractSpecification;
-import llnl.gnem.apps.detection.core.dataObjects.ArrayConfiguration;
-import llnl.gnem.apps.detection.core.dataObjects.DetectorType;
+
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.core.dataObjects.SlownessSpecification;
 import llnl.gnem.apps.detection.core.dataObjects.TriggerPositionType;
 import java.io.FileInputStream;
@@ -35,58 +35,58 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
-import java.sql.SQLException;
-import java.text.ParseException;
+
 import java.util.ArrayList;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayConfiguration;
+import llnl.gnem.apps.detection.util.ArrayInfoModel;
+import llnl.gnem.core.dataAccess.DataAccessException;
 import llnl.gnem.core.util.StreamKey;
 
 public class ArrayDetectorSpecification extends AbstractSpecification implements Serializable {
 
     private static final long serialVersionUID = -7768540165481026013L;
 
-    private final float                 STADuration;
-    private final float                 LTADuration;
-    private final float                 gapDuration;
-    private final boolean               spawnOnTriggers;
+    private final float STADuration;
+    private final float LTADuration;
+    private final float gapDuration;
+    private final boolean spawnOnTriggers;
     private final SlownessSpecification slownessSpecification;
-    private final ArrayConfiguration    geometry;
+    private final ArrayConfiguration geometry;
 
-    public static ArrayDetectorSpecification createFromDatabase( float                  threshold,
-                                                                 float                  blackoutPeriod,
-                                                                 ArrayList< StreamKey> staChanList,
-                                                                 float                  STADuration,
-                                                                 float                  LTADuration,
-                                                                 float                  gapDuration,
-                                                                 boolean                enableSpawning,
-                                                                 float                  backAzimuth,
-                                                                 float                  velocity,
-                                                                 String                 arrayName,
-                                                                 String                 siteTable,
-                                                                 int                    jdate   ) throws IOException, ParseException, SQLException {
-        ArrayConfiguration config = ArrayConfiguration.createFromDatabase(arrayName, siteTable, jdate);
-        return new ArrayDetectorSpecification( threshold,
-                                               blackoutPeriod,
-                                               staChanList,
-                                               STADuration, 
-                                               LTADuration, 
-                                               gapDuration, 
-                                               enableSpawning,
-                                               backAzimuth, 
-                                               velocity, 
-                                               config           );
+    public static ArrayDetectorSpecification create(float threshold,
+            float blackoutPeriod,
+            ArrayList< StreamKey> staChanList,
+            float STADuration,
+            float LTADuration,
+            float gapDuration,
+            boolean enableSpawning,
+            float backAzimuth,
+            float velocity,
+            String arrayName,
+            int jdate) throws DataAccessException {
+        ArrayConfiguration config = ArrayInfoModel.getInstance().getGeometry(arrayName);
+           
+        return new ArrayDetectorSpecification(threshold,
+                blackoutPeriod,
+                staChanList,
+                STADuration,
+                LTADuration,
+                gapDuration,
+                enableSpawning,
+                backAzimuth,
+                velocity,
+                config);
     }
 
-    public static ArrayDetectorSpecification createFromFileAndDatabase( String specFile, String siteTable, int jdate ) throws IOException, ParseException, SQLException {
+    public static ArrayDetectorSpecification create(String specFile, int jdate) throws  DataAccessException, IOException {
         try (FileInputStream stream = new FileInputStream(specFile)) {
-            return new ArrayDetectorSpecification(stream, true, siteTable, jdate);
+            return new ArrayDetectorSpecification(stream, jdate);
         }
 
     }
 
-    public ArrayDetectorSpecification(InputStream stream, 
-            boolean createGeomFromDb,
-            String siteTable,
-            int jdate) throws IOException, ParseException, SQLException {
+    public ArrayDetectorSpecification(InputStream stream,
+            int jdate) throws   DataAccessException, IOException {
 
         super(stream);
 
@@ -96,38 +96,34 @@ public class ArrayDetectorSpecification extends AbstractSpecification implements
 
         spawnOnTriggers = Boolean.parseBoolean(parameterList.getProperty("enableSpawning", "true"));
 
-
-       
         float baz = Float.parseFloat(parameterList.getProperty("backAzimuth", "0.0"));
         float vel = Float.parseFloat(parameterList.getProperty("velocity", "99999.0"));
-        
-        
-        slownessSpecification = new SlownessSpecification(vel,baz);
-        
+
+        slownessSpecification = new SlownessSpecification(vel, baz);
 
         triggerPositionType = TriggerPositionType.THRESHOLD_EXCEED_POINT;
         detectorType = DetectorType.ARRAYPOWER;
 
-
-        geometry = createGeomFromDb ? createFromDb(siteTable, jdate) : createGeometry();
+        geometry = ArrayInfoModel.getInstance().getGeometry(staChanList);
+ 
         verifyChannelConsistency();
     }
 
     /*
      * Constructor to support instantiation of detectors stored in the database.
      */
-    private ArrayDetectorSpecification( float                  threshold,
-                                        float                  blackoutPeriod,
-                                        ArrayList< StreamKey> staChanList,
-                                        float                  STADuration,
-                                        float                  LTADuration,
-                                        float                  gapDuration,
-                                        boolean                enableSpawning,
-                                        float                  backAzimuth,
-                                        float                  velocity,
-                                        ArrayConfiguration     config ) throws IOException, ParseException {
+    private ArrayDetectorSpecification(float threshold,
+            float blackoutPeriod,
+            ArrayList< StreamKey> staChanList,
+            float STADuration,
+            float LTADuration,
+            float gapDuration,
+            boolean enableSpawning,
+            float backAzimuth,
+            float velocity,
+            ArrayConfiguration config)  {
 
-        super( threshold, blackoutPeriod, staChanList );
+        super(threshold, blackoutPeriod, staChanList);
         geometry = config;
         this.STADuration = STADuration;
         this.LTADuration = LTADuration;
@@ -135,9 +131,7 @@ public class ArrayDetectorSpecification extends AbstractSpecification implements
 
         spawnOnTriggers = enableSpawning;
 
-
-        slownessSpecification = new SlownessSpecification(velocity,backAzimuth);
-
+        slownessSpecification = new SlownessSpecification(velocity, backAzimuth);
 
         triggerPositionType = TriggerPositionType.THRESHOLD_EXCEED_POINT;
         detectorType = DetectorType.ARRAYPOWER;
@@ -196,27 +190,14 @@ public class ArrayDetectorSpecification extends AbstractSpecification implements
         ps.println("array geometry = " + geometry.getArrayName());
     }
 
-    private ArrayConfiguration createGeometry() throws NumberFormatException, ParseException, IOException {
-        String arrayDefinitions = parameterList.getProperty("arrayDefinitions");
-        String[] tokens = arrayDefinitions.split("\\s+");
-        String CSS_SiteFile = tokens[0].trim();
-        String arrayName = tokens[1].trim();
-        int jdate = Integer.parseInt(tokens[2]);
 
-
-        return ArrayConfiguration.createFromFlatfile(arrayName, CSS_SiteFile, jdate);
-    }
 
     private void verifyChannelConsistency() {
-        for( StreamKey sck : this.getStaChanList()){
-            if( !geometry.hasElement(sck.getSta())){
-                throw new IllegalStateException("Element: "+sck+ " not found in geometry!");
+        for (StreamKey sck : this.getStreamKeys()) {
+            if (geometry != null && !geometry.hasElement(sck.getSta())) {
+                throw new IllegalStateException("Element: " + sck + " not found in geometry!");
             }
         }
-    }
-
-    private ArrayConfiguration createFromDb(String siteTable, int jdate) throws SQLException, IOException, ParseException {
-        return ArrayConfiguration.createFromDatabase(getStaChanList(), siteTable, jdate);
     }
 
     public double getBackAzimuth() {
@@ -230,8 +211,7 @@ public class ArrayDetectorSpecification extends AbstractSpecification implements
     SlownessSpecification getSlownessSpecification() {
         return slownessSpecification;
     }
-    
-    
+
     @Override
     public boolean isArraySpecification() {
         return true;

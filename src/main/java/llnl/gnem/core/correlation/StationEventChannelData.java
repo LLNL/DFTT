@@ -67,7 +67,7 @@ public class StationEventChannelData implements Serializable, Comparable<Station
 
     public StationEventChannelData(CorrelationComponent comp) {
         EventStaInfo evidWfidDelta = new EventStaInfo(comp.getEvent().getEvid(), comp.getWfid(), comp.getDegDist(), 0.0, 0.0);
-        NominalArrival arrival = ((CorrelationTraceData) comp.getTraceData()).getNominalPick();
+        NominalArrival arrival = ((CorrelationTraceData) comp.getCorrelationTraceData()).getNominalPick();
         double nominalWindowLength = 10.0;
         Collection<BandInfo> bands = new ArrayList<>();
         PhaseWindow phaseWindow = new PhaseWindow(-1,arrival.getPhase(), nominalWindowLength, 0,0,0,0,0,bands);

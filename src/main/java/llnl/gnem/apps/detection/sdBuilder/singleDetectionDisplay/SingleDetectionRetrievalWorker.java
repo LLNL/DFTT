@@ -28,9 +28,9 @@ package llnl.gnem.apps.detection.sdBuilder.singleDetectionDisplay;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
-import llnl.gnem.apps.detection.core.dataObjects.Detection;
-import llnl.gnem.apps.detection.core.dataObjects.TriggerDataFeatures;
-import llnl.gnem.apps.detection.database.DetectionDAO;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
+import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
+
 import llnl.gnem.core.util.ApplicationLogger;
 
 /**
@@ -48,7 +48,7 @@ public class SingleDetectionRetrievalWorker extends SwingWorker<Void,Void> {
 
     @Override
     protected Void doInBackground() throws Exception {
-            result = DetectionDAO.getInstance().getSingleDetection(detectionid);
+            result = DetectionDAOFactory.getInstance().getDetectionDAO().getSingleDetection(detectionid);
         return null;
     }
     

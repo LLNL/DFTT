@@ -26,8 +26,8 @@
 package llnl.gnem.apps.detection.sdBuilder.dataSelection;
 
 import java.util.Objects;
-import llnl.gnem.apps.detection.core.dataObjects.Detection;
-import llnl.gnem.apps.detection.core.dataObjects.Trigger;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Trigger;
 
 /**
  *
@@ -53,6 +53,7 @@ public class ClassifiedDetection extends Detection {
         return usabilityStatus;
     }
     
+    @Override
     public String toString()
     {
         return String.format("%s A_STAT = %s, U_STAT = %s",super.toString(),artifactStatus, usabilityStatus);

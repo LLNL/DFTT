@@ -37,6 +37,7 @@ import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import llnl.gnem.core.gui.filter.actions.RemoveFilterAction;
 import llnl.gnem.core.waveform.filter.FilterClient;
 import llnl.gnem.core.util.Passband;
 import llnl.gnem.core.gui.util.SpringUtilities;
@@ -104,7 +105,6 @@ public class FilterGui extends JPanel implements FilterView,
                 }
             }
         });
-
 
         jScrollPane1.getViewport().setView(filterList);
         setLayout(new GridLayout(1, 2, 10, 5));
@@ -222,38 +222,42 @@ public class FilterGui extends JPanel implements FilterView,
     @Override
     public void update() {
         FilterModel model = FilterModel.getInstance();
+        ArrayList<StoredFilter> filters = model.getMyStoredFilters();
         StoredFilter aFilter = model.getCurrentFilter();
-        ArrayList<StoredFilter> filters = model.getAllStoredFilters();
-        spinnerModel.setValue(aFilter.getOrder());
-        lowCutEdit.setValue(aFilter.getLowpass());
-        highCornerEdit.setValue(aFilter.getHighpass());
-        passbandSpinnerModel.setValue(aFilter.getPassband());
-        zeroPhaseCheck.setSelected(!aFilter.isCausal());
+        if (aFilter != null) {
+            spinnerModel.setValue(aFilter.getOrder());
+            lowCutEdit.setValue(aFilter.getLowpass());
+            highCornerEdit.setValue(aFilter.getHighpass());
+            passbandSpinnerModel.setValue(aFilter.getPassband());
+            zeroPhaseCheck.setSelected(!aFilter.isCausal());
+        }
         filterList.removeAll();
         listModel.removeAllElements();
-        if(!filters.contains(aFilter)){
-            filters.add(aFilter);
-        }
         for (StoredFilter filter : filters) {
             listModel.addElement(filter);
         }
 
         for (int j = 0; j < listModel.getSize(); ++j) {
             StoredFilter filter = (StoredFilter) listModel.elementAt(j);
-            if (filter.equals(aFilter)) {
+            if (aFilter != null && filter.equals(aFilter)) {
                 skipModelUpdate = true;
                 filterList.setSelectedIndex(j);
                 break;
             }
         }
-
-        filterList.ensureIndexIsVisible(filterList.getSelectedIndex());
         skipModelUpdate = false;
+        int index = filterList.getSelectedIndex();
+        if (index < 0) {
+            index = 0;
+        }
+        filterList.ensureIndexIsVisible(index);
 
         toolbarControl.setFilters(filters);
         StoredFilter selected = (StoredFilter) filterList.getSelectedValue();
-        toolbarControl.setSelectedFilter(selected);
-        FilterModel.getInstance().savePreferences();
+        if (selected != null) {
+            toolbarControl.setSelectedFilter(selected);
+        }
+        //      FilterModel.getInstance().setCurrentFilter(selected);
     }
 
     public StoredFilter getUserDefinedFilter() {
@@ -266,22 +270,24 @@ public class FilterGui extends JPanel implements FilterView,
                 (Double) highCornerEdit.getValue(),
                 "-",
                 "iir",
-                "-",false);
+                "-", false);
     }
 
     @Override
     public void valueChanged(ListSelectionEvent e) {
+        if (skipModelUpdate) {
+            return;
+        }
         if (!e.getValueIsAdjusting()) {
 
             if (filterList.getSelectedIndex() == -1) {
-                //Do nothing...
+                RemoveFilterAction.getInstance(this).setSelectedFilter(null);
             } else {
-                if (skipModelUpdate) {
-                    return;
-                }
+
                 StoredFilter filter = (StoredFilter) filterList.getSelectedValue();
                 FilterModel.getInstance().changeSelectedFilter(filter);
                 toolbarControl.setSelectedFilter(filter);
+                RemoveFilterAction.getInstance(this).setSelectedFilter(filter);
             }
         }
     }
@@ -301,8 +307,9 @@ public class FilterGui extends JPanel implements FilterView,
 
     public void removeSelectedFilter() {
         StoredFilter filter = (StoredFilter) filterList.getSelectedValue();
-        FilterModel.getInstance().removeFilter(filter);
+        new FilterRemovalWorker(filter).execute();
         toolbarControl.removeFilter(filter);
+        RemoveFilterAction.getInstance(this).setSelectedFilter(null);
     }
 
     public JFrame getOwningContainer() {

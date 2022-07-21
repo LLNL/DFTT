@@ -30,6 +30,7 @@ import llnl.gnem.core.gui.plotting.keymapper.ControlKeyMapper;
 import llnl.gnem.core.gui.plotting.plotobject.PlotObject;
 
 import java.awt.event.KeyEvent;
+import llnl.gnem.core.gui.plotting.transforms.Coordinate;
 
 /*
  *  COPYRIGHT NOTICE
@@ -46,6 +47,13 @@ import java.awt.event.KeyEvent;
  * @author Doug Dodge
  */
 public class JPlotKeyMessage {
+
+
+    private final JSubplot subplot;
+    private final PlotObject plotObject;
+    private final KeyEvent keyEvent;
+    private final ControlKeyMapper controlKeyMapper;
+    private final Coordinate currentCoord;
     /**
      * Constructor for the JPlotKeyMessage object
      *
@@ -55,12 +63,17 @@ public class JPlotKeyMessage {
      *          the axis boundaries while entering the key combination.)
      * @param controlKeyMapper  provides platform-specific key mappings
      */
-    public JPlotKeyMessage( KeyEvent e, JSubplot p, PlotObject o, ControlKeyMapper controlKeyMapper )
+    public JPlotKeyMessage( KeyEvent e, JSubplot p, PlotObject o, ControlKeyMapper controlKeyMapper,Coordinate currentCoord )
     {
         this.keyEvent = e;
         this.subplot = p;
         this.plotObject = o;
         this.controlKeyMapper = controlKeyMapper;
+        this.currentCoord = currentCoord;
+    }
+
+    public Coordinate getCurrentCoord() {
+        return currentCoord;
     }
 
     /**
@@ -97,11 +110,6 @@ public class JPlotKeyMessage {
     {
         return controlKeyMapper;
     }
-
-    private final JSubplot subplot;
-    private final PlotObject plotObject;
-    private final KeyEvent keyEvent;
-    private final ControlKeyMapper controlKeyMapper;
 }
 
 

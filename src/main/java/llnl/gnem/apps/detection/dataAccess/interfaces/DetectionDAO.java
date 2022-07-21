@@ -25,8 +25,16 @@
  */
 package llnl.gnem.apps.detection.dataAccess.interfaces;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
+import llnl.gnem.apps.detection.core.dataObjects.DetectionObjects;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Trigger;
+import llnl.gnem.apps.detection.core.dataObjects.TriggerDataFeatures;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectionSummary;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.ShortDetectionSummary;
+import llnl.gnem.apps.detection.sdBuilder.dataSelection.ClassifiedDetection;
+import llnl.gnem.apps.detection.util.DetectorSubstitution;
 import llnl.gnem.core.dataAccess.DataAccessException;
 import llnl.gnem.core.util.Epoch;
 
@@ -35,5 +43,28 @@ import llnl.gnem.core.util.Epoch;
  * @author dodge1
  */
 public interface DetectionDAO {
+
     Collection<ShortDetectionSummary> getDetectionsInTimeInterval(int configid, Epoch epoch) throws DataAccessException;
+
+    Detection detectionFromTrigger(Trigger trigger) throws DataAccessException;
+    
+    Collection<ClassifiedDetection> getDetections(int runid, int detectorid) throws DataAccessException;
+    
+    Detection getSingleDetection(int detectionid) throws DataAccessException;
+    
+    DetectionObjects getDetectionObjects(int runid, int detectorid, boolean retrieveByBlocks, int blockSize, int lastRetrievedDetectionId) throws DataAccessException;
+    
+    TriggerDataFeatures getTriggerDataFeatures(int detectionid) throws DataAccessException;
+    
+    void deleteDetection(Detection detection) throws DataAccessException;
+    
+    void deleteDetections(ArrayList<Integer> detectionIdValues) throws DataAccessException;
+    
+    void reassignDetection(Detection detection, DetectorSubstitution substitute) throws DataAccessException;
+    
+    Collection<String> reportAllDetections(int runid) throws DataAccessException;
+    
+    Collection<String> reportDetectionSummary(int runid)throws DataAccessException;
+
+    Collection<DetectionSummary> getDetectionSummaries(int runid, int detectorid, double detStatThreshold)throws DataAccessException;
 }

@@ -78,12 +78,16 @@ public class StoredFilter implements Serializable{
         this.order = 2;
         this.lowpass = 0.0001;
         this.highpass = 1000;
-        this.descrip = "-";
+        this.descrip = "NO FILTER";
         this.impulseResponse = "iir";
         this.auth = "-";
         defaultFilter = false;
     }
 
+    public boolean isNoFilter(){
+        return filterid == -1 && order == 2 && lowpass == 0.0001 && highpass == 1000 && descrip.equals("NO FILTER");
+    }
+    
     @Override
     public int hashCode() {
         int hash = 3;
