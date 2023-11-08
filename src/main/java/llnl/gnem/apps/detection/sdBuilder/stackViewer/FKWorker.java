@@ -39,15 +39,15 @@ import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
 import llnl.gnem.apps.detection.sdBuilder.stackViewer.StackModel.StackData;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
 import llnl.gnem.apps.detection.util.DebugHelpers;
-import llnl.gnem.core.gui.plotting.MouseMode;
-import llnl.gnem.core.signalprocessing.arrayProcessing.FKProducer;
-import llnl.gnem.core.signalprocessing.arrayProcessing.FKResult;
-import llnl.gnem.core.signalprocessing.arrayProcessing.SlownessValue;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.SeriesMath;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
-import llnl.gnem.core.waveform.seismogram.CssSeismogram;
+import llnl.gnem.dftt.core.gui.plotting.MouseMode;
+import llnl.gnem.dftt.core.signalprocessing.arrayProcessing.FKProducer;
+import llnl.gnem.dftt.core.signalprocessing.arrayProcessing.FKResult;
+import llnl.gnem.dftt.core.signalprocessing.arrayProcessing.SlownessValue;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.SeriesMath;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
+import llnl.gnem.dftt.core.waveform.seismogram.CssSeismogram;
 
 /**
  *

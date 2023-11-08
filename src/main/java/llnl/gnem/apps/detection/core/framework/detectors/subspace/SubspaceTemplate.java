@@ -57,12 +57,12 @@ import llnl.gnem.apps.detection.core.dataObjects.TemplateSerializationType;
 import llnl.gnem.apps.detection.core.framework.detectors.EmpiricalTemplate;
 import llnl.gnem.apps.detection.core.signalProcessing.SVDUpdate;
 import llnl.gnem.apps.detection.util.io.SACFileWriter;
-import llnl.gnem.core.dataAccess.dataObjects.ProgressMonitor;
-import llnl.gnem.core.signalprocessing.statistics.SignalPairStats;
-import llnl.gnem.core.signalprocessing.statistics.TimeBandwidthComponents;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.FileSystemException;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.dataAccess.dataObjects.ProgressMonitor;
+import llnl.gnem.dftt.core.signalprocessing.statistics.SignalPairStats;
+import llnl.gnem.dftt.core.signalprocessing.statistics.TimeBandwidthComponents;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.FileSystemException;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 public class SubspaceTemplate extends EmpiricalTemplate implements Serializable {
 

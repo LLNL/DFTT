@@ -40,8 +40,8 @@ import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceTempla
 import llnl.gnem.apps.detection.statistics.HistogramData;
 import llnl.gnem.apps.detection.streams.ConcreteStreamProcessor;
 import llnl.gnem.apps.detection.util.TimeStamp;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.dataAccess.dataObjects.ProgressMonitor;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.dataObjects.ProgressMonitor;
 
 /**
  *
@@ -75,7 +75,7 @@ public interface SubspaceDetectorDAO {
      * @param duration
      * @param streamProcessor
      * @return
-     * @throws llnl.gnem.core.dataAccess.DataAccessException
+     * @throws llnl.gnem.dftt.core.dataAccess.DataAccessException
      * @throws IllegalStateException
      */
     SubspaceDetector createDetectorFromStreamSegment(StreamSegment segment,

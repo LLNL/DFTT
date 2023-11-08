@@ -52,9 +52,9 @@ import llnl.gnem.apps.detection.dataAccess.interfaces.StreamProcessorDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.SubspaceDetectorDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.SubspaceTemplateDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.TriggerDAO;
-import llnl.gnem.core.dataAccess.DAOFactory;
+import llnl.gnem.dftt.core.dataAccess.DAOFactory;
 
-import llnl.gnem.core.database.Connections;
+import llnl.gnem.dftt.core.database.Connections;
 
 /**
  *

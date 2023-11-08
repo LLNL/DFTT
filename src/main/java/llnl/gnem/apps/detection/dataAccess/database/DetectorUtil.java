@@ -56,9 +56,9 @@ import llnl.gnem.apps.detection.streams.ConcreteStreamProcessor;
 import llnl.gnem.apps.detection.util.RunInfo;
 import llnl.gnem.apps.detection.util.SubspaceThreshold;
 import llnl.gnem.apps.detection.util.initialization.StreamsConfig;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.dataAccess.database.oracle.OracleDBUtil;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.database.oracle.OracleDBUtil;
+import llnl.gnem.dftt.core.util.StreamKey;
 import oracle.sql.BLOB;
 
 /**

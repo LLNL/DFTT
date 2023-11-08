@@ -28,7 +28,7 @@ package llnl.gnem.apps.detection.sdBuilder.allStations;
 import java.util.ArrayList;
 import java.util.Collection;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.PhasePick;
-import llnl.gnem.core.waveform.BaseTraceData;
+import llnl.gnem.dftt.core.waveform.BaseTraceData;
 
 /**
  *

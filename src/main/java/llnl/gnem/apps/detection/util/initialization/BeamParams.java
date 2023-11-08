@@ -27,7 +27,7 @@ package llnl.gnem.apps.detection.util.initialization;
 
 
 import java.util.ArrayList;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 import net.jcip.annotations.ThreadSafe;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;

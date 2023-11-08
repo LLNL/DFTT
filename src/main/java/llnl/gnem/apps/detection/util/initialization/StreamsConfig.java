@@ -98,6 +98,16 @@ public class StreamsConfig {
         return getInfo(streamName).isTriggerOnlyOnCorrelators();
     }
 
+
+    public double getMinComputedThreshold(String streamName) {
+        return getInfo(streamName).getMinComputedThreshold();
+    }
+
+    public double getMaxComputedThreshold(String streamName) {
+        return getInfo(streamName).getMaxComputedThreshold();
+    }
+    
+    
     public boolean isLoadCorrelatorsFromDb(String streamName) {
         return getInfo(streamName).isLoadCorrelatorsFromDb();
     }

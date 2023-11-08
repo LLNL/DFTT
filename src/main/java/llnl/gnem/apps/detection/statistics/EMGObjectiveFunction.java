@@ -25,8 +25,8 @@
  */
 package llnl.gnem.apps.detection.statistics;
 
-import llnl.gnem.core.optimization.ObjectiveFunction;
-import llnl.gnem.core.signalprocessing.statistics.EMGDistribution;
+import llnl.gnem.dftt.core.optimization.ObjectiveFunction;
+import llnl.gnem.dftt.core.signalprocessing.statistics.EMGDistribution;
 
 /**
  *

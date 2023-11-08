@@ -32,7 +32,7 @@ import llnl.gnem.apps.detection.core.dataObjects.PreprocessorParams;
 import llnl.gnem.apps.detection.core.dataObjects.TransformedStreamSegment;
 
 import llnl.gnem.apps.detection.core.signalProcessing.RFFTdp;
-import llnl.gnem.core.util.PairT;
+import llnl.gnem.dftt.core.util.PairT;
 import llnl.gnem.apps.detection.core.dataObjects.StreamSegment;
 import llnl.gnem.apps.detection.core.dataObjects.WaveformSegment;
 

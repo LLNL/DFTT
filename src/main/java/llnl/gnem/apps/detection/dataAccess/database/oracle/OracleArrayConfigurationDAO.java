@@ -41,7 +41,7 @@ import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.dataAccess.database.TableNames;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayElementInfo;
 import llnl.gnem.apps.detection.dataAccess.interfaces.ArrayConfigurationDAO;
-import llnl.gnem.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
 
 /**
  *

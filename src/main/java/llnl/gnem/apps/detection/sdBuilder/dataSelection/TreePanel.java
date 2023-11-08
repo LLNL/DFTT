@@ -59,8 +59,6 @@ import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.sdBuilder.actions.AdvanceAction;
 import llnl.gnem.apps.detection.sdBuilder.actions.ClassifyAllDetectionsAction;
 import llnl.gnem.apps.detection.sdBuilder.actions.CreateTemplateAction;
-import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
-import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
 import llnl.gnem.apps.detection.sdBuilder.actions.DeleteConfigurationAction;
 import llnl.gnem.apps.detection.sdBuilder.actions.DeleteDetectionAction;
 import llnl.gnem.apps.detection.sdBuilder.actions.DeleteDetectorAction;
@@ -68,6 +66,7 @@ import llnl.gnem.apps.detection.sdBuilder.actions.DeleteRunAction;
 import llnl.gnem.apps.detection.sdBuilder.actions.DisplayDetectorHistogramAction;
 import llnl.gnem.apps.detection.sdBuilder.actions.DisplayDetectorTemplateAction;
 import llnl.gnem.apps.detection.sdBuilder.actions.PopulateCorrelatorAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.ShowOrHideCorrelationWindowAction;
 import llnl.gnem.apps.detection.sdBuilder.actions.SortByConfigNameAction;
 import llnl.gnem.apps.detection.sdBuilder.actions.SortByConfigidAction;
 import llnl.gnem.apps.detection.sdBuilder.actions.SortByDetectionCountAction;
@@ -75,12 +74,14 @@ import llnl.gnem.apps.detection.sdBuilder.actions.SortByDetectoridAction;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
 import llnl.gnem.apps.detection.sdBuilder.picking.DetectionPhasePickModel;
 import llnl.gnem.apps.detection.sdBuilder.templateDisplay.projections.GetProjectionsAction;
+import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ComputeCorrelationsWorker;
+import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.WindowAdjustmentDirection;
 import llnl.gnem.apps.detection.util.Configuration;
 import llnl.gnem.apps.detection.util.FrameworkRun;
 import llnl.gnem.apps.detection.util.KeyPhaseMapper;
-import llnl.gnem.core.gui.plotting.MouseMode;
+import llnl.gnem.dftt.core.gui.plotting.MouseMode;
 
 /**
  *
@@ -130,14 +131,15 @@ public class TreePanel extends JPanel implements TreeSelectionListener {
         public boolean dispatchKeyEvent(KeyEvent e) {
             if (e.getID() == KeyEvent.KEY_RELEASED) {
                 ClusterBuilderFrame.getInstance().setMouseMode(MouseMode.SELECT_ZOOM);
-                if (e.getKeyChar() == KeyEvent.VK_TAB) {
+                if (e.getKeyChar() == KeyEvent.VK_TAB && e.getModifiersEx() == 0) {
                     TreePanel.this.processTabKey();
                     return true;
-                } else if (e.getKeyChar() == KeyEvent.VK_DELETE) {
-                    deleteObject();
-                    return true;
                 }
-            } else if (e.getID() == KeyEvent.KEY_PRESSED) {
+            } else if (e.getKeyChar() == KeyEvent.VK_DELETE) {
+                deleteObject();
+                return true;
+            } else if (e.getID()
+                    == KeyEvent.KEY_PRESSED) {
                 String phase = KeyPhaseMapper.getInstance().getMappedPhase(e.getKeyChar());
                 if (phase != null) {
                     DetectionPhasePickModel.getInstance().setCurrentPhase(phase);
@@ -333,7 +335,7 @@ public class TreePanel extends JPanel implements TreeSelectionListener {
     public void loadDetections() {
         if (currentSelection != null) {
             DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) currentSelection.getParent();
-            if (parentNode.getUserObject() instanceof FrameworkRun) {
+            if (parentNode != null && parentNode.getUserObject() instanceof FrameworkRun) {
                 FrameworkRun runInfo = (FrameworkRun) parentNode.getUserObject();
                 Object userObject = currentSelection.getUserObject();
                 if (userObject instanceof DetectorStats) {
@@ -349,6 +351,7 @@ public class TreePanel extends JPanel implements TreeSelectionListener {
             }
         }
         tree.requestFocusInWindow();
+
     }
 
     private class TreeKeyListener extends KeyAdapter {
@@ -377,6 +380,15 @@ public class TreePanel extends JPanel implements TreeSelectionListener {
                         if (userObject instanceof DetectorStats) {
                             DetectorStats stats = (DetectorStats) userObject;
                             int detectorid = stats.getDetectorid();
+                            TreeNode node = currentSelection.getParent();
+                            if (node instanceof DefaultMutableTreeNode) {
+                                Object obj = ((DefaultMutableTreeNode) node).getUserObject();
+                                if (obj instanceof FrameworkRun) {
+                                    FrameworkRun fr = (FrameworkRun) obj;
+                                    int runid = fr.getRunid();
+                                    GetProjectionsAction.getInstance(this).setRunid(runid);
+                                }
+                            }
                             DisplayDetectorTemplateAction ddta = DisplayDetectorTemplateAction.getInstance(this);
                             ddta.setDetectorid(detectorid);
                             ddta.actionPerformed(null);
@@ -387,7 +399,7 @@ public class TreePanel extends JPanel implements TreeSelectionListener {
                     break;
                 case 'q':
                 case 'Q':
-                    if (currentSelection != null) {
+                    if (currentSelection != null && event.getModifiersEx() == 0) {
                         Object userObject = currentSelection.getUserObject();
                         if (userObject instanceof DetectorStats) {
                             DefaultMutableTreeNode previous = currentSelection.getPreviousSibling();
@@ -399,6 +411,10 @@ public class TreePanel extends JPanel implements TreeSelectionListener {
                 case 'F':
                     ClusterBuilderFrame.getInstance().applyCurrentFilter();
                     tree.requestFocusInWindow();
+                    break;
+                case 'w':
+                case 'W':
+                    ShowOrHideCorrelationWindowAction.getInstance(this).actionPerformed(null);
                     break;
                 case 'b':
                     classifyAndNext("b", false);
@@ -448,44 +464,43 @@ public class TreePanel extends JPanel implements TreeSelectionListener {
                     break;
             }
         }
+    }
 
-        private void classifyAndNext(String status, boolean proceedToNext) {
-            if (currentSelection != null) {
-                Object userObject = currentSelection.getUserObject();
-                if (userObject instanceof DetectorStats) {
-                    DetectorStats stats = (DetectorStats) userObject;
-                    int detectorid = stats.getDetectorid();
-                    TriggerClassification tc = TriggerClassification.createFromSingleStatusString(status);
-                    stats.updateClassification(tc);
-                    CorrelatedTracesModel.getInstance().resetTriggerClassification(tc, detectorid);
-                    new ClassifyDetectionWorker(detectorid, status).execute();
+    public void classifyAndNext(String status, boolean proceedToNext) {
+        if (currentSelection != null) {
+            Object userObject = currentSelection.getUserObject();
+            if (userObject instanceof DetectorStats) {
+                DetectorStats stats = (DetectorStats) userObject;
+                int detectorid = stats.getDetectorid();
+                TriggerClassification tc = TriggerClassification.createFromSingleStatusString(status);
+                stats.updateClassification(tc);
+                CorrelatedTracesModel.getInstance().resetTriggerClassification(tc, detectorid);
+                new ClassifyDetectionWorker(detectorid, status).execute();
 
-                    if (ParameterModel.getInstance().isSuppressBadDetectors()
-                            && !(status.equals("g") || status.equals("l") || status.equals("r") || status.equals("e"))) {
-                        CorrelatedTracesModel.getInstance().clear();
-                        DefaultMutableTreeNode next = currentSelection.getNextSibling();
-                        removeNode(currentSelection);
-                        if (next != null && next.getUserObject() != null && next.getUserObject() instanceof DetectorStats) {
-                            TreePath path = new TreePath(next.getPath());
-                            tree.setSelectionPath(path);
-                            tree.scrollPathToVisible(path);
-                            if (proceedToNext) {
-                                displayNode(next);
-                            }
+                if (ParameterModel.getInstance().isSuppressBadDetectors()
+                        && !(status.equals("g") || status.equals("l") || status.equals("r") || status.equals("e"))) {
+                    CorrelatedTracesModel.getInstance().clear();
+                    DefaultMutableTreeNode next = currentSelection.getNextSibling();
+                    removeNode(currentSelection);
+                    if (next != null && next.getUserObject() != null && next.getUserObject() instanceof DetectorStats) {
+                        TreePath path = new TreePath(next.getPath());
+                        tree.setSelectionPath(path);
+                        tree.scrollPathToVisible(path);
+                        if (proceedToNext) {
+                            displayNode(next);
                         }
-                    } else if (proceedToNext) {
-                        DefaultMutableTreeNode next = currentSelection.getNextSibling();
-                        displayNode(next);
                     }
-                    tree.requestFocusInWindow();
+                } else if (proceedToNext) {
+                    DefaultMutableTreeNode next = currentSelection.getNextSibling();
+                    displayNode(next);
                 }
+                tree.requestFocusInWindow();
             }
         }
-
     }
 
     private void correlateCurrent() {
-        ComputeCorrelationsWorker worker = new ComputeCorrelationsWorker(ParameterModel.getInstance().isFixShiftsToZero());
+        ComputeCorrelationsWorker worker = new ComputeCorrelationsWorker(ParameterModel.getInstance().isFixShiftsToZero(), null, null, null);
         worker.execute();
         tree.requestFocusInWindow();
     }
@@ -571,6 +586,7 @@ public class TreePanel extends JPanel implements TreeSelectionListener {
 
         }
         tree.requestFocusInWindow();
+
     }
 
     private class MyMouseListener extends MouseAdapter {
@@ -642,6 +658,7 @@ public class TreePanel extends JPanel implements TreeSelectionListener {
                 DetectorStats stats = (DetectorStats) userObject;
                 int runid = stats.getRunid();
                 GetProjectionsAction.getInstance(this).setRunid(runid);
+                GetProjectionsAction.getInstance(this).setDetectorid(stats.getDetectorid());
 
                 AdvanceAction.getInstance(this).setEnabled(CorrelatedTracesModel.getInstance().isCanAdvance());
                 int detectorid = stats.getDetectorid();

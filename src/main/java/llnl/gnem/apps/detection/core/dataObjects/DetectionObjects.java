@@ -28,7 +28,7 @@ package llnl.gnem.apps.detection.core.dataObjects;
 import java.util.Collection;
 import java.util.Map;
 import llnl.gnem.apps.detection.classify.TriggerClassification;
-import llnl.gnem.core.util.PairT;
+import llnl.gnem.dftt.core.util.PairT;
 
 /**
  *

@@ -30,7 +30,7 @@ import java.awt.event.KeyEvent;
 import javax.swing.*;
 import llnl.gnem.apps.detection.sdBuilder.stackViewer.FKWorker;
 
-import llnl.gnem.core.gui.util.Utility;
+import llnl.gnem.dftt.core.gui.util.Utility;
 
 public class BuildStackBeamAction extends AbstractAction {
 

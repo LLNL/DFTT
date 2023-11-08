@@ -30,18 +30,16 @@ import java.awt.event.ActionEvent;
 import java.util.prefs.Preferences;
 import javax.swing.*;
 import llnl.gnem.apps.detection.sdBuilder.BuilderFilterContainer;
-import llnl.gnem.apps.detection.sdBuilder.ChannelCombo;
-import llnl.gnem.apps.detection.sdBuilder.allStations.actions.DefineEventAction;
 import llnl.gnem.apps.detection.sdBuilder.allStations.actions.ExitAction;
 import llnl.gnem.apps.detection.sdBuilder.allStations.actions.ExportAction;
 import llnl.gnem.apps.detection.sdBuilder.allStations.actions.MagnifyAction;
 import llnl.gnem.apps.detection.sdBuilder.allStations.actions.PrintAction;
 import llnl.gnem.apps.detection.sdBuilder.allStations.actions.ReduceAction;
-import llnl.gnem.core.gui.filter.FilterToolbarControl;
+import llnl.gnem.dftt.core.gui.filter.FilterToolbarControl;
 
-import llnl.gnem.core.gui.plotting.ZoomType;
-import llnl.gnem.core.gui.util.Utility;
-import llnl.gnem.core.util.ButtonAction;
+import llnl.gnem.dftt.core.gui.plotting.ZoomType;
+import llnl.gnem.dftt.core.gui.util.Utility;
+import llnl.gnem.dftt.core.util.ButtonAction;
 
 /**
  * Created by dodge1 Date: Feb 12, 2010 COPYRIGHT NOTICE Copyright (C) 2007
@@ -86,8 +84,6 @@ public class AllStationsToolbar extends JToolBar {
 
         control = new BuilderFilterContainer(SeismogramModel.getInstance()).getFilterToolbarControl();
         add(control);
-
-        button = new JButton(DefineEventAction.getInstance(this));
         addButton(button);
         this.addSeparator();
         add(AllStationChannelCombo.getInstance());

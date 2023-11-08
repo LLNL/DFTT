@@ -30,7 +30,7 @@ import java.util.Collection;
 import llnl.gnem.apps.detection.classify.LabeledFeature;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.core.framework.FKScreenResults;
-import llnl.gnem.core.waveform.qc.DataDefect;
+import llnl.gnem.dftt.core.waveform.qc.DataDefect;
 
 /**
  *

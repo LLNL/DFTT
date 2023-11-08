@@ -45,9 +45,9 @@ import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
 import llnl.gnem.apps.detection.sdBuilder.templateDisplay.TemplateDisplayFrame;
 import llnl.gnem.apps.detection.sdBuilder.templateDisplay.TemplateModel;
 import llnl.gnem.apps.detection.streams.ConcreteStreamProcessor;
-import llnl.gnem.core.correlation.CorrelationComponent;
-import llnl.gnem.core.correlation.CorrelationTraceData;
-import llnl.gnem.core.waveform.seismogram.CssSeismogram;
+import llnl.gnem.dftt.core.correlation.CorrelationComponent;
+import llnl.gnem.dftt.core.correlation.CorrelationTraceData;
+import llnl.gnem.dftt.core.waveform.seismogram.CssSeismogram;
 import llnl.gnem.apps.detection.core.dataObjects.StreamSegment;
 import llnl.gnem.apps.detection.core.dataObjects.WaveformSegment;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
@@ -55,7 +55,7 @@ import llnl.gnem.apps.detection.sdBuilder.configuration.DetectorCreationOption;
 import llnl.gnem.apps.detection.sdBuilder.dataSelection.ClassifyDetectionWorker;
 import llnl.gnem.apps.detection.sdBuilder.dataSelection.DeleteDetectorWorker;
 import llnl.gnem.apps.detection.sdBuilder.dataSelection.ReplaceTemplateWorker;
-import llnl.gnem.core.gui.util.ProgressDialog;
+import llnl.gnem.dftt.core.gui.util.ProgressDialog;
 
 /**
  *

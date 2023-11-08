@@ -45,10 +45,11 @@ import java.util.Map;
 import java.util.logging.Level;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceDetector;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
-import llnl.gnem.core.dataAccess.DataAccessException;
+import llnl.gnem.apps.detection.sdBuilder.histogramDisplay.HistogramModel;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
 
 
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
 
 /**
  * Created by dodge1 Date: Sep 27, 2010 COPYRIGHT NOTICE Copyright (C) 2007
@@ -85,6 +86,7 @@ public class DetectionFramework {
                 DetectionDAOFactory.getInstance().getStreamDAO().writeStreamParamsIntoConfiguration(streamid, streamName, sampleRate);
             }
         }
+        
     }
 
     private Map<String, Boolean> buildStreamTriggerMap() {
@@ -93,6 +95,10 @@ public class DetectionFramework {
         for( String stream : streams){
             boolean triggerOnlyOnCorrelators = StreamsConfig.getInstance().isTriggerOnlyOnCorrelators(stream);
             streamTriggeringMap.put(stream, triggerOnlyOnCorrelators);
+            double minAutoThreshold = StreamsConfig.getInstance().getMinComputedThreshold(stream);
+            double maxAuthThreshold = StreamsConfig.getInstance().getMaxComputedThreshold(stream);
+            HistogramModel.getInstance().setMinAllowableThreshold(minAutoThreshold);
+            HistogramModel.getInstance().setMaxAllowableThreshold(maxAuthThreshold);
         }
         return streamTriggeringMap;
     }

@@ -33,9 +33,9 @@ import llnl.gnem.apps.detection.core.framework.detectors.Detector;
 import llnl.gnem.apps.detection.core.framework.detectors.TemplateNormalization;
 import llnl.gnem.apps.detection.sdBuilder.dataSelection.DetectorStats;
 import llnl.gnem.apps.detection.streams.ConcreteStreamProcessor;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
 
 /**
  *
@@ -63,7 +63,7 @@ public interface DetectorDAO {
      * relative to the old
      * @param templateDuration The duration of the new template
      * @param sourceInfo
-     * @throws llnl.gnem.core.dataAccess.DataAccessException
+     * @throws llnl.gnem.dftt.core.dataAccess.DataAccessException
      */    void replaceSubspaceTemplate(int oldDetectorid,
             int newDetectorid,
             double templateOffset,

@@ -35,7 +35,7 @@ import java.util.Map;
 import llnl.gnem.apps.detection.FrameworkPreprocessorParams;
 import llnl.gnem.apps.detection.core.framework.StreamProcessor;
 import llnl.gnem.apps.detection.streams.ConcreteStreamProcessor;
-import llnl.gnem.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
 
 /**
  *

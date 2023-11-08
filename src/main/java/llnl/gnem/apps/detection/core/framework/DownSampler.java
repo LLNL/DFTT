@@ -32,10 +32,10 @@ import java.util.ArrayList;
 import java.util.List;
 import llnl.gnem.apps.detection.core.dataObjects.PreprocessorParams;
 
-import llnl.gnem.core.signalprocessing.Sequence;
+import llnl.gnem.dftt.core.signalprocessing.Sequence;
 import llnl.gnem.apps.detection.core.dataObjects.StreamSegment;
 import llnl.gnem.apps.detection.core.dataObjects.WaveformSegment;
-import llnl.gnem.core.waveform.qc.DataDefect;
+import llnl.gnem.dftt.core.waveform.qc.DataDefect;
 
 public class DownSampler {
 

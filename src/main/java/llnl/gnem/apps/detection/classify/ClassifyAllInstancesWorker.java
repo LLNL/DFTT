@@ -30,8 +30,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
-import llnl.gnem.core.gui.util.ProgressDialog;
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.gui.util.ProgressDialog;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
 
 /**
  * Created by dodge1 Date: Feb 12, 2012 COPYRIGHT NOTICE Copyright (C) 2007

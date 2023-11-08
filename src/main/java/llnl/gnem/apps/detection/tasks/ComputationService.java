@@ -30,12 +30,12 @@ import llnl.gnem.apps.detection.core.dataObjects.CancellationData;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.Trigger;
 import llnl.gnem.apps.detection.util.initialization.ProcessingPrescription;
 import java.util.Collection;
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
 
 import java.util.concurrent.*;
 import java.util.logging.Level;
 import llnl.gnem.apps.detection.core.framework.DetectionStatistic;
-import llnl.gnem.core.util.PairT;
+import llnl.gnem.dftt.core.util.PairT;
 
 
 /**

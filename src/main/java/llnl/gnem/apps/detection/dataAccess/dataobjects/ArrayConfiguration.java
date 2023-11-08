@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  * #L%
  */
-/*
+ /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -38,9 +38,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import llnl.gnem.apps.detection.core.dataObjects.SlownessSpecification;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
 
 /**
  *
@@ -50,12 +50,11 @@ public class ArrayConfiguration {
 
     private final String arrayName;
     private final Map<Epoch, Collection<ArrayElementInfo>> epochMap;
-    
-    public Collection<String> getArrayStationCodes()
-    {
+
+    public Collection<String> getArrayStationCodes() {
         Set<String> result = new HashSet<>();
-        for(Collection<ArrayElementInfo> cae : epochMap.values()){
-            for( ArrayElementInfo aei : cae){
+        for (Collection<ArrayElementInfo> cae : epochMap.values()) {
+            for (ArrayElementInfo aei : cae) {
                 result.add(aei.getStationCode());
             }
         }
@@ -123,6 +122,21 @@ public class ArrayConfiguration {
         return new ArrayList<>();
     }
 
+    public ArrayElementInfo getElement(StreamKey key, int jdate) {
+        TimeT atime = TimeT.jdateToTimeT(jdate);
+        for (Epoch e : epochMap.keySet()) {
+            if (e.ContainsTime(atime)) {
+                Collection<ArrayElementInfo> elements = epochMap.get(e);
+                for (ArrayElementInfo aei : elements) {
+                    if (aei.getStationCode().equals(key.getSta())) {
+                        return aei;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
         return "Array{" + "arrayName=" + arrayName + ", epochMap=" + epochMap + '}';
@@ -171,19 +185,19 @@ public class ArrayConfiguration {
     public Map<StreamKey, ArrayElementInfo> getElements(Collection<StreamKey> channels, int jdate) {
         Map<StreamKey, ArrayElementInfo> result = new HashMap<>();
         TimeT atime = TimeT.getTimeFromJulianDate(jdate);
-        for(Epoch e : epochMap.keySet()){
-            if(e.ContainsTime(atime)){
+        for (Epoch e : epochMap.keySet()) {
+            if (e.ContainsTime(atime)) {
                 Collection<ArrayElementInfo> elements = epochMap.get(e);
-                for(StreamKey key : channels){
-                    for(ArrayElementInfo aei : elements){
-                        if(aei.getStationCode().equals(key.getSta())){
+                for (StreamKey key : channels) {
+                    for (ArrayElementInfo aei : elements) {
+                        if (aei.getStationCode().equals(key.getSta())) {
                             result.put(key, aei);
                         }
                     }
                 }
             }
         }
-        if( result.size() != channels.size()){
+        if (result.size() != channels.size()) {
             throw new IllegalStateException("Could not retrieve an array element for all stream keys!");
         }
         return result;

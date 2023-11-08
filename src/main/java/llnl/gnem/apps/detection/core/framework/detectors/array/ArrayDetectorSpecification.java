@@ -39,8 +39,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayConfiguration;
 import llnl.gnem.apps.detection.util.ArrayInfoModel;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 public class ArrayDetectorSpecification extends AbstractSpecification implements Serializable {
 

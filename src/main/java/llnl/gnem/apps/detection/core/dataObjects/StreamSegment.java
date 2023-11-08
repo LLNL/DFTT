@@ -30,14 +30,14 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import llnl.gnem.core.waveform.qc.DataDefect;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
-import llnl.gnem.core.waveform.qc.DataSpike;
-import llnl.gnem.core.waveform.qc.DropOut;
-import llnl.gnem.core.waveform.qc.DropoutDetector;
-import llnl.gnem.core.waveform.qc.SpikeProcessor;
+import llnl.gnem.dftt.core.waveform.qc.DataDefect;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
+import llnl.gnem.dftt.core.waveform.qc.DataSpike;
+import llnl.gnem.dftt.core.waveform.qc.DropOut;
+import llnl.gnem.dftt.core.waveform.qc.DropoutDetector;
+import llnl.gnem.dftt.core.waveform.qc.SpikeProcessor;
 
 public class StreamSegment {
 

@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.logging.Level;
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
 
 
 public class SingleLink extends AbstractLinker {

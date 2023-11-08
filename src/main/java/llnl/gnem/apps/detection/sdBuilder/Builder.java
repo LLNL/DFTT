@@ -33,13 +33,13 @@ import javax.swing.UIManager;
 
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
-import llnl.gnem.core.gui.filter.FilterRetrievalWorker;
-import llnl.gnem.core.gui.util.ExceptionDialog;
-import llnl.gnem.core.gui.util.MessageDialog;
-import llnl.gnem.core.traveltime.Ak135.TraveltimeCalculatorProducer;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.JavaPrefObjectManager;
-import llnl.gnem.core.util.FileUtil.DriveMapper;
+import llnl.gnem.dftt.core.gui.filter.FilterRetrievalWorker;
+import llnl.gnem.dftt.core.gui.util.ExceptionDialog;
+import llnl.gnem.dftt.core.gui.util.MessageDialog;
+import llnl.gnem.dftt.core.traveltime.Ak135.TraveltimeCalculatorProducer;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.JavaPrefObjectManager;
+import llnl.gnem.dftt.core.util.FileUtil.DriveMapper;
 
 /**
  *

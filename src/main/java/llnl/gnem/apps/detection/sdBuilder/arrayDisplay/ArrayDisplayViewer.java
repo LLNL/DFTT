@@ -25,36 +25,36 @@
  */
 package llnl.gnem.apps.detection.sdBuilder.arrayDisplay;
 
-import llnl.gnem.core.gui.plotting.Limits;
-import llnl.gnem.core.gui.plotting.VertAlignment;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JSubplot;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.VPickLine;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.PickErrorChangeState;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.WindowDurationChangedState;
-import llnl.gnem.core.gui.plotting.ZoomType;
-import llnl.gnem.core.gui.plotting.MouseMode;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JPlotKeyMessage;
-import llnl.gnem.core.gui.plotting.PlotObjectClicked;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.XAxis;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JMultiAxisPlot;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.PickMovedState;
-import llnl.gnem.core.correlation.CorrelationTraceData;
+import llnl.gnem.dftt.core.gui.plotting.Limits;
+import llnl.gnem.dftt.core.gui.plotting.VertAlignment;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JSubplot;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.VPickLine;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.PickErrorChangeState;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.WindowDurationChangedState;
+import llnl.gnem.dftt.core.gui.plotting.ZoomType;
+import llnl.gnem.dftt.core.gui.plotting.MouseMode;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JPlotKeyMessage;
+import llnl.gnem.dftt.core.gui.plotting.PlotObjectClicked;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.XAxis;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JMultiAxisPlot;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.PickMovedState;
+import llnl.gnem.dftt.core.correlation.CorrelationTraceData;
 import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.*;
 import javax.swing.JPopupMenu;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
-import llnl.gnem.core.correlation.util.NominalArrival;
-import llnl.gnem.core.gui.plotting.plotobject.Line;
-import llnl.gnem.core.gui.plotting.plotobject.PinnedText;
-import llnl.gnem.core.gui.plotting.plotobject.PlotObject;
-import llnl.gnem.core.gui.plotting.plotobject.XPinnedText;
-import llnl.gnem.core.correlation.CorrelationComponent;
-import llnl.gnem.core.gui.plotting.HorizAlignment;
-import llnl.gnem.core.gui.plotting.HorizPinEdge;
-import llnl.gnem.core.gui.plotting.VertPinEdge;
-import llnl.gnem.core.util.SeriesMath;
+import llnl.gnem.dftt.core.correlation.util.NominalArrival;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.Line;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.PinnedText;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.PlotObject;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.XPinnedText;
+import llnl.gnem.dftt.core.correlation.CorrelationComponent;
+import llnl.gnem.dftt.core.gui.plotting.HorizAlignment;
+import llnl.gnem.dftt.core.gui.plotting.HorizPinEdge;
+import llnl.gnem.dftt.core.gui.plotting.VertPinEdge;
+import llnl.gnem.dftt.core.util.SeriesMath;
 
 /**
  *

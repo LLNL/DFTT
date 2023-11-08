@@ -63,9 +63,9 @@ import llnl.gnem.apps.detection.util.ArrayInfoModel;
 import llnl.gnem.apps.detection.util.initialization.ProcessingPrescription;
 import llnl.gnem.apps.detection.util.initialization.StreamInfo;
 import llnl.gnem.apps.detection.util.initialization.StreamsConfig;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.util.FileUtil.DriveMapper;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.util.FileUtil.DriveMapper;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *
@@ -217,8 +217,10 @@ public abstract class DbStreamProcessorDAO implements StreamProcessorDAO {
                 SlownessRangeSpecification srs = new SlownessRangeSpecification(slowness, range);
                 Map<StreamKey, ArrayElementInfo> ourElements = new HashMap<>();
                 for (StreamKey key : streamKeys) {
-          //          ourElements.put(key, ac.getElement(key.getSta()));
-                    System.out.println("implement this!");
+                    ArrayElementInfo aei = ac.getElement(key, jdate);
+                    if(aei != null){
+                        ourElements.put(key,aei);
+                    }
                 }
                 FKScreenConfiguration config = new FKScreenConfiguration(screenParams, srs, ourElements);
                 processor.addFKScreen(config);

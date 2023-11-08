@@ -34,7 +34,7 @@ import llnl.gnem.apps.detection.core.framework.detectors.EmpiricalTemplate;
 import llnl.gnem.apps.detection.core.framework.detectors.TemplateNormalization;
 import llnl.gnem.apps.detection.core.framework.detectors.arrayCorrelation.ArrayCorrelationTemplate;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceTemplate;
-import llnl.gnem.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
 
 /**
  *

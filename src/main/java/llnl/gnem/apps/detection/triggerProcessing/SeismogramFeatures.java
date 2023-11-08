@@ -26,14 +26,14 @@
 package llnl.gnem.apps.detection.triggerProcessing;
 
 import java.io.Serializable;
-import llnl.gnem.core.signalprocessing.statistics.SignalPairStats;
-import llnl.gnem.core.signalprocessing.statistics.TimeBandwidthComponents;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.SeriesMath;
-import llnl.gnem.core.util.seriesMathHelpers.SampleStatistics;
-import llnl.gnem.core.waveform.classification.Feature;
-import llnl.gnem.core.waveform.classification.MomentEstimates;
-import llnl.gnem.core.waveform.seismogram.TimeSeries;
+import llnl.gnem.dftt.core.signalprocessing.statistics.SignalPairStats;
+import llnl.gnem.dftt.core.signalprocessing.statistics.TimeBandwidthComponents;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.SeriesMath;
+import llnl.gnem.dftt.core.util.seriesMathHelpers.SampleStatistics;
+import llnl.gnem.dftt.core.waveform.classification.Feature;
+import llnl.gnem.dftt.core.waveform.classification.MomentEstimates;
+import llnl.gnem.dftt.core.waveform.seismogram.TimeSeries;
 
 /**
  *

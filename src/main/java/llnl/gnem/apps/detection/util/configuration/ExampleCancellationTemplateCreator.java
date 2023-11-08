@@ -30,7 +30,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *

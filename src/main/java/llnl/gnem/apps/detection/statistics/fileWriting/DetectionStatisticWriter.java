@@ -35,8 +35,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import llnl.gnem.core.util.FileSystemException;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.util.FileSystemException;
+import llnl.gnem.dftt.core.util.TimeT;
 
 /**
  * Created by dodge1

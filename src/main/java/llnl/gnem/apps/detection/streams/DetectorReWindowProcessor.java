@@ -48,16 +48,16 @@ import llnl.gnem.apps.detection.util.SourceDataHolder;
 import llnl.gnem.apps.detection.util.initialization.ProcessingPrescription;
 import llnl.gnem.apps.detection.util.initialization.StreamInfo;
 import llnl.gnem.apps.detection.util.initialization.StreamsConfig;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.signalprocessing.statistics.SignalPairStats;
-import llnl.gnem.core.signalprocessing.statistics.TimeBandwidthComponents;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.Passband;
-import llnl.gnem.core.util.SeriesMath;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.waveform.merge.NamedIntWaveform;
-import llnl.gnem.core.waveform.seismogram.BasicSeismogram;
-import llnl.gnem.core.waveform.seismogram.CssSeismogram;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.signalprocessing.statistics.SignalPairStats;
+import llnl.gnem.dftt.core.signalprocessing.statistics.TimeBandwidthComponents;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.Passband;
+import llnl.gnem.dftt.core.util.SeriesMath;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.waveform.merge.NamedIntWaveform;
+import llnl.gnem.dftt.core.waveform.seismogram.BasicSeismogram;
+import llnl.gnem.dftt.core.waveform.seismogram.CssSeismogram;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 /**
@@ -132,6 +132,7 @@ public class DetectorReWindowProcessor {
 
         WindowSelector selector = new WindowSelector(X, nch, npts, analysisWindowLength, decrate, minimumWindowLength, refine, SNRThreshold, (float) floorFactor, minDimensionForRefinement);
         OnsetData onset = getSTALTAEnergyCaptureOnset(selector, rate, preTriggerSeconds, analysisWindowLength);
+        if(onset == null)return null;
 
         SubspaceParameters params = new SubspaceParameters(originalDetector.getSpecification().getThreshold(),
                 info.getEnergyCaptureThreshold(), originalDetector.getSpecification().getBlackoutPeriod());

@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  * #L%
  */
-/*
+ /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -39,58 +39,63 @@ import java.util.Collection;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.dataAccess.interfaces.PredictedPhasePickDAO;
 import llnl.gnem.apps.detection.sdBuilder.picking.PredictedPhasePick;
-import llnl.gnem.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
 
 /**
  *
  * @author dodge1
  */
 public abstract class DbPredictedPhasePickDAO implements PredictedPhasePickDAO {
-         private static final double COINCIDENCE_THRESHOLD_SECONDS = 10.0;
-  
+
+    private static final double COINCIDENCE_THRESHOLD_SECONDS = 10.0;
+
     @Override
-    public Collection<PredictedPhasePick> getPredictedPicks(int runid, int detectorid) throws DataAccessException{
+    public Collection<PredictedPhasePick> getPredictedPicks(int runid, int detectorid) throws DataAccessException {
         try {
-            return getPredictedPicksP( runid,  detectorid);
+            return getPredictedPicksP(runid, detectorid);
         } catch (SQLException ex) {
             throw new DataAccessException(ex.getMessage());
         }
     }
+
     private Collection<PredictedPhasePick> getPredictedPicksP(int runid, int detectorid) throws SQLException {
         Collection<PredictedPhasePick> result = new ArrayList<>();
-        String sql = String.format("select a.detectionid, \n"
-                + "d.evid,\n"
-                + "d.mag, \n"
-                + "d.ptime, \n"
-                + "d.stime from %s a, %s b, %s c, %s d\n"
-                + "where a.detectorid = ?\n"
-                + "and a.runid = ?\n"
-                + "and a.runid = b.runid\n"
-                + "and a.triggerid = c.triggerid\n"
-                + "and b.CONFIGID = d.configid\n"
-                + "and d.PTIME between c.time - %f and c.time + %f", 
-                TableNames.getDetectionTable(), 
-                TableNames.getFrameworkRunTable(), 
-                TableNames.getTriggerRecordTable(), 
-                TableNames.getEventStationTimesTable(),
+        String sql = String.format("select detectionid, event_id, station_code, chan, iphase, time\n"
+                + "  from %s\n"
+                + " where detectionid in\n"
+                + "       (select distinct a.detectionid\n"
+                + "          from %s a, %s b, %s c, %s d\n"
+                + "         where a.detectorid = ?\n"
+                + "           and a.runid = ?\n"
+                + "           and a.runid = b.runid\n"
+                + "           and a.triggerid = c.triggerid\n"
+                + "           and b.CONFIGID = d.configid\n"
+                + "           and d.iphase like 'P%%'\n"
+                + "           and d.time between c.time - %f and c.time + %f)",
+                TableNames.getArrivalTable(),
+                TableNames.getDetectionTable(),
+                TableNames.getFrameworkRunTable(),
+                TableNames.getTriggerRecordTable(),
+                TableNames.getArrivalTable(),
+                
                 COINCIDENCE_THRESHOLD_SECONDS,
                 COINCIDENCE_THRESHOLD_SECONDS);
         Connection conn = null;
         try {
             conn = DetectionDAOFactory.getInstance().getConnections().checkOut();
-            try(PreparedStatement stmt = conn.prepareStatement(sql)){
-                stmt.setInt(1,detectorid);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, detectorid);
                 stmt.setInt(2, runid);
-                try(ResultSet rs = stmt.executeQuery()){
-                    while(rs.next()){
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
                         int jdx = 1;
                         int detectionid = rs.getInt(jdx++);
                         int evid = rs.getInt(jdx++);
-                        double magnitude = rs.getDouble(jdx++);
-                        double ptime = rs.getDouble(jdx++);
-                        double stime = rs.getDouble(jdx++);
-                        result.add(new PredictedPhasePick(evid, detectionid, magnitude, "P", ptime));
-                        result.add(new PredictedPhasePick(evid, detectionid, magnitude, "S", stime));
+                        String sta = rs.getString(jdx++);
+                        String chan = rs.getString(jdx++);
+                        String phase  = rs.getString(jdx++);
+                        double time = rs.getDouble(jdx++);
+                        result.add(new PredictedPhasePick(evid, detectionid, sta, chan, phase, time));
                     }
                 }
             }

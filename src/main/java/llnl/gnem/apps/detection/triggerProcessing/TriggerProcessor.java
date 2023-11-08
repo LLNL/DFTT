@@ -44,8 +44,8 @@ import llnl.gnem.apps.detection.core.framework.FKScreen;
 import llnl.gnem.apps.detection.core.framework.FKScreenResults;
 import llnl.gnem.apps.detection.core.framework.detectors.DetectorInfo;
 import llnl.gnem.apps.detection.core.framework.detectors.array.FKScreenConfiguration;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.TimeT;
 import llnl.gnem.apps.detection.core.dataObjects.StreamSegment;
 import llnl.gnem.apps.detection.core.dataObjects.WaveformSegment;
 import llnl.gnem.apps.detection.core.framework.detectors.Detector;
@@ -54,12 +54,12 @@ import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceSpecif
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceTemplate;
 import llnl.gnem.apps.detection.core.signalProcessing.Beamformer;
 import llnl.gnem.apps.detection.core.signalProcessing.SNRfromSTALTA;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.PairT;
-import llnl.gnem.core.util.SeriesMath;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.seriesMathHelpers.SampleStatistics;
-import llnl.gnem.core.waveform.seismogram.TimeSeries;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.PairT;
+import llnl.gnem.dftt.core.util.SeriesMath;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.seriesMathHelpers.SampleStatistics;
+import llnl.gnem.dftt.core.waveform.seismogram.TimeSeries;
 
 /**
  *
@@ -195,7 +195,7 @@ public class TriggerProcessor {
                 && durationOK
                 && snrIsOK
                 && !(fkStatus == FKStatus.FAILED);
-        return new EvaluatedTrigger(td, usableTrigger, fkStatus, feature, medianDuration,
+       return new EvaluatedTrigger(td, usableTrigger, fkStatus, feature, medianDuration,
                 fkResults, snrIsOK, durationOK, velocityOK, forceFixedTemplateLength,
                 fixedTemplateLength, relativeAmplitude);
     }

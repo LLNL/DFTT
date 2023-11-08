@@ -28,7 +28,7 @@ package llnl.gnem.apps.detection.core.dataObjects;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import java.io.PrintStream;
 import java.util.Collection;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 public interface DetectorSpecification {
 

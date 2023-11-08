@@ -27,7 +27,7 @@ package llnl.gnem.apps.detection.core.framework.detectors.subspace;
 
 import java.io.Serializable;
 import llnl.gnem.apps.detection.core.signalProcessing.RFFTdp;
-import llnl.gnem.core.signalprocessing.Sequence;
+import llnl.gnem.dftt.core.signalprocessing.Sequence;
 import java.util.ArrayList;
 
 /**

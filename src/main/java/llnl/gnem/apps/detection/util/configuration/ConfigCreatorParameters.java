@@ -23,13 +23,14 @@
  * THE SOFTWARE.
  * #L%
  */
-/*
+ /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
 package llnl.gnem.apps.detection.util.configuration;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,12 +44,12 @@ import org.apache.commons.cli.ParseException;
 
 import llnl.gnem.apps.detection.dataAccess.ApplicationRoleManager;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
-import llnl.gnem.core.dataAccess.DAOFactory;
-import llnl.gnem.core.dataAccess.SeismogramSourceInfo;
-import llnl.gnem.core.database.DbCommandLineParser;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.dataAccess.DAOFactory;
+import llnl.gnem.dftt.core.dataAccess.SeismogramSourceInfo;
+import llnl.gnem.dftt.core.database.DbCommandLineParser;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
 
 /**
  *
@@ -76,11 +77,12 @@ public class ConfigCreatorParameters {
     private int numThreads = 4;
     private double blockSizeSeconds = 400;
     private int decimationRate = 1;
-    private boolean spawnCorrelationDetectors = true;
+    private boolean spawnCorrelationDetectors = false;
     private DetectorType bootDetectorType = DetectorType.STALTA;
     private Double beamAzimuth = null;
     private Double beamVelocity = null;
-    private Collection<String> stations = new ArrayList<>();
+    private final Collection<String> stations = new ArrayList<>();
+    private String bulletinFileName = "bulletin.txt";
     private SeismogramSourceInfo seismogramSourceInfo = new SeismogramSourceInfo(); // defaults to use the DB
 
     public String getRefSta() {
@@ -207,9 +209,9 @@ public class ConfigCreatorParameters {
         options.addOption(configOption);
 
         Option stationCodesOption = new Option("s",
-                                               "StationList",
-                                               true,
-                                               "One or more station codes to use in creating this configuration. If more than 1 then separate with commas and no spaces e.g. -s sta1,sta2,sta3.");
+                "StationList",
+                true,
+                "One or more station codes to use in creating this configuration. If more than 1 then separate with commas and no spaces e.g. -s sta1,sta2,sta3.");
         stationCodesOption.setType(String.class);
         stationCodesOption.setRequired(false);
         options.addOption(stationCodesOption);
@@ -219,7 +221,7 @@ public class ConfigCreatorParameters {
         refstaOption.setRequired(false);
         options.addOption(refstaOption);
 
-        Option bootDetTypeOption = new Option("b", "BootDetectorType", true, "Type of boot detector to create. only ARRAYPOWER and STALTA are supported. (defaults to STALTA).");
+        Option bootDetTypeOption = new Option("b", "BootDetectorType", true, "Type of boot detector to create. only ARRAYPOWER, BULLETIN,  and STALTA are supported. (defaults to STALTA).");
         bootDetTypeOption.setType(String.class);
         bootDetTypeOption.setRequired(false);
         options.addOption(bootDetTypeOption);
@@ -299,10 +301,15 @@ public class ConfigCreatorParameters {
         decimationRateOption.setRequired(false);
         options.addOption(decimationRateOption);
 
+        Option bulletinFileNameOption = new Option("bull", "BulletinFile", true, "The name of the bulletin file. It will be created empty if it does not exist. Default = bulletin.txt");
+        bulletinFileNameOption.setType(String.class);
+        bulletinFileNameOption.setRequired(false);
+        options.addOption(bulletinFileNameOption);
+
         Option sourceIdentifierOption = new Option("I",
-                                                   "SourceIdentifier",
-                                                   true,
-                                                   "When source_type is CssDatabase this is the name of the continuous_wfdisc table. When source_type is FDSN this is the agency string. When source_type is Type2Database this field is ignored.");
+                "SourceIdentifier",
+                true,
+                "When source_type is CssDatabase this is the name of the continuous_wfdisc table. When source_type is FDSN this is the agency string. When source_type is Type2Database this field is ignored.");
         Option srcTypeOption = new Option("type", "SourceType", true, "Source type (one of CssDatabase, Type2Database, FDSN)");
         srcTypeOption.setRequired(false);
         sourceIdentifierOption.setRequired(false);
@@ -310,6 +317,10 @@ public class ConfigCreatorParameters {
         sourceIdentifierOption.setType(String.class);
         options.addOption(sourceIdentifierOption);
         options.addOption(srcTypeOption);
+
+        Option spawnSubspaceDetectorsOption = new Option("p", "SpawnSubspace", false, "When specified, the STREAM file will have the spawn option turned on.");
+        spawnSubspaceDetectorsOption.setRequired(false);
+        options.addOption(spawnSubspaceDetectorsOption);
 
         if (args.length == 0 || args[0].trim().isEmpty()) {
             printUsage(options);
@@ -353,13 +364,17 @@ public class ConfigCreatorParameters {
 
             if (tmp != null) {
                 bootDetectorType = DetectorType.valueOf(tmp);
-                if (bootDetectorType != DetectorType.ARRAYPOWER && bootDetectorType != DetectorType.STALTA) {
-                    System.err.println("Only ARRAYPOWER and STALTA are supported as boot detectors!");
+                if (bootDetectorType != DetectorType.ARRAYPOWER && bootDetectorType != DetectorType.STALTA && bootDetectorType != DetectorType.BULLETIN) {
+                    System.err.println("Only ARRAYPOWER, BULLETIN, and STALTA are supported as boot detectors!");
                     printUsage(options);
                     System.exit(1);
                 }
             } else {
                 bootDetectorType = DetectorType.STALTA;
+            }
+            tmp = cmd.hasOption(bulletinFileNameOption.getOpt()) ? cmd.getOptionValue(bulletinFileNameOption.getOpt()) : null;
+            if (tmp != null) {
+                this.bulletinFileName = tmp;
             }
 
             Number tmpInt = cmd.hasOption(minJdateOption.getOpt()) ? (Number) cmd.getParsedOptionValue(minJdateOption.getOpt()) : null;
@@ -458,10 +473,14 @@ public class ConfigCreatorParameters {
                 seismogramSourceInfo = new SeismogramSourceInfo(sourceType, tmp);
             }
 
-            if (isArrayBased() && (beamAzimuth == null || beamVelocity == null)) {
+            if (isArrayBased() && (beamAzimuth == null || beamVelocity == null) && bootDetectorType != DetectorType.BULLETIN) {
                 System.out.println("Array configurations must have both beam azimuth and velocity specified!");
                 printUsage(options);
                 System.exit(1);
+            }
+            spawnCorrelationDetectors = bootDetectorType != DetectorType.BULLETIN;
+            if (cmd.hasOption(spawnSubspaceDetectorsOption)) {
+                spawnCorrelationDetectors = true;
             }
 
         } catch (ParseException ex) {
@@ -480,6 +499,10 @@ public class ConfigCreatorParameters {
         TimeT time = TimeT.getTimeFromJulianDate(minDate);
         TimeT endTime = TimeT.getTimeFromJulianDate(maxDate);
         return new Epoch(time, endTime);
+    }
+
+    public File getBulletinFileName() {
+        return new File(bulletinFileName);
     }
 
     private static class ConfigCreatorParametersHolder {

@@ -30,7 +30,7 @@ import java.awt.event.KeyEvent;
 import javax.swing.AbstractAction;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.PhasePick;
 import llnl.gnem.apps.detection.sdBuilder.picking.DetectionPhasePickModel;
-import llnl.gnem.core.gui.util.Utility;
+import llnl.gnem.dftt.core.gui.util.Utility;
 
 public class RemoveSinglePickAction extends AbstractAction {
 

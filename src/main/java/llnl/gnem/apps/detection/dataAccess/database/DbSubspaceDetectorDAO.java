@@ -58,12 +58,12 @@ import llnl.gnem.apps.detection.statistics.HistogramData;
 import llnl.gnem.apps.detection.streams.ConcreteStreamProcessor;
 import llnl.gnem.apps.detection.util.RunInfo;
 import llnl.gnem.apps.detection.util.TimeStamp;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.dataAccess.dataObjects.ProgressMonitor;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.PairT;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.dataObjects.ProgressMonitor;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.PairT;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
 
 /**
  *
@@ -113,7 +113,7 @@ public abstract class DbSubspaceDetectorDAO implements SubspaceDetectorDAO {
      * @param monitor
      * @param creationInfo
      * @return
-     * @throws llnl.gnem.core.dataAccess.DataAccessException
+     * @throws llnl.gnem.dftt.core.dataAccess.DataAccessException
      */
     @Override
     public SubspaceDetector createAndSaveSubspaceDetector(ConcreteStreamProcessor processor, Collection<StreamSegment> eventSegments, double prepickSeconds, double correlationWindowLength,
@@ -169,7 +169,7 @@ public abstract class DbSubspaceDetectorDAO implements SubspaceDetectorDAO {
      *
      * @param processor
      * @return
-     * @throws llnl.gnem.core.dataAccess.DataAccessException
+     * @throws llnl.gnem.dftt.core.dataAccess.DataAccessException
      */
     @Override
     public Collection<? extends Detector> retrieveSubspaceDetectors(ConcreteStreamProcessor processor) throws DataAccessException {
@@ -192,7 +192,7 @@ public abstract class DbSubspaceDetectorDAO implements SubspaceDetectorDAO {
      * @param streamName
      * @param sampleRate
      * @return
-     * @throws llnl.gnem.core.dataAccess.DataAccessException
+     * @throws llnl.gnem.dftt.core.dataAccess.DataAccessException
      */
     @Override
     public Collection<Detector> buildFromExternalTemplate(DetectorSpecification spec, ConcreteStreamProcessor processor, Collection<Detector> ssDetectors) throws DataAccessException {

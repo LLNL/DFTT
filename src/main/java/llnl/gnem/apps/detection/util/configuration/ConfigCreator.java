@@ -37,13 +37,13 @@ import llnl.gnem.apps.detection.dataAccess.Util;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayConfiguration;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayElementInfo;
 import llnl.gnem.apps.detection.util.ArrayInfoModel;
-import llnl.gnem.core.dataAccess.DAOFactory;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.dataAccess.dataObjects.continuous.StreamAvailability;
+import llnl.gnem.dftt.core.dataAccess.DAOFactory;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.dataObjects.continuous.StreamAvailability;
 
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *
@@ -74,7 +74,7 @@ public class ConfigCreator {
         Collection<StreamKey> selectedChannels = chooseChannels(so.getMergedSegments());
 
 
-        File bulletinFile = null;
+ 
         new ConfigFileWriter(ConfigCreatorParameters.getInstance().getRefSta(),
                 ConfigCreatorParameters.getInstance().getConfigName(),
                 configDirectory,
@@ -91,7 +91,7 @@ public class ConfigCreator {
                 ConfigCreatorParameters.getInstance().getBootDetectorType(),
                 ConfigCreatorParameters.getInstance().getBeamAzimuth(),
                 ConfigCreatorParameters.getInstance().getBeamVelocity(),
-                bulletinFile,
+                ConfigCreatorParameters.getInstance().getBulletinFileName(),
                 ConfigCreatorParameters.getInstance().getSnrThreshold(),
                 ConfigCreatorParameters.getInstance().getMinEventDuration(),
                 ConfigCreatorParameters.getInstance().getBlockSizeSeconds(),

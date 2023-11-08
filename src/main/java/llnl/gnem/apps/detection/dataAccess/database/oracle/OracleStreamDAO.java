@@ -54,12 +54,12 @@ import llnl.gnem.apps.detection.dataAccess.database.TableNames;
 import llnl.gnem.apps.detection.util.initialization.BootDetectorParams;
 import llnl.gnem.apps.detection.util.initialization.StreamInfo;
 import llnl.gnem.apps.detection.util.initialization.StreamsConfig;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.dataAccess.database.oracle.OracleDBUtil;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.Passband;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.waveform.filter.StoredFilter;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.database.oracle.OracleDBUtil;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.Passband;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.waveform.filter.StoredFilter;
 import oracle.sql.BLOB;
 
 /**

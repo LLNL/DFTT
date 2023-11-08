@@ -28,8 +28,8 @@ package llnl.gnem.apps.detection.dataAccess.dataobjects;
 import java.util.Objects;
 
 import llnl.gnem.apps.detection.util.TimeStamp;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.TimeT;
 import net.jcip.annotations.ThreadSafe;
 
 /**

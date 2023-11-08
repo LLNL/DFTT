@@ -31,7 +31,7 @@ import javax.swing.SwingWorker;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
 
 /**
  *

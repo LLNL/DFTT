@@ -25,8 +25,8 @@
  */
 package llnl.gnem.apps.detection.dataAccess;
 
-import llnl.gnem.core.database.Role;
-import llnl.gnem.core.database.RoleManager;
+import llnl.gnem.dftt.core.database.Role;
+import llnl.gnem.dftt.core.database.RoleManager;
 
 import java.sql.Connection;
 import java.sql.SQLException;

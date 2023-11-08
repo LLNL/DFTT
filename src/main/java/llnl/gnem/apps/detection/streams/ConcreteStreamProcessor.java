@@ -73,16 +73,17 @@ import llnl.gnem.apps.detection.util.TimeStamp;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.SubstitutionReason;
 import llnl.gnem.apps.detection.util.initialization.ProcessingPrescription;
 import llnl.gnem.apps.detection.util.initialization.StreamsConfig;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.FileSystemException;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.FileSystemException;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
 import llnl.gnem.apps.detection.core.dataObjects.StreamSegment;
 import llnl.gnem.apps.detection.core.dataObjects.WaveformSegment;
+import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceTemplate;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.sdBuilder.histogramDisplay.HistogramModel;
 import llnl.gnem.apps.detection.util.RunInfo;
-import llnl.gnem.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
 
 /**
  * Created by dodge1 Date: Oct 1, 2010 COPYRIGHT NOTICE Copyright (C) 2007
@@ -107,7 +108,6 @@ public class ConcreteStreamProcessor implements StreamProcessor {
     private final Map<Integer, Collection<Detection>> rewindowCandidateMap;
 
     private long blocksProcessedCount = 0;
-    Collection<Detector> mfDetectors;
     private final double blackoutSeconds;
     private final DetectorReWindowProcessor reWindowProcessor;
 
@@ -136,7 +136,6 @@ public class ConcreteStreamProcessor implements StreamProcessor {
         modifiedDataWriter.initialize(ProcessingPrescription.getInstance().getModifiedTraceDirectory(),
                 ProcessingPrescription.getInstance().getModifiedTraceChannels());
 
-        mfDetectors = new ArrayList<>();
         blackoutSeconds = StreamsConfig.getInstance().getSubspaceBlackoutPeriod(streamName);
         reWindowProcessor = new DetectorReWindowProcessor(this);
     }
@@ -183,10 +182,10 @@ public class ConcreteStreamProcessor implements StreamProcessor {
         processBlock(transformed, block);
         ++blocksProcessedCount;
         if (blocksProcessedCount % StreamsConfig.getInstance().getStatsRefreshIntervalInBlocks(streamName) == 0) {
-            ApplicationLogger.getInstance().log(Level.INFO, "Writing detection histogram data...");
-            DetectionDAOFactory.getInstance().getSubspaceDetectorDAO().writeHistograms(getSubspaceDetectors());
-            ApplicationLogger.getInstance().log(Level.INFO, "Done writing detection histogram data.");
             if (StreamsConfig.getInstance().isUseDynamicThresholds(streamName)) {
+                ApplicationLogger.getInstance().log(Level.INFO, "Writing detection histogram data...");
+                DetectionDAOFactory.getInstance().getSubspaceDetectorDAO().writeHistograms(getSubspaceDetectors());
+                ApplicationLogger.getInstance().log(Level.INFO, "Done writing detection histogram data.");
                 ApplicationLogger.getInstance().log(Level.INFO, "Updating subspace detector thresholds...");
                 TimeT blockStart = block.getStartTime();
                 int runid = RunInfo.getInstance().getRunid();
@@ -283,30 +282,34 @@ public class ConcreteStreamProcessor implements StreamProcessor {
                     ApplicationLogger.getInstance().log(Level.INFO, detection.toString());
                 });
                 if (ProcessingPrescription.getInstance().isRewindowDetectors()) {
-                    Set<Integer> detectorsToRemove = new HashSet<>();
-                    for (Detection detection : detections) {
-                        Collection<Detection> candidateDetections = rewindowCandidateMap.get(detection.getDetectorid());
-                        if (candidateDetections != null) {
-                            candidateDetections.add(detection);
-                            if (candidateDetections.size() >= ProcessingPrescription.getInstance().getRewindowDetectionCountThreshold()) {
-                                SubspaceDetector newDetector = reWindowProcessor.rewindowOneDetector(detection.getDetectorid(), candidateDetections);
-                                if (newDetector != null) {
-                                    addDetector(newDetector);
-                                    detectorsToRemove.add(detection.getDetectorid());
-                                }
-                                rewindowCandidateMap.remove(detection.getDetectorid());
-                            }
-                        }
-                    }
-                    for (Integer detectorid : detectorsToRemove) {
-                        detectors.remove(detectorid);
-                        statisticScanner.removeDetector(detectorid);
-                    }
+                    rewindowSelectedDetectors(detections);
                 }
                 maybeSpawnNewdetectors(detections, compatibleStream);
             }
         } catch (Exception ex) {
             ApplicationLogger.getInstance().log(Level.WARNING, "Failed creating detections!", ex);
+        }
+    }
+
+    private void rewindowSelectedDetectors(Collection<Detection> detections) throws DataAccessException {
+        Set<Integer> detectorsToRemove = new HashSet<>();
+        for (Detection detection : detections) {
+            Collection<Detection> candidateDetections = rewindowCandidateMap.get(detection.getDetectorid());
+            if (candidateDetections != null) {
+                candidateDetections.add(detection);
+                if (candidateDetections.size() >= ProcessingPrescription.getInstance().getRewindowDetectionCountThreshold()) {
+                    SubspaceDetector newDetector = reWindowProcessor.rewindowOneDetector(detection.getDetectorid(), candidateDetections);
+                    if (newDetector != null) {
+                        addDetector(newDetector);
+                        detectorsToRemove.add(detection.getDetectorid());
+                    }
+                    rewindowCandidateMap.remove(detection.getDetectorid());
+                }
+            }
+        }
+        for (Integer detectorid : detectorsToRemove) {
+            detectors.remove(detectorid);
+            statisticScanner.removeDetector(detectorid);
         }
     }
 
@@ -381,6 +384,7 @@ public class ConcreteStreamProcessor implements StreamProcessor {
     private void maybeSpawnNewdetectors(Collection<Detection> detections, StreamSegment compatibleStream) throws Exception {
         detections.parallelStream().forEach(d -> maybeSpawnOneDetector(d, compatibleStream));
     }
+
 
     private void maybeSpawnOneDetector(Detection detection, StreamSegment compatibleStream) {
         Detector detector = getDetector(detection);

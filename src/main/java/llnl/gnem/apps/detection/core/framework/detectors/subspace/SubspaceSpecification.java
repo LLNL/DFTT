@@ -32,7 +32,7 @@ import java.util.Collection;
 import llnl.gnem.apps.detection.core.dataObjects.AbstractEmpiricalSpecification;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.core.dataObjects.TriggerPositionType;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 public class SubspaceSpecification extends AbstractEmpiricalSpecification {
 

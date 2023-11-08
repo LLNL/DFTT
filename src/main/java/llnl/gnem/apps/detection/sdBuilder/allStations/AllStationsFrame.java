@@ -27,7 +27,7 @@ package llnl.gnem.apps.detection.sdBuilder.allStations;
 
 import java.awt.BorderLayout;
 import javax.swing.JFrame;
-import llnl.gnem.core.gui.util.PersistentPositionContainer;
+import llnl.gnem.dftt.core.gui.util.PersistentPositionContainer;
 
 public class AllStationsFrame extends PersistentPositionContainer {
 
@@ -108,10 +108,6 @@ public class AllStationsFrame extends PersistentPositionContainer {
 
     public void savePicks() {
         viewer.savePicks();
-    }
-
-    public void defineEventWindow() {
-        viewer.defineEventWindow();
     }
 
 }

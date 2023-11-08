@@ -29,17 +29,16 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.PhasePick;
 import llnl.gnem.apps.detection.dataAccess.interfaces.PickDAO;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.dataAccess.database.oracle.OracleDBUtil;
-import llnl.gnem.core.database.Connections;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.database.oracle.OracleDBUtil;
+import llnl.gnem.dftt.core.database.Connections;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 public abstract class DbPickDAO implements PickDAO {
 
@@ -179,6 +178,17 @@ public abstract class DbPickDAO implements PickDAO {
                     stmt.execute();
                 }
             }
+//            sql = String.format("delete from %s where detectionid = ? and phase = ?",
+//                    TableNames.getPhasePickTable());
+//            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+//                for (PhasePick pp : picks) {
+//                    stmt.setInt(1, pp.getDetectionid());
+//                    stmt.setString(2, pp.getPhase());
+//                    stmt.execute();
+//                }
+//            }
+            
+
             sql = String.format("merge into %s a\n"
                     + "using (select ? pickid,\n"
                     + "              ? configid,\n"
@@ -239,7 +249,7 @@ public abstract class DbPickDAO implements PickDAO {
                     TableNames.getPhasePickTable(),
                     SequenceNames.getPickidSequenceName());
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                for (PhasePick dpp : picks) {
+                 for (PhasePick dpp : picks) {
                     int jdx = 1;
                     stmt.setInt(jdx++, dpp.getPickid());
                     stmt.setInt(jdx++, dpp.getConfigid());

@@ -31,8 +31,8 @@ import java.io.IOException;
 import java.util.logging.Level;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
 
 public class RunInfo {
 

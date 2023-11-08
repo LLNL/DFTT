@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,21 +25,42 @@
  */
 package llnl.gnem.apps.detection.sdBuilder;
 
-import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterViewer;
-import java.awt.*;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.prefs.Preferences;
-import javax.swing.*;
-import llnl.gnem.apps.detection.sdBuilder.actions.*;
-import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
-import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
+
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.JToolBar;
+
+import llnl.gnem.apps.detection.sdBuilder.actions.AdvanceAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.AutoScaleAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.ComputeCorrelationsAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.CreateSacfilesAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.ExitAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.ExportAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.FirstCorrelationAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.LastCorrelationAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.MagnifyAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.NextCorrelationAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.OpenHelpAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.OpenParamsDlgAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.PreviousCorrelationAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.PrintAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.ReduceAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.RefreshConfigurationsAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.RevertAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.ShowOrHideCorrelationWindowAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.UnzoomAllAction;
+import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterViewer;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
-import llnl.gnem.core.gui.filter.FilterToolbarControl;
-import llnl.gnem.core.gui.plotting.ZoomType;
-import llnl.gnem.core.gui.util.Utility;
-import llnl.gnem.core.gui.waveform.plotPrefs.OpenPlotPrefsDialogAction;
-import llnl.gnem.core.util.ButtonAction;
+import llnl.gnem.dftt.core.gui.filter.FilterToolbarControl;
+import llnl.gnem.dftt.core.gui.plotting.ZoomType;
+import llnl.gnem.dftt.core.gui.util.Utility;
+import llnl.gnem.dftt.core.gui.waveform.plotPrefs.OpenPlotPrefsDialogAction;
+import llnl.gnem.dftt.core.util.ButtonAction;
+import llnl.gnem.dftt.core.waveform.filter.StoredFilter;
 
 /**
  * Created by dodge1 Date: Feb 12, 2010 COPYRIGHT NOTICE Copyright (C) 2007
@@ -54,7 +75,6 @@ public class ClusterDlgToolbar extends JToolBar {
     private final FilterToolbarControl control;
 
     public ClusterDlgToolbar(ClusterViewer viewer) {
-        super();
         this.viewer = viewer;
         JButton button = new JButton(ExitAction.getInstance(this));
         addButton(button);
@@ -69,9 +89,6 @@ public class ClusterDlgToolbar extends JToolBar {
         button = new JButton(PrintAction.getInstance(this));
         addButton(button);
         this.addSeparator();
-
-        button = new JButton(CreateTemplateAction.getInstance(this));
-        addButton(button);
 
         button = new JButton(CreateSacfilesAction.getInstance(this));
         addButton(button);
@@ -98,46 +115,33 @@ public class ClusterDlgToolbar extends JToolBar {
         addButton(button);
 
         addSeparator();
-       
-        ImageIcon imageIcon = new ImageIcon(Utility.getIcon(this, "miscIcons/showerror16.gif").getImage().getScaledInstance(32, 32, Image.SCALE_DEFAULT));
-        JCheckBox showWindowCheck = new JCheckBox(imageIcon);
-        imageIcon = new ImageIcon(Utility.getIcon(this, "miscIcons/viewStack.gif").getImage().getScaledInstance(32, 32, Image.SCALE_DEFAULT));
-        showWindowCheck.setSelectedIcon(imageIcon);
-        boolean showCorrelationWindow = ParameterModel.getInstance().isShowCorrelationWindow();
-        showWindowCheck.setSelected(showCorrelationWindow);
-        showWindowCheck.addActionListener(new WindowCheckActionListener());
-        this.add(showWindowCheck);
+
+        button = new JButton(ShowOrHideCorrelationWindowAction.getInstance(this));
+        addButton(button);
 
         addSeparator();
 
         button = new JButton(AdvanceAction.getInstance(this));
         addButton(button);
         addSeparator();
-        
+
         control = new BuilderFilterContainer(CorrelatedTracesModel.getInstance()).getFilterToolbarControl();
         add(control);
 
         button = new JButton(ComputeCorrelationsAction.getInstance(this));
         addButton(button);
         addSeparator();
-        
 
+        button = new JButton(FirstCorrelationAction.getInstance(this));
+        addButton(button);
         button = new JButton(PreviousCorrelationAction.getInstance(this));
         addButton(button);
         button = new JButton(NextCorrelationAction.getInstance(this));
         addButton(button);
+        button = new JButton(LastCorrelationAction.getInstance(this));
+        addButton(button);
         addSeparator();
         button = new JButton(RevertAction.getInstance(this));
-        addButton(button);
-
-        addSeparator();
-        button = new JButton(DeleteAllPicksAction.getInstance(this));
-        addButton(button);
-        
-        button = new JButton(DeleteDisplayedDetectionsAction.getInstance(this));
-        addButton(button);
-        
-        button = new JButton(DisplayAllStationsStackAction.getInstance(this));
         addButton(button);
 
         JPanel spacer = new JPanel();
@@ -147,34 +151,19 @@ public class ClusterDlgToolbar extends JToolBar {
         add(ChannelCombo.getInstance());
         button = new JButton(OpenParamsDlgAction.getInstance(this));
         addButton(button);
+        button = new JButton(OpenHelpAction.getInstance(this));
+        addButton(button);
         button = new JButton(new OpenPlotPrefsDialogAction(this));
         addButton(button);
     }
 
     private void addButton(JButton button) {
         if (button.getIcon() != null) {
-            button.setText(""); //an icon-only button
+            button.setText(""); // an icon-only button
         }
         button.setPreferredSize(new Dimension(38, 36));
         button.setMaximumSize(new Dimension(38, 36));
         add(button);
-    }
-
-    private class WindowCheckActionListener implements ActionListener {
-
-        public WindowCheckActionListener() {
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            Object source = e.getSource();
-            if (source instanceof JCheckBox) {
-                JCheckBox jcb = (JCheckBox) source;
-                boolean selected = jcb.isSelected();
-                ParameterModel.getInstance().setShowCorrelationWindow(selected);
-                ClusterBuilderFrame.getInstance().setCorrelationWindowVisible(selected);
-            }
-        }
     }
 
     public class ZoomTypeState extends ButtonAction {
@@ -242,7 +231,21 @@ public class ClusterDlgToolbar extends JToolBar {
         viewer.setZoomType(zoomType);
     }
 
+    public void setSelectedFilter(StoredFilter selected) {
+        control.setSelectedFilter(selected);
+    }
+
     public void applyCurrentFilter() {
         control.applyCurrentFilter();
     }
+
+    public void unApplyFilter() {
+        control.unApplyFilter();
+    }
+    
+    public StoredFilter getCurrentFilter()
+    {
+        return control.getCurrentFilter();
+    }
+
 }

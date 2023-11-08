@@ -27,7 +27,7 @@ package llnl.gnem.apps.detection.sdBuilder.singleDetectionDisplay;
 
 import java.awt.BorderLayout;
 import javax.swing.JSplitPane;
-import llnl.gnem.core.gui.util.PersistentPositionContainer;
+import llnl.gnem.dftt.core.gui.util.PersistentPositionContainer;
 
 /**
  *

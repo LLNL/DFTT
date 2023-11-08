@@ -31,9 +31,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import llnl.gnem.apps.detection.triggerProcessing.SeismogramFeatures.FeatureType;
-import llnl.gnem.core.util.PairT;
-import llnl.gnem.core.util.SeriesMath;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.PairT;
+import llnl.gnem.dftt.core.util.SeriesMath;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *

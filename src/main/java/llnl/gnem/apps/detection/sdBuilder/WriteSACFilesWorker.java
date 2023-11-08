@@ -34,16 +34,16 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
 
-import llnl.gnem.core.correlation.*;
-import llnl.gnem.core.gui.plotting.Limits;
-import llnl.gnem.core.gui.util.ExceptionDialog;
-import llnl.gnem.core.gui.util.ProgressDialog;
-import llnl.gnem.core.io.SAC.SACFile;
-import llnl.gnem.core.io.SAC.SACHeader;
-import llnl.gnem.core.signalprocessing.Sequence;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.FileSystemException;
-import llnl.gnem.core.waveform.seismogram.CssSeismogram;
+import llnl.gnem.dftt.core.correlation.*;
+import llnl.gnem.dftt.core.gui.plotting.Limits;
+import llnl.gnem.dftt.core.gui.util.ExceptionDialog;
+import llnl.gnem.dftt.core.gui.util.ProgressDialog;
+import llnl.gnem.dftt.core.io.SAC.SACFile;
+import llnl.gnem.dftt.core.io.SAC.SACHeader;
+import llnl.gnem.dftt.core.signalprocessing.Sequence;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.FileSystemException;
+import llnl.gnem.dftt.core.waveform.seismogram.CssSeismogram;
 import llnl.gnem.apps.detection.core.dataObjects.WaveformSegment;
 
 /**
@@ -141,7 +141,7 @@ public class WriteSACFilesWorker extends SwingWorker<Void, Void> {
     private void writeSacFile(int detectionid, WaveformSegment data, File detectorDir, double shift, double correlation) throws FileSystemException {
         WaveformSegment waveformSegment = data;
         SACHeader header = new SACHeader();
-        header.setTime(new llnl.gnem.core.util.TimeT(waveformSegment.getTimeAsDouble()));
+        header.setTime(new llnl.gnem.dftt.core.util.TimeT(waveformSegment.getTimeAsDouble()));
         header.b = 0;
         header.delta = (float) (1.0 / data.getSamprate());
         header.kstnm = waveformSegment.getSta();

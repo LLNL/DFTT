@@ -27,7 +27,7 @@ package llnl.gnem.apps.detection.triggerProcessing;
 
 import llnl.gnem.apps.detection.core.framework.detectors.DetectorInfo;
 import llnl.gnem.apps.detection.util.TimeStamp;
-import llnl.gnem.core.util.Epoch;
+import llnl.gnem.dftt.core.util.Epoch;
 import llnl.gnem.apps.detection.core.dataObjects.StreamSegment;
 
 /**

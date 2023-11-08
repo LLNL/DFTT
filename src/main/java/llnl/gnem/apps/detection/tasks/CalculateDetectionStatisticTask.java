@@ -31,7 +31,7 @@ import llnl.gnem.apps.detection.core.dataObjects.TransformedStreamSegment;
 import llnl.gnem.apps.detection.core.framework.DetectionStatistic;
 import llnl.gnem.apps.detection.core.framework.detectors.Detector;
 import llnl.gnem.apps.detection.core.framework.detectors.DetectorInfo;
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
 
 /**
  *

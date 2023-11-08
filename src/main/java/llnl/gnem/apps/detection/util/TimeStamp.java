@@ -248,23 +248,6 @@ public class TimeStamp implements Comparable<TimeStamp> {
         return altFormat.format(new Date(epochMilliseconds));
     }
 
-    public static void main(String[] args) {
-
-        TimeStamp T = new TimeStamp(1970, 1, 0, 0, 0, 203);
-        System.out.println(T.epochAsLong());
-        System.out.println(T.epochAsDouble());
-        T = new TimeStamp(1970, 1, 1, 0, 0, 203);
-        System.out.println(T.epochAsLong());
-        System.out.println(T.epochAsDouble());
-        T.plus(86400);
-        System.out.println(T.epochAsLong());
-        System.out.println(T.epochAsDouble());
-
-        System.out.println(T.toString());
-        System.out.println(T.getYear() + "  " + T.getJDay() + "  " + T.getHour() + "  " + T.getMin() + "  " + T.getSec() + "  " + T.getMsec());
-        System.out.println(T.getDirectoryName());
-    }
-
     @Override
     public int compareTo(TimeStamp T) {
 

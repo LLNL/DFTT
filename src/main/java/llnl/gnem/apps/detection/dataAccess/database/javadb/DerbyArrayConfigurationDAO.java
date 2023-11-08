@@ -33,7 +33,7 @@ package llnl.gnem.apps.detection.dataAccess.database.javadb;
 import java.util.Collection;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayElementInfo;
 import llnl.gnem.apps.detection.dataAccess.interfaces.ArrayConfigurationDAO;
-import llnl.gnem.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
 
 /**
  *

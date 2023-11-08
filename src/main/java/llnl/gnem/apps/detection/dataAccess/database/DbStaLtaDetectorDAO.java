@@ -45,8 +45,8 @@ import llnl.gnem.apps.detection.dataAccess.interfaces.StaLtaDetectorDAO;
 
 import llnl.gnem.apps.detection.streams.ConcreteStreamProcessor;
 import llnl.gnem.apps.detection.util.PowerDetThreshold;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *

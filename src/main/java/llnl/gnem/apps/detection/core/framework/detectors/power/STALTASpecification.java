@@ -37,7 +37,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
 
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 
 public class STALTASpecification extends AbstractSpecification implements Serializable{

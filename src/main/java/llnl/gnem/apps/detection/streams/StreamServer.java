@@ -36,10 +36,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
 import llnl.gnem.apps.detection.core.dataObjects.WaveformSegment;
 
 /**

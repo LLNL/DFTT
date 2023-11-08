@@ -42,15 +42,15 @@ import llnl.gnem.apps.detection.dataAccess.dataobjects.OriginInfo;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.PhasePick;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.ShortDetectionSummary;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
-import llnl.gnem.core.dataAccess.DAOFactory;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.gui.util.ExceptionDialog;
-import llnl.gnem.core.gui.util.ProgressDialog;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
-import llnl.gnem.core.waveform.seismogram.CssSeismogram;
+import llnl.gnem.dftt.core.dataAccess.DAOFactory;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.gui.util.ExceptionDialog;
+import llnl.gnem.dftt.core.gui.util.ProgressDialog;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
+import llnl.gnem.dftt.core.waveform.seismogram.CssSeismogram;
 
 /**
  * Created by dodge1 Date: Feb 12, 2012 COPYRIGHT NOTICE Copyright (C) 2007
@@ -89,7 +89,7 @@ public class GetStationTimeDataWorker extends SwingWorker<Void, Void> {
             ProgressDialog.getInstance().setText("Retrieving origins...");
             origins.addAll(DetectionDAOFactory.getInstance().getOriginDAO().getOriginsInTimeWindow(timeWindow));
             ProgressDialog.getInstance().setText("Retrieving events...");
-            events.addAll(DetectionDAOFactory.getInstance().getEventDAO().getEventsInTimeWindow(timeWindow));
+      //      events.addAll(DetectionDAOFactory.getInstance().getEventDAO().getEventsInTimeWindow(timeWindow));
             ProgressDialog.getInstance().setText("Retrieving station list...");
             Collection<StationInfo> evstaInfo = DetectionDAOFactory.getInstance().getStationDAO().getGroupStations(groupid);
             ProgressDialog.getInstance().setProgressBarIndeterminate(false);

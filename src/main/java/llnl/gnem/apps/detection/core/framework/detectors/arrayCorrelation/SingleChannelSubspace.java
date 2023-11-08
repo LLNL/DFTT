@@ -28,7 +28,7 @@ package llnl.gnem.apps.detection.core.framework.detectors.arrayCorrelation;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SingleChannelCorrelator;
 import llnl.gnem.apps.detection.core.signalProcessing.OverlapAdd_dp;
 import llnl.gnem.apps.detection.core.signalProcessing.RFFTdp;
-import llnl.gnem.core.signalprocessing.Sequence;
+import llnl.gnem.dftt.core.signalprocessing.Sequence;
 import java.util.ArrayList;
 import java.util.Arrays;
 

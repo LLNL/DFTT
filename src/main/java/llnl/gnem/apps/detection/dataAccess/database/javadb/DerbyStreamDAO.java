@@ -33,10 +33,10 @@ package llnl.gnem.apps.detection.dataAccess.database.javadb;
 import java.util.ArrayList;
 import java.util.Collection;
 import llnl.gnem.apps.detection.dataAccess.database.DbStreamDAO;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.waveform.filter.StoredFilter;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.waveform.filter.StoredFilter;
 
 /**
  *

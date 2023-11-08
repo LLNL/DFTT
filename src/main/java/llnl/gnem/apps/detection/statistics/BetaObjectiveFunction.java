@@ -25,7 +25,7 @@
  */
 package llnl.gnem.apps.detection.statistics;
 
-import llnl.gnem.core.optimization.ObjectiveFunction;
+import llnl.gnem.dftt.core.optimization.ObjectiveFunction;
 import org.apache.commons.math3.distribution.BetaDistribution;
 
 /**

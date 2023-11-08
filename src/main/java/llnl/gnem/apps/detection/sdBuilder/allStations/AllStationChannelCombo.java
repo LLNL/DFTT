@@ -28,7 +28,7 @@ package llnl.gnem.apps.detection.sdBuilder.allStations;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JComboBox;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 public class AllStationChannelCombo extends JComboBox {
 

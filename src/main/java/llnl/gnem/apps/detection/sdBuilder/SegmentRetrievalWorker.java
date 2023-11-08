@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,17 +25,9 @@
  */
 package llnl.gnem.apps.detection.sdBuilder;
 
-import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
-import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
-import llnl.gnem.core.waveform.responseProcessing.WaveformDataType;
-import llnl.gnem.core.waveform.responseProcessing.WaveformDataUnits;
-import llnl.gnem.apps.detection.core.dataObjects.WaveformSegment;
-import llnl.gnem.core.waveform.seismogram.CssSeismogram;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -44,42 +36,46 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
+
 import llnl.gnem.apps.detection.ConfigurationInfo;
 import llnl.gnem.apps.detection.classify.TriggerClassification;
 import llnl.gnem.apps.detection.core.dataObjects.DetectionObjects;
+import llnl.gnem.apps.detection.core.dataObjects.WaveformSegment;
 import llnl.gnem.apps.detection.core.framework.detectors.EmpiricalTemplate;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceTemplate;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayConfiguration;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayElementInfo;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.PhasePick;
-
 import llnl.gnem.apps.detection.sdBuilder.actions.AdvanceAction;
-
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
 import llnl.gnem.apps.detection.sdBuilder.histogramDisplay.HistogramModel;
 import llnl.gnem.apps.detection.sdBuilder.picking.PredictedPhasePick;
 import llnl.gnem.apps.detection.sdBuilder.singleDetectionDisplay.SingleDetectionModel;
 import llnl.gnem.apps.detection.sdBuilder.templateDisplay.TemplateModel;
 import llnl.gnem.apps.detection.sdBuilder.templateDisplay.projections.ProjectionModel;
-
+import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
+import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
 import llnl.gnem.apps.detection.source.SourceData;
 import llnl.gnem.apps.detection.util.ArrayInfoModel;
 import llnl.gnem.apps.detection.util.FrameworkRun;
-import llnl.gnem.core.correlation.CorrelationComponent;
-import llnl.gnem.core.correlation.CorrelationEventInfo;
-import llnl.gnem.core.correlation.CorrelationTraceData;
-import llnl.gnem.core.correlation.util.NominalArrival;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.gui.util.ProgressDialog;
-import llnl.gnem.core.seismicData.EventInfo;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.PairT;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.correlation.CorrelationComponent;
+import llnl.gnem.dftt.core.correlation.CorrelationEventInfo;
+import llnl.gnem.dftt.core.correlation.CorrelationTraceData;
+import llnl.gnem.dftt.core.correlation.util.NominalArrival;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.gui.util.ProgressDialog;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.PairT;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
+import llnl.gnem.dftt.core.waveform.responseProcessing.WaveformDataType;
+import llnl.gnem.dftt.core.waveform.responseProcessing.WaveformDataUnits;
+import llnl.gnem.dftt.core.waveform.seismogram.CssSeismogram;
 
 /**
  *
@@ -106,7 +102,8 @@ public class SegmentRetrievalWorker extends SwingWorker<Void, Void> {
     private int rowsRetrieved;
     private final int configid;
 
-    public SegmentRetrievalWorker(int runid, int detectorid, SourceData source, double preTrigSeconds, double duration, FrameworkRun runInfo) {
+    public SegmentRetrievalWorker(int runid, int detectorid, SourceData source, double preTrigSeconds, double duration,
+            FrameworkRun runInfo) {
         this.runid = runid;
         this.detectorid = detectorid;
         this.source = source;
@@ -132,39 +129,50 @@ public class SegmentRetrievalWorker extends SwingWorker<Void, Void> {
     @Override
     protected Void doInBackground() throws Exception {
 
+        ProgressDialog.getInstance().setText("Determining waveform availability...");
         ConfigurationInfo.getInstance().setCurrentConfigurationData(runInfo.getConfigid());
 
         if (duration <= 0) {
-            duration = preTrigSeconds + 1.5 * DetectionDAOFactory.getInstance().getTriggerDAO().getMeanDuration(runid, detectorid);
+            duration = preTrigSeconds
+                    + 1.5 * DetectionDAOFactory.getInstance().getTriggerDAO().getMeanDuration(runid, detectorid);
         }
 
-        DetectionObjects detObjs = DetectionDAOFactory.getInstance().getDetectionDAO().getDetectionObjects(runid, detectorid, retrieveByBlocks, blockSize, lastRetrievedDetectionId);
+        ProgressDialog.getInstance().setText("Retrieving detection list.");
+        DetectionObjects detObjs = DetectionDAOFactory.getInstance().getDetectionDAO().getDetectionObjects(runid,
+                detectorid, retrieveByBlocks, blockSize, lastRetrievedDetectionId);
         lastRetrievedDetectionId = detObjs.getMaxDetectionId();
         rowsRetrieved = detObjs.getRowsRetrieved();
         triggerClassificationMap.putAll(detObjs.getTriggerClassificationMap());
 
-        detectionPhasePicks.addAll(DetectionDAOFactory.getInstance().getPickDAO().getDetectionPhasePicks(runid, detectorid));
-        predictedPhasePicks.addAll(DetectionDAOFactory.getInstance().getPredictedPhasePickDAO().getPredictedPicks(runid, detectorid));
-        Collection<PhasePick> allPicks = new ArrayList<>();//DetectionDAOFactory.getInstance().getPickDAO().getAllPicks(configid);
-        if (detObjs.getU().size() > 0) {
+        detectionPhasePicks
+                .addAll(DetectionDAOFactory.getInstance().getPickDAO().getDetectionPhasePicks(runid, detectorid));
+        predictedPhasePicks.addAll(
+                DetectionDAOFactory.getInstance().getPredictedPhasePickDAO().getPredictedPicks(runid, detectorid));
+        Collection<PhasePick> allPicks = new ArrayList<>();
+        if (!detObjs.getU().isEmpty()) {
             ProgressDialog.getInstance().setProgressBarIndeterminate(false);
             ProgressDialog.getInstance().setMinMax(0, detObjs.getDetTimes().size());
             ProgressDialog.getInstance().setValue(0);
             AtomicInteger successes = new AtomicInteger(0);
             AtomicInteger failures = new AtomicInteger(0);
             AtomicInteger processedCount = new AtomicInteger(0);
-            List<DetectionWaveforms> results = detObjs.getDetTimes().parallelStream().map(t -> getDetectionWaveforms(t, allPicks, successes, failures, processedCount)).filter(Objects::nonNull).collect(Collectors.toList());
+            List<DetectionWaveforms> results = detObjs.getDetTimes().parallelStream()
+                    .map(t -> getDetectionWaveforms(t, allPicks, successes, failures, processedCount))
+                    .filter(Objects::nonNull).collect(Collectors.toList());
             successCount = successes.get();
             failedCount = failures.get();
             retrieved.addAll(results);
-            correlationWindowLength = DetectionDAOFactory.getInstance().getTriggerDAO().getAverageSignalDuration(runid, detectorid);
+            correlationWindowLength = DetectionDAOFactory.getInstance().getTriggerDAO().getAverageSignalDuration(runid,
+                    detectorid);
             try {
-                EmpiricalTemplate etemplate = DetectionDAOFactory.getInstance().getSubspaceTemplateDAO().getEmpiricalTemplate(detectorid);
+                EmpiricalTemplate etemplate = DetectionDAOFactory.getInstance().getSubspaceTemplateDAO()
+                        .getEmpiricalTemplate(detectorid);
                 float[][] data = null;
 
                 SubspaceTemplate template = (SubspaceTemplate) etemplate;
                 data = template.getRepresentation().get(0);
-                double rate = etemplate.getProcessingParameters().samplingRate / etemplate.getProcessingParameters().decrate;
+                double rate = etemplate.getProcessingParameters().samplingRate
+                        / etemplate.getProcessingParameters().decrate;
                 correlationWindowLength = (int) (data[0].length / rate);
             } catch (Exception ex) {
                 //
@@ -176,7 +184,8 @@ public class SegmentRetrievalWorker extends SwingWorker<Void, Void> {
 
     }
 
-    private DetectionWaveforms getDetectionWaveforms(PairT<Integer, Double> pair, Collection<PhasePick> allPicks, AtomicInteger successes, AtomicInteger failures, AtomicInteger processedCount) {
+    private DetectionWaveforms getDetectionWaveforms(PairT<Integer, Double> pair, Collection<PhasePick> allPicks,
+            AtomicInteger successes, AtomicInteger failures, AtomicInteger processedCount) {
         int detectionid = pair.getFirst();
         ProgressDialog.getInstance().setText("Processing detectionid: " + detectionid);
         double time = pair.getSecond();
@@ -191,7 +200,8 @@ public class SegmentRetrievalWorker extends SwingWorker<Void, Void> {
         }
         boolean segmentsAreSameLength = segmentLengthsAgree(results);
         if (segmentsAreSameLength) {
-            Collection<CorrelationComponent> components = buildCorrelationComponentCollection(detectionid, time, results, 1);
+            Collection<CorrelationComponent> components = buildCorrelationComponentCollection(detectionid, time,
+                    results, 1);
             if (components.size() == results.size()) {
                 Epoch epoch = new Epoch(time - preTrigSeconds, time - preTrigSeconds + duration);
                 try {
@@ -210,7 +220,8 @@ public class SegmentRetrievalWorker extends SwingWorker<Void, Void> {
                 return null;
             }
         } else {
-            ProgressDialog.getInstance().setText(String.format("Skipping detectionid: %d because not all segements are same length.", detectionid));
+            ProgressDialog.getInstance().setText(
+                    String.format("Skipping detectionid: %d because not all segements are same length.", detectionid));
             failures.incrementAndGet();
             ProgressDialog.getInstance().setValue(processedCount.incrementAndGet());
             return null;
@@ -218,11 +229,10 @@ public class SegmentRetrievalWorker extends SwingWorker<Void, Void> {
 
     }
 
-    private Collection<PhasePick> getNonDetectionPhasePicks(Epoch epoch, int detectionid, Collection<PhasePick> allPicks) throws DataAccessException {
+    private Collection<PhasePick> getNonDetectionPhasePicks(Epoch epoch, int detectionid,
+            Collection<PhasePick> allPicks) throws DataAccessException {
         Collection<PhasePick> result = new ArrayList<>();
-        Iterator<PhasePick> it = allPicks.iterator();
-        while (it.hasNext()) {
-            PhasePick pick = it.next();
+        for (PhasePick pick : allPicks) {
             if (!epoch.ContainsTime(new TimeT(pick.getTime()))) {
                 continue;
             } else if (pick.getDetectionid() != null && pick.getDetectionid() == detectionid) {
@@ -275,7 +285,8 @@ public class SegmentRetrievalWorker extends SwingWorker<Void, Void> {
             CorrelatedTracesModel.getInstance().setRunid(runid);
             CorrelatedTracesModel.getInstance().setConfigid(configid);
             if (failedCount > 0) {
-                String msg = String.format("%d detections were retrieved.\n%d were rejected because of missing data.", successCount, failedCount);
+                String msg = String.format("%d detections were retrieved.\n%d were rejected because of missing data.",
+                        successCount, failedCount);
                 JOptionPane.showMessageDialog(ClusterBuilderFrame.getInstance(), msg);
 
             }
@@ -299,7 +310,8 @@ public class SegmentRetrievalWorker extends SwingWorker<Void, Void> {
         NominalArrival arrival = new NominalArrival("DET", time);
         for (WaveformSegment ws : results) {
             ArrayElementInfo aei = keyElementMap.get(ws.getStreamKey());
-            CssSeismogram seis = new CssSeismogram(wfid++, ws.getStreamKey(), ws.getData(), ws.getSamprate(), new TimeT(ws.getTimeAsDouble()), 1.0, -1.0);
+            CssSeismogram seis = new CssSeismogram(wfid++, ws.getStreamKey(), ws.getData(), ws.getSamprate(),
+                    new TimeT(ws.getTimeAsDouble()), 1.0, -1.0);
             if (runInfo.isRawRateFixed() && runInfo.getFixedRawSampleRate() != seis.getSamprate()) {
                 seis.resample(runInfo.getFixedRawSampleRate());
             }

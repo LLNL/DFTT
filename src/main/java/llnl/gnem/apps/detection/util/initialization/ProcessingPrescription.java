@@ -42,11 +42,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import llnl.gnem.apps.detection.dataAccess.Util;
-import llnl.gnem.core.dataAccess.SeismogramSourceInfo;
+import llnl.gnem.dftt.core.dataAccess.SeismogramSourceInfo;
 
-import llnl.gnem.core.util.FileInputArrayLoader;
-import llnl.gnem.core.util.FileUtil.DriveMapper;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.FileInputArrayLoader;
+import llnl.gnem.dftt.core.util.FileUtil.DriveMapper;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  * Created by dodge1 Date: Sep 30, 2010 COPYRIGHT NOTICE Copyright (C) 2007

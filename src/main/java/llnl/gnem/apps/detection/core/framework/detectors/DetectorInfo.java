@@ -39,7 +39,7 @@ import llnl.gnem.apps.detection.core.dataObjects.TriggerPositionType;
 import llnl.gnem.apps.detection.core.framework.detectors.array.FKScreenConfiguration;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayConfiguration;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayElementInfo;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *

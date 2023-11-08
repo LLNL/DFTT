@@ -35,9 +35,9 @@ import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.Trigger;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.Epoch;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.Epoch;
 
 /**
  * Created by dodge1 Date: Sep 27, 2010 COPYRIGHT NOTICE Copyright (C) 2007
@@ -205,9 +205,10 @@ public class TriggerManager {
         overlapped.remove(survivor);
         for (Trigger trigger : overlapped) {
             DetectionDAOFactory.getInstance().getTriggerDAO().markAsCoincident(trigger);
-            String msg = String.format("Trigger (%s) was rejected as coincident in TriggerManager:chooseSurvivor.",
-                    trigger.toString());
-            ApplicationLogger.getInstance().log(Level.FINE, String.format(msg));
+            Epoch intersection = survivor.getEpoch().intersection(trigger.getEpoch());
+            String msg = String.format("Trigger (%s) was rejected as coincident in TriggerManager:chooseSurvivor. Overlaps with %d for %f seconds",
+                    trigger.toString(), survivor.getTriggerid(),intersection.duration());
+            ApplicationLogger.getInstance().log(Level.INFO, String.format(msg));
 
         }
         overlapped.clear();

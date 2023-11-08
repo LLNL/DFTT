@@ -31,7 +31,7 @@ import llnl.gnem.apps.detection.util.RunInfo;
 
 
 import java.io.File;
-import llnl.gnem.core.util.FileSystemException;
+import llnl.gnem.dftt.core.util.FileSystemException;
 
 /**
  * Created by dodge1

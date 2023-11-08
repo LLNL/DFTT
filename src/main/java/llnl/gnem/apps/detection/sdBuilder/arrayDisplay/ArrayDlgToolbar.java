@@ -38,9 +38,9 @@ import llnl.gnem.apps.detection.sdBuilder.arrayDisplay.actions.MakeFKMeasurement
 import llnl.gnem.apps.detection.sdBuilder.arrayDisplay.actions.PrintAction;
 import llnl.gnem.apps.detection.sdBuilder.arrayDisplay.actions.ReduceAction;
 import llnl.gnem.apps.detection.sdBuilder.arrayDisplay.actions.UnzoomAllAction;
-import llnl.gnem.core.gui.plotting.ZoomType;
-import llnl.gnem.core.gui.util.Utility;
-import llnl.gnem.core.util.ButtonAction;
+import llnl.gnem.dftt.core.gui.plotting.ZoomType;
+import llnl.gnem.dftt.core.gui.util.Utility;
+import llnl.gnem.dftt.core.util.ButtonAction;
 
 /**
  * Created by dodge1 Date: Feb 12, 2010 COPYRIGHT NOTICE Copyright (C) 2007

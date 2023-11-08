@@ -45,11 +45,11 @@ import java.util.StringTokenizer;
 import java.util.logging.Level;
 
 import llnl.gnem.apps.detection.core.framework.detectors.bulletin.BulletinSpecification;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.FileInputArrayLoader;
-import llnl.gnem.core.util.FileUtil.DriveMapper;
-import llnl.gnem.core.util.PairT;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.FileInputArrayLoader;
+import llnl.gnem.dftt.core.util.FileUtil.DriveMapper;
+import llnl.gnem.dftt.core.util.PairT;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *
@@ -87,7 +87,8 @@ public class StreamInfo {
 
     private boolean useDynamicThresholds;
     private int statsRefreshIntervalInBlocks;
-
+    private double minComputedThreshold;
+    private double maxComputedThreshold;
 
     public Collection<StreamKey> getChannels() {
         return new ArrayList<>(channels);
@@ -140,9 +141,12 @@ public class StreamInfo {
         snrThreshold = Double.parseDouble(propertyList.getProperty("SnrThreshold", "2.0").trim());
         minEventDuration = Double.parseDouble(propertyList.getProperty("MinEventDuration", "10.0").trim());
         useConfigFileThreshold = Boolean.parseBoolean(propertyList.getProperty("UseConfigFileThreshold", "true").trim());
-         useDynamicThresholds = Boolean.parseBoolean(propertyList.getProperty("UseDynamicThresholds", "false").trim());
+        useDynamicThresholds = Boolean.parseBoolean(propertyList.getProperty("UseDynamicThresholds", "false").trim());
+        
+        minComputedThreshold = Double.parseDouble(propertyList.getProperty("MinComputedThreshold", "0.05").trim());
+        maxComputedThreshold = Double.parseDouble(propertyList.getProperty("MaxComputedThreshold", "0.65").trim());
 
-         boolean screenPowerTriggers = Boolean.parseBoolean(propertyList.getProperty("FKScreenPowerTriggers", "false").trim());
+        boolean screenPowerTriggers = Boolean.parseBoolean(propertyList.getProperty("FKScreenPowerTriggers", "false").trim());
         boolean computeFKParams = Boolean.parseBoolean(propertyList.getProperty("ComputeAndSaveFKParams", "false").trim());
         boolean requireMinimumVelocity = Boolean.parseBoolean(propertyList.getProperty("RequireMinimumVelocity", "false").trim());
         boolean requireMaximumVelocity = Boolean.parseBoolean(propertyList.getProperty("RequireMaximumVelocity", "false").trim());
@@ -208,6 +212,14 @@ public class StreamInfo {
         return triggerOnlyOnCorrelators;
     }
 
+    public double getMinComputedThreshold() {
+        return minComputedThreshold;
+    }
+
+    public double getMaxComputedThreshold() {
+        return maxComputedThreshold;
+    }
+
     private Properties getPropertyList(String filename) throws IOException {
 
         Properties propertyList = new Properties();
@@ -249,7 +261,7 @@ public class StreamInfo {
                     break;
                 case 5:
                     //AGENCY-net-sta-chan-locid
-                    result.add(new StreamKey(tokens[0], tokens[1], tokens[2], tokens[3],tokens[4]));
+                    result.add(new StreamKey(tokens[0], tokens[1], tokens[2], tokens[3], tokens[4]));
                     break;
                 default:
                     break;
@@ -435,7 +447,6 @@ public class StreamInfo {
     public int getDecimatedBlockSize() {
         return decimatedBlockSize;
     }
-
 
     boolean isUseDynamicThresholds() {
         return useDynamicThresholds;

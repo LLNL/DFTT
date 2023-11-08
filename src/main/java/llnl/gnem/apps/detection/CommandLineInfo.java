@@ -43,10 +43,10 @@ import llnl.gnem.apps.detection.util.DetectoridRestriction;
 import llnl.gnem.apps.detection.util.PowerDetThreshold;
 import llnl.gnem.apps.detection.util.SubspaceThreshold;
 import llnl.gnem.apps.detection.util.initialization.ProcessingPrescription;
-import llnl.gnem.core.dataAccess.DAOFactory;
-import llnl.gnem.core.dataAccess.SeismogramSourceInfo;
-import llnl.gnem.core.database.DbCommandLineParser;
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.dataAccess.DAOFactory;
+import llnl.gnem.dftt.core.dataAccess.SeismogramSourceInfo;
+import llnl.gnem.dftt.core.database.DbCommandLineParser;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
 
 /**
  *
@@ -62,6 +62,7 @@ public class CommandLineInfo {
 
     private boolean scaleByCalib;
     private Integer runidToResume = null;
+    private Integer resumeJdate = null;
     private boolean ignoreDetectorClassification = false;
 
     private CommandLineInfo() {
@@ -69,6 +70,10 @@ public class CommandLineInfo {
     
     public static CommandLineInfo getInstance() {
         return CommandLineInfoHolder.INSTANCE;
+    }
+
+    public Integer getResumeJdate() {
+        return resumeJdate;
     }
     
     private static class CommandLineInfoHolder {
@@ -130,6 +135,10 @@ public class CommandLineInfo {
 
         Option detectoridFileOption = new Option("d", "DetectoridFile", true, "Name of text file containing DETECTORID values. Only these detectors will be loaded.");
         Option resumeRunOption = new Option("r", "ResumeRun", true, "the runid of the run to resume. If exists and is compatible with configuration,execution will resume on day of last trigger.");
+        Option resumeJdateOption = new Option("rd", "ResumeDate", true, "If specified and if the -r option was specified, then processing resumes on this date.");
+ 
+        
+        
         Option ignoreClassOption = new Option("i",
                                               "Ignore",
                                               false,
@@ -149,6 +158,7 @@ public class CommandLineInfo {
         ignoreClassOption.setRequired(false);
         replaceBulletinDetectorOption.setRequired(false);
         targetStreamidOption.setRequired(false);
+        resumeJdateOption.setRequired(false);
 
         ssThreshOption.setType(Number.class);
         pdThreshOption.setType(Number.class);
@@ -159,6 +169,7 @@ public class CommandLineInfo {
         targetStreamidOption.setType(Number.class);
         srcTypeOption.setType(String.class);
         sourceIdentifierOption.setType(String.class);
+        resumeJdateOption.setType(Number.class);
 
         options.addOption(help);
 
@@ -175,6 +186,7 @@ public class CommandLineInfo {
         options.addOption(ignoreClassOption);
         options.addOption(replaceBulletinDetectorOption);
         options.addOption(targetStreamidOption);
+        options.addOption(resumeJdateOption);
 
         if (args.length == 0 || args[0].trim().isEmpty()) {
             printUsage(options);
@@ -216,6 +228,11 @@ public class CommandLineInfo {
             if (cmd.hasOption(resumeRunOption.getOpt())) {
                 runidToResume = ((Number) cmd.getParsedOptionValue(resumeRunOption.getOpt())).intValue();
             }
+            
+            if (cmd.hasOption(resumeJdateOption.getOpt()) && runidToResume != null) {
+                resumeJdate = ((Number) cmd.getParsedOptionValue(resumeJdateOption.getOpt())).intValue();
+            }
+            
 
             if (cmd.hasOption(replaceBulletinDetectorOption.getOpt())) {
                 ProcessingPrescription.getInstance().setReplaceBulletinDetector(true);

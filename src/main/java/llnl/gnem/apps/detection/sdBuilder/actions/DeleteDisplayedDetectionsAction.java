@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,13 +29,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collection;
-import javax.swing.*;
+
+import javax.swing.AbstractAction;
+
 import llnl.gnem.apps.detection.sdBuilder.dataSelection.DeleteDetectionsWorker;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
-import llnl.gnem.core.correlation.CorrelationComponent;
-
-import llnl.gnem.core.gui.util.Utility;
+import llnl.gnem.dftt.core.correlation.CorrelationComponent;
+import llnl.gnem.dftt.core.gui.util.Utility;
 
 /**
  * Created by dodge1 Date: Mar 22, 2010 COPYRIGHT NOTICE Copyright (C) 2007
@@ -57,18 +58,19 @@ public class DeleteDisplayedDetectionsAction extends AbstractAction {
         super("Delete", Utility.getIcon(owner, "miscIcons/deleteSite32.gif"));
         putValue(SHORT_DESCRIPTION, "Delete all displayed detections.");
         putValue(MNEMONIC_KEY, KeyEvent.VK_D);
+        setEnabled(false);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        Collection<CorrelationComponent>  selected = ClusterBuilderFrame.getInstance().getVisibleTraces();
+        Collection<CorrelationComponent> selected = ClusterBuilderFrame.getInstance().getVisibleTraces();
         CorrelatedTracesModel.getInstance().detectionsWereDeleted(selected);
-        
+
         ArrayList<Integer> detectionIdValues = new ArrayList<>();
-        for(CorrelationComponent cc : selected){
-            int detectionid = (int)cc.getEvent().getEvid();
+        for (CorrelationComponent cc : selected) {
+            int detectionid = (int) cc.getEvent().getEvid();
             detectionIdValues.add(detectionid);
-            
+
         }
         new DeleteDetectionsWorker(detectionIdValues).execute();
         ClusterBuilderFrame.getInstance().removeMultipleDetections(detectionIdValues);

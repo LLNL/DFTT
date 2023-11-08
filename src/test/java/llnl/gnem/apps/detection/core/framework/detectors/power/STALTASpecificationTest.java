@@ -4,14 +4,17 @@
  */
 package llnl.gnem.apps.detection.core.framework.detectors.power;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
-import llnl.gnem.core.util.StreamKey;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *
@@ -19,8 +22,9 @@ import static org.junit.Assert.*;
  */
 public class STALTASpecificationTest {
     private final STALTASpecification spec;
+
     public STALTASpecificationTest() {
-        ArrayList< StreamKey> staChanList = new ArrayList< >();
+        ArrayList<StreamKey> staChanList = new ArrayList<>();
         staChanList.add(new StreamKey("KK01", "SHZ"));
         staChanList.add(new StreamKey("KK02", "SHZ"));
         staChanList.add(new StreamKey("KK03", "SHZ"));
@@ -31,7 +35,7 @@ public class STALTASpecificationTest {
         staChanList.add(new StreamKey("KK08", "SHZ"));
         staChanList.add(new StreamKey("KK09", "SHZ"));
 
-         spec = new STALTASpecification(
+        spec = new STALTASpecification(
                 25.0f,
                 20.0f,
                 staChanList,
@@ -40,19 +44,19 @@ public class STALTASpecificationTest {
                 1.0f,
                 true);
     }
-    
+
     @BeforeClass
     public static void setUpClass() {
     }
-    
+
     @AfterClass
     public static void tearDownClass() {
     }
-    
+
     @Before
     public void setUp() {
     }
-    
+
     @After
     public void tearDown() {
     }

@@ -30,9 +30,9 @@ import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceDetect
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.statistics.DistributionFitter;
 import llnl.gnem.apps.detection.statistics.HistogramData;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.TimeT;
 import org.apache.commons.math3.distribution.BetaDistribution;
 
 /**
@@ -60,8 +60,12 @@ public class HistogramModel {
     private BetaDistribution betaDist;
     private int detectorid;
     private int runid;
+    private double minAllowableThreshold;
+    private double maxAllowableThreshold;
 
     private HistogramModel() {
+        minAllowableThreshold = .02;
+        maxAllowableThreshold = 0.8;
         histogram = null;
         betaDist = null;
     }
@@ -80,6 +84,14 @@ public class HistogramModel {
             view.displayHistogram();
         }
 
+    }
+
+    public void setMinAllowableThreshold(double minAllowableThreshold) {
+        this.minAllowableThreshold = minAllowableThreshold;
+    }
+
+    public void setMaxAllowableThreshold(double maxAllowableThreshold) {
+        this.maxAllowableThreshold = maxAllowableThreshold;
     }
 
     public HistogramData getHistogram() {
@@ -177,11 +189,11 @@ public class HistogramModel {
 
                 double tmpThresh = getInverseCumulativeDensity(betaDist, 1.0 - DistributionFitter.getFixedFalseAlarmRate());
                 double newThreshold = (threshold *8 + tmpThresh * 2) / 10;
-                if (newThreshold > 0.8) {
-                    newThreshold = 0.8;
+                if (newThreshold > maxAllowableThreshold) {
+                    newThreshold = maxAllowableThreshold;
                 }
-                if (newThreshold < .02) {
-                    newThreshold = .02;
+                if (newThreshold < minAllowableThreshold) {
+                    newThreshold = minAllowableThreshold;
                 }
                 sd.getSpecification().setThreshold((float) newThreshold);
                 ApplicationLogger.getInstance().log(Level.FINE,

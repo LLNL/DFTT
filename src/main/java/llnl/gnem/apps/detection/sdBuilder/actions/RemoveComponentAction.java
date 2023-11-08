@@ -29,8 +29,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import javax.swing.AbstractAction;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
-import llnl.gnem.core.correlation.CorrelationComponent;
-import llnl.gnem.core.gui.util.Utility;
+import llnl.gnem.dftt.core.correlation.CorrelationComponent;
+import llnl.gnem.dftt.core.gui.util.Utility;
 
 public class RemoveComponentAction extends AbstractAction {
 

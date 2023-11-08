@@ -35,8 +35,8 @@ import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.StationInfo;
 import llnl.gnem.apps.detection.dataAccess.interfaces.StationDAO;
 
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.database.Connections;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.database.Connections;
 
 
 public abstract class DbStationDAO implements StationDAO {

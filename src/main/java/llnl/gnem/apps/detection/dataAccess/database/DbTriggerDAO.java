@@ -40,7 +40,7 @@ import llnl.gnem.apps.detection.dataAccess.dataobjects.Trigger;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.dataAccess.interfaces.TriggerDAO;
 import llnl.gnem.apps.detection.triggerProcessing.EvaluatedTrigger;
-import llnl.gnem.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
 
 /**
  *

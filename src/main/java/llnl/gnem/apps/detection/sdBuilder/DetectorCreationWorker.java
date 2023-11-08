@@ -31,8 +31,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.SwingWorker;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
-import llnl.gnem.core.gui.plotting.MouseMode;
-import llnl.gnem.core.gui.util.ProgressDialog;
+import llnl.gnem.dftt.core.gui.plotting.MouseMode;
+import llnl.gnem.dftt.core.gui.util.ProgressDialog;
 
 /**
  *

@@ -34,8 +34,8 @@ import java.util.logging.Logger;
 
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.dataAccess.interfaces.FeatureDAO;
-import llnl.gnem.core.gui.util.ProgressDialog;
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.gui.util.ProgressDialog;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.trees.RandomForest;

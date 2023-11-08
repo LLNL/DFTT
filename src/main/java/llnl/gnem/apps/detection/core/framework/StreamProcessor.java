@@ -32,7 +32,7 @@ import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
 import llnl.gnem.apps.detection.core.dataObjects.TransformedStreamSegment;
 
 import llnl.gnem.apps.detection.core.framework.detectors.Detector;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.StreamKey;
 import llnl.gnem.apps.detection.core.dataObjects.StreamSegment;
 import llnl.gnem.apps.detection.core.dataObjects.WaveformSegment;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceDetector;

@@ -31,8 +31,8 @@ import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import llnl.gnem.core.util.FileSystemException;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.util.FileSystemException;
+import llnl.gnem.dftt.core.util.TimeT;
 
 /**
  * Created by dodge1 Date: Oct 4, 2010 COPYRIGHT NOTICE Copyright (C) 2007

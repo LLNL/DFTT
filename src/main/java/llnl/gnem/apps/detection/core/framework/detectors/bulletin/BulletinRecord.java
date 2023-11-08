@@ -26,7 +26,7 @@
 package llnl.gnem.apps.detection.core.framework.detectors.bulletin;
 
 import java.io.Serializable;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.util.TimeT;
 
 /**
  *

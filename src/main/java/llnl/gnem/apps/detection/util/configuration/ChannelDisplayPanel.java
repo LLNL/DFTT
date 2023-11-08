@@ -31,9 +31,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.*;
-import llnl.gnem.core.dataAccess.dataObjects.continuous.StreamAvailability;
-import llnl.gnem.core.gui.util.SpringUtilities;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.dataAccess.dataObjects.continuous.StreamAvailability;
+import llnl.gnem.dftt.core.gui.util.SpringUtilities;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *

@@ -32,7 +32,7 @@ import javax.swing.SwingUtilities;
 import llnl.gnem.apps.detection.core.framework.detectors.EmpiricalTemplate;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceTemplate;
 import llnl.gnem.apps.detection.sdBuilder.templateDisplay.projections.DetectorProjection;
-import llnl.gnem.core.waveform.filter.StoredFilter;
+import llnl.gnem.dftt.core.waveform.filter.StoredFilter;
 
 /**
  *

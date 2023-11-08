@@ -25,8 +25,8 @@
  */
 package llnl.gnem.apps.detection.sdBuilder;
 
-import llnl.gnem.core.gui.filter.FilterGuiContainer;
-import llnl.gnem.core.waveform.filter.FilterClient;
+import llnl.gnem.dftt.core.gui.filter.FilterGuiContainer;
+import llnl.gnem.dftt.core.waveform.filter.FilterClient;
 
 /**
  *

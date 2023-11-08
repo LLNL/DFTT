@@ -1,0 +1,163 @@
+/*
+ * #%L
+ * Detection Framework (Release)
+ * %%
+ * Copyright (C) 2015 - 2020 Lawrence Livermore National Laboratory (LLNL)
+ * %%
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ * #L%
+ */
+package llnl.gnem.dftt.core.signalprocessing;
+
+/**
+ * Formulas from https://en.wikipedia.org/wiki/Window_function
+ * @author dodge1
+ */
+public class WindowFunction {
+
+    private static float getWindowValue(int j, int n, WindowType type) {
+        switch (type) {
+            case NONE:
+                return 1.0f;
+            case BARTLETT:
+                return bartlettValue(j, n);
+            case WELCH:
+                return welchValue(j, n);
+            case HANNING:
+                return hanningValue(j, n);
+            case HAMMING:
+                return hammingValue(j, n);
+            case BLACKMAN:
+                return blackmanValue(j,n);
+            case BLACKMAN_NUTTALL:
+                return blackmanNuttallValue(j,n);
+            case TUKEY:
+                return tukeyValue(j,n);
+            default:
+                throw new IllegalStateException("Unknown type : " + type);
+        }
+    }
+
+    private static float tukeyLowValue(int j, int n) {
+        double term = 2 * j / tukeyCoeff / (n-1) -1;
+        return (float)(1 + Math.cos(term * Math.PI))/2;
+    }
+
+    private static float tukeyHighValue(int j, int n) {
+        double term = 2 * j / tukeyCoeff / (n-1) +1 - 2/tukeyCoeff;
+        return (float)(1 + Math.cos(term * Math.PI))/2;
+    }
+
+    public static synchronized float getTukeyCoeff() {
+        return tukeyCoeff;
+    }
+
+    public static synchronized void setTukeyCoeff(float aTukeyCoeff) {
+        tukeyCoeff = Math.min(Math.max(0, aTukeyCoeff),1);
+    }
+
+    public static enum WindowType {
+
+        NONE, BARTLETT, WELCH, HANNING, HAMMING, BLACKMAN, BLACKMAN_NUTTALL, TUKEY
+    }
+    
+    private static float tukeyCoeff = 0.5f;
+
+    public static void applyWindow(float[] data, WindowType type) {
+        int n = data.length;
+        for (int j = 0; j < n; ++j) {
+            float w = getWindowValue(j, n, type);
+            data[j] *= w;
+        }
+    }
+
+    public static void applyWindow(double[] data, WindowType type) {
+        int n = data.length;
+        for (int j = 0; j < n; ++j) {
+            float w = getWindowValue(j, n, type);
+            data[j] *= w;
+        }
+    }
+    
+    public static float[] getWindow(WindowType type, int windowLength){
+        float[] result = new float[windowLength];
+        for (int j = 0; j < windowLength; ++j) {
+            float w = getWindowValue(j, windowLength, type);
+            result[j] = w;
+        }
+        return result;
+    }
+
+    private static float bartlettValue(int j, int n) {
+        float l = n - 1;
+        float t2 = l / 2;
+        return 1 - Math.abs((j - t2) / t2);
+    }
+
+    private static float welchValue(int j, int n) {
+        float v = (n - 1) / 2.0f;
+        float num = j - v;
+        float p = num / v;
+        return 1 - p * p;
+    }
+
+    private static float hanningValue(int j, int n) {
+        double num = 2 * Math.PI * j;
+        double cv = Math.cos(num / (n - 1));
+        return 0.5f * (float) (1 - cv);
+    }
+
+    private static float hammingValue(int j, int n) {
+        double num = 2 * Math.PI * j;
+        double cv = Math.cos(num / (n - 1));
+        return 0.53836f - 0.46164f * (float) cv;
+    }
+
+    private static float blackmanValue(int j, int n) {
+        float a0 = 0.42659f;
+        float a1 = 0.49656f;
+        float a2 = 0.076849f;
+        double num = 2 * Math.PI * j;
+        double cv = Math.cos(num / (n - 1));
+        double cv2 = Math.cos(num * 2 / (n - 1));
+        return a0 - a1 * (float) cv + a2 * (float) cv2;
+    }
+    
+    private static float blackmanNuttallValue(int j, int n){
+        float a0 = 0.3635819f;
+        float a1 = 0.4891775f;
+        float a2 = 0.1365995f;
+        float a3 = 0.0106411f;
+        double num = 2 * Math.PI * j;
+        double cv = Math.cos(num / (n - 1));
+        double cv2 = Math.cos(num * 2 / (n - 1));
+        double cv3 = Math.cos(num * 3 / (n - 1));
+        return a0 - a1 * (float)cv + a2 * (float)cv2 - a3 * (float)cv3;
+    }
+    
+    private static float tukeyValue(int j, int n){
+        float test1 = tukeyCoeff * (n-1)/2;
+        if(j <= test1)
+            return tukeyLowValue(j,n);
+        float test2 = (n-1) * (1-tukeyCoeff/2);
+        if(j <= test2)return 1;
+        return tukeyHighValue(j,n);
+    }
+
+}

@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,12 +26,17 @@
 package llnl.gnem.apps.detection.sdBuilder.dataSelection;
 
 import java.util.concurrent.CancellationException;
-import java.util.logging.Level;
+import java.util.concurrent.ExecutionException;
+
 import javax.swing.SwingWorker;
 import javax.swing.tree.DefaultMutableTreeNode;
-import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
+import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
 
 /**
  * Created by dodge1 Date: Feb 12, 2012 COPYRIGHT NOTICE Copyright (C) 2007
@@ -39,19 +44,20 @@ import llnl.gnem.core.util.ApplicationLogger;
  */
 public class DeleteDetectionWorker extends SwingWorker<Void, Void> {
 
+    private static final Logger log = LoggerFactory.getLogger(DeleteDetectionWorker.class);
+
     private final Detection detection;
     private final DefaultMutableTreeNode node;
 
-    public DeleteDetectionWorker(Detection detection, DefaultMutableTreeNode node)
-    {
+    public DeleteDetectionWorker(Detection detection, DefaultMutableTreeNode node) {
         this.detection = detection;
         this.node = node;
     }
 
     @Override
     protected Void doInBackground() throws Exception {
-       
-       DetectionDAOFactory.getInstance().getDetectionDAO().deleteDetection(detection);
+
+        DetectionDAOFactory.getInstance().getDetectionDAO().deleteDetection(detection);
         return null;
 
     }
@@ -61,9 +67,10 @@ public class DeleteDetectionWorker extends SwingWorker<Void, Void> {
         try {
             get();
             ConfigDataModel.getInstance().removeNode(node);
-        } catch (Exception e) {
+            CorrelatedTracesModel.getInstance().detectionWasDeleted(detection.getDetectionid());
+        } catch (InterruptedException | ExecutionException e) {
             if (!(e instanceof CancellationException)) {
-                ApplicationLogger.getInstance().log(Level.WARNING, "Error removing detector.", e);
+                log.warn("Error removing detector.", e);
             }
         }
     }

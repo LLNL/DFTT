@@ -25,7 +25,7 @@
  */
 package llnl.gnem.apps.detection.dataAccess.database;
 
-import llnl.gnem.core.database.ConnectedUser;
+import llnl.gnem.dftt.core.database.ConnectedUser;
 
 public class SequenceNames {
 

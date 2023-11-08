@@ -44,8 +44,8 @@ import llnl.gnem.apps.detection.dataAccess.dataobjects.Trigger;
 
 import llnl.gnem.apps.detection.util.DetectorSubstitution;
 import llnl.gnem.apps.detection.util.TimeStamp;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.dataAccess.database.oracle.OracleDBUtil;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.database.oracle.OracleDBUtil;
 
 /**
  *

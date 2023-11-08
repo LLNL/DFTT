@@ -31,7 +31,7 @@
 package llnl.gnem.apps.detection.dataAccess.dataobjects;
 
 import java.util.Objects;
-import llnl.gnem.core.util.Epoch;
+import llnl.gnem.dftt.core.util.Epoch;
 
 /**
  *

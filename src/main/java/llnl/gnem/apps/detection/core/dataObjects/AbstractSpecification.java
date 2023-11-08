@@ -37,7 +37,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.StringTokenizer;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /*
  * AbstractSpecification is the base specification class for all detectors, i.e. it contains parameter common to all

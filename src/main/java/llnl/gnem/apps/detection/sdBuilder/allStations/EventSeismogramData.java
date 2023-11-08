@@ -33,10 +33,10 @@ import llnl.gnem.apps.detection.dataAccess.dataobjects.StationInfo;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.OriginInfo;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.PhasePick;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.ShortDetectionSummary;
-import llnl.gnem.core.waveform.BaseTraceData;
-import llnl.gnem.core.waveform.responseProcessing.WaveformDataType;
-import llnl.gnem.core.waveform.responseProcessing.WaveformDataUnits;
-import llnl.gnem.core.waveform.seismogram.CssSeismogram;
+import llnl.gnem.dftt.core.waveform.BaseTraceData;
+import llnl.gnem.dftt.core.waveform.responseProcessing.WaveformDataType;
+import llnl.gnem.dftt.core.waveform.responseProcessing.WaveformDataUnits;
+import llnl.gnem.dftt.core.waveform.seismogram.CssSeismogram;
 
 /**
  *

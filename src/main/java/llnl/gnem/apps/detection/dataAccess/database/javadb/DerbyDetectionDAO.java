@@ -31,7 +31,7 @@ import llnl.gnem.apps.detection.dataAccess.dataobjects.Trigger;
 import llnl.gnem.apps.detection.dataAccess.database.DbDetectionDAO;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectionSummary;
 import llnl.gnem.apps.detection.util.DetectorSubstitution;
-import llnl.gnem.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
 
 
 public class DerbyDetectionDAO extends DbDetectionDAO {

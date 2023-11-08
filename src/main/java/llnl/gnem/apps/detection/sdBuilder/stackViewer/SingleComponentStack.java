@@ -29,18 +29,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
-import llnl.gnem.core.correlation.CorrelationComponent;
-import llnl.gnem.core.correlation.CorrelationTraceData;
-import llnl.gnem.core.correlation.util.NominalArrival;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.SeriesMath;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
-import llnl.gnem.core.waveform.BaseTraceData;
-import llnl.gnem.core.waveform.responseProcessing.WaveformDataType;
-import llnl.gnem.core.waveform.responseProcessing.WaveformDataUnits;
-import llnl.gnem.core.waveform.seismogram.CssSeismogram;
-import llnl.gnem.core.waveform.seismogram.TimeSeries;
+import llnl.gnem.dftt.core.correlation.CorrelationComponent;
+import llnl.gnem.dftt.core.correlation.CorrelationTraceData;
+import llnl.gnem.dftt.core.correlation.util.NominalArrival;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.SeriesMath;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
+import llnl.gnem.dftt.core.waveform.BaseTraceData;
+import llnl.gnem.dftt.core.waveform.responseProcessing.WaveformDataType;
+import llnl.gnem.dftt.core.waveform.responseProcessing.WaveformDataUnits;
+import llnl.gnem.dftt.core.waveform.seismogram.CssSeismogram;
+import llnl.gnem.dftt.core.waveform.seismogram.TimeSeries;
 
 /**
  *
@@ -166,9 +166,8 @@ public class SingleComponentStack {
             CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
             double traceStart = td.getTime().getEpochTime();
             double nominalPickTime = td.getNominalPick().getTime();
-            double ccShift = cc.getShift();
-            double start = traceStart - nominalPickTime + ccShift;
-            double traceEnd = td.getEpoch().getEnd() - nominalPickTime + ccShift;
+            double start = traceStart - nominalPickTime;
+            double traceEnd = td.getEpoch().getEnd() - nominalPickTime;
 
             if (start < earliest) {
                 earliest = start;

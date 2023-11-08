@@ -33,8 +33,8 @@ import llnl.gnem.apps.detection.sdBuilder.arrayDisplay.ArrayDisplayModel.FKInput
 import llnl.gnem.apps.detection.sdBuilder.arrayDisplay.fkDisplay.SingleEventFKFrame;
 import llnl.gnem.apps.detection.sdBuilder.arrayDisplay.fkDisplay.SingleEventFKModel;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
-import llnl.gnem.core.signalprocessing.arrayProcessing.FKProducer;
-import llnl.gnem.core.signalprocessing.arrayProcessing.FKResult;
+import llnl.gnem.dftt.core.signalprocessing.arrayProcessing.FKProducer;
+import llnl.gnem.dftt.core.signalprocessing.arrayProcessing.FKResult;
 
 /**
  *

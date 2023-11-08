@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,20 +29,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
+
 import javax.swing.SwingWorker;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.Projection;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceTemplate;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
-
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.apps.detection.sdBuilder.templateDisplay.TemplateDisplayFrame;
+import llnl.gnem.dftt.core.gui.util.ProgressDialog;
 
 /**
  *
  * @author dodge1
  */
 public class ComputeProjectionsWorker extends SwingWorker<Void, Void> {
+
+    private static final Logger log = LoggerFactory.getLogger(ComputeProjectionsWorker.class);
 
     private final int detectorid;
     private SubspaceTemplate currentTemplate;
@@ -52,17 +58,26 @@ public class ComputeProjectionsWorker extends SwingWorker<Void, Void> {
     public ComputeProjectionsWorker(int detectorid, int runid) {
         this.detectorid = detectorid;
         this.runid = runid;
+        ProgressDialog.getInstance().setTitle("Computing projections");
+        ProgressDialog.getInstance().setText("...");
+        ProgressDialog.getInstance().setProgressStringPainted(true);
+        ProgressDialog.getInstance().setProgressBarIndeterminate(true);
+        ProgressDialog.getInstance().setReferenceFrame(TemplateDisplayFrame.getInstance());
+        ProgressDialog.getInstance().setLabelVisibility(true);
+        ProgressDialog.getInstance().setVisible(true);
+
     }
 
     @Override
     protected Void doInBackground() throws Exception {
 
         currentTemplate = DetectionDAOFactory.getInstance().getSubspaceTemplateDAO().getSubspaceTemplate(detectorid);
-        ArrayList<Integer> detectorids = DetectionDAOFactory.getInstance().getDetectorDAO().getSubspaceDetectorIDsWithDetections(runid);
+        ArrayList<Integer> detectorids = DetectionDAOFactory.getInstance().getDetectorDAO()
+                .getSubspaceDetectorIDsWithDetections(runid);
 
         List<DetectorProjection> projections = detectorids.parallelStream()
-                .filter(t -> isNewDetector(t))
-                .map(t -> produceProjection(t))
+                .filter(this::isNewDetector)
+                .map(this::produceProjection)
                 .filter(Objects::nonNull).collect(Collectors.toList());
         result = new ProjectionCollection(detectorid, projections);
         return null;
@@ -74,7 +89,8 @@ public class ComputeProjectionsWorker extends SwingWorker<Void, Void> {
 
     private DetectorProjection produceProjection(int adetectorid) {
         try {
-            SubspaceTemplate thatTemplate = DetectionDAOFactory.getInstance().getSubspaceTemplateDAO().getSubspaceTemplate(adetectorid);
+            SubspaceTemplate thatTemplate = DetectionDAOFactory.getInstance().getSubspaceTemplateDAO()
+                    .getSubspaceTemplate(adetectorid);
             Projection p = new Projection(currentTemplate, thatTemplate);
             int delay = p.getDecimatedDelay();
             double projection = p.getProjectionValue();
@@ -86,11 +102,12 @@ public class ComputeProjectionsWorker extends SwingWorker<Void, Void> {
 
     @Override
     public void done() {
+        ProgressDialog.getInstance().setVisible(false);
         try {
             get();
             ProjectionModel.getInstance().setProjections(result);
         } catch (InterruptedException | ExecutionException ex) {
-            ApplicationLogger.getInstance().log(Level.WARNING, "Failed retrieving template for detectorid : " + detectorid, ex);
+            log.warn("Failed retrieving template for detectorid : " + detectorid, ex);
         }
     }
 

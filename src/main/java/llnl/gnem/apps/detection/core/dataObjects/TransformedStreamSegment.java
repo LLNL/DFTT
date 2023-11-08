@@ -30,8 +30,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import llnl.gnem.core.util.PairT;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.PairT;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *

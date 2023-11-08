@@ -1,0 +1,25 @@
+version: "3.9"
+services:
+  dftt-gui:
+    image: "dftt:latest"
+    ports:
+      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./data:/opt/apps/data/:rw
+      - ./prefs:/home/apps/.java:rw
+      - ./config:/opt/apps/config/:rw
+    environment:
+      DB_URL: dftt-db
+  dftt-db:
+    image: "dftt-db:latest"
+    ports:
+      - "127.0.0.1:11521:1521"
+    environment:
+      ORACLE_PDB: ORCL
+      ORACLE_PWD: changeit 
+    volumes:
+      - database-volume:/opt/oracle/oradata/:rw
+volumes:
+  database-volume:
+    

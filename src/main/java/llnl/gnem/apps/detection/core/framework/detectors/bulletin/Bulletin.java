@@ -29,9 +29,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Level;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.TimeT;
 
 /**
  *

@@ -29,7 +29,7 @@ import llnl.gnem.apps.detection.core.dataObjects.DetectorSpecification;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.core.dataObjects.TransformedStreamSegment;
 import llnl.gnem.apps.detection.core.framework.DetectionStatistic;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 public interface Detector {
 

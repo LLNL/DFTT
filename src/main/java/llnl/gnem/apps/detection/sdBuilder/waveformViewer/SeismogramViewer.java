@@ -25,8 +25,8 @@
  */
 package llnl.gnem.apps.detection.sdBuilder.waveformViewer;
 
-import llnl.gnem.core.correlation.CorrelationComponent;
-import llnl.gnem.core.gui.plotting.MouseMode;
+import llnl.gnem.dftt.core.correlation.CorrelationComponent;
+import llnl.gnem.dftt.core.gui.plotting.MouseMode;
 
 /**
  *

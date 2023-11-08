@@ -34,19 +34,19 @@ import llnl.gnem.apps.detection.core.framework.detectors.EmpiricalTemplate;
 import llnl.gnem.apps.detection.core.framework.detectors.arrayCorrelation.ArrayCorrelationTemplate;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceTemplate;
 import llnl.gnem.apps.detection.sdBuilder.templateDisplay.projections.DetectorProjection;
-import llnl.gnem.core.gui.plotting.PaintMode;
-import llnl.gnem.core.gui.plotting.PenStyle;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JMultiAxisPlot;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JSubplot;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.VPickLine;
-import llnl.gnem.core.gui.plotting.plotobject.Line;
-import llnl.gnem.core.gui.plotting.plotobject.PinnedText;
-import llnl.gnem.core.signalprocessing.SpectralOps;
-import llnl.gnem.core.signalprocessing.statistics.SignalPairStats;
-import llnl.gnem.core.signalprocessing.statistics.TimeBandwidthComponents;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.SeriesMath;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.gui.plotting.PaintMode;
+import llnl.gnem.dftt.core.gui.plotting.PenStyle;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JMultiAxisPlot;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JSubplot;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.VPickLine;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.Line;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.PinnedText;
+import llnl.gnem.dftt.core.signalprocessing.SpectralOps;
+import llnl.gnem.dftt.core.signalprocessing.statistics.SignalPairStats;
+import llnl.gnem.dftt.core.signalprocessing.statistics.TimeBandwidthComponents;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.SeriesMath;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *
@@ -115,20 +115,6 @@ public class TemplateView extends JMultiAxisPlot {
             plot.AddPlotObject(text);
         }
 
-        if (templateIn instanceof SubspaceTemplate) {
-            SubspaceTemplate template = (SubspaceTemplate) templateIn;
-            for (int j = 0; j < data.length; ++j) {
-                StreamKey key = templateIn.getStaChanList().get(j);
-                JSubplot plot = streamPlotMap.get(key);
-                TimeBandwidthComponents tbc = template.getTimeFreqStats(dimension, j);
-                double centroid = tbc.getTimeCentroid();
-                VPickLine vpl = new VPickLine((float) centroid, 0.8, "centroid");
-                vpl.getWindow().setDuration(tbc.getTimeSigma());
-                vpl.getWindow().setVisible(true);
-                vpl.setAllDraggable(false);
-                plot.AddPlotObject(vpl);
-            }
-        }
 
         String detectorInfo = TemplateModel.getInstance().getDetectorInfo();
         int detectorid = TemplateModel.getInstance().getDetectorid();

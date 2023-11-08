@@ -4,14 +4,17 @@
  */
 package llnl.gnem.apps.detection.core.framework.detectors.subspace;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
-import llnl.gnem.core.util.StreamKey;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *

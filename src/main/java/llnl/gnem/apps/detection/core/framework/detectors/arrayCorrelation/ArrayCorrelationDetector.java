@@ -35,7 +35,7 @@ import llnl.gnem.apps.detection.core.dataObjects.TransformedStreamSegment;
 import llnl.gnem.apps.detection.core.framework.DetectionStatistic;
 import llnl.gnem.apps.detection.core.framework.detectors.AbstractEmpiricalDetector;
 import llnl.gnem.apps.detection.core.framework.detectors.DetectorInfo;
-import llnl.gnem.core.util.PairT;
+import llnl.gnem.dftt.core.util.PairT;
 import llnl.gnem.apps.detection.core.dataObjects.WaveformSegment;
 
 /**

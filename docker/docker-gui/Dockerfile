@@ -16,7 +16,7 @@ ENV DB_NAME=$DB_NAME
 ENV EXTERNAL_SCHEMA_NAME=$EXTERNAL_SCHEMA_NAME
 
 ARG JAVA_OPTS="-XX:MaxRAMPercentage=80 -Ddatabase_type=ORACLE -Dsun.java2d.xrender=false -Djava.util.prefs.systemRoot=/tmp/.java -Djava.util.prefs.syncInterval=2000000 -Dllnl.gnemcore.config.dir=/opt/apps/"
-ENV JAVA_OPTS=${JAVA_OPTS}
+ENV JAVA_OPTS=${JAVA_OPTS} -DEXTERNAL_SCHEMA_NAME=${EXTERNAL_SCHEMA_NAME}
 
 LABEL name=$NAME
 LABEL maintainer="Justin Barno (barno1@llnl.gov)"

@@ -31,9 +31,9 @@ import java.util.HashMap;
 import java.util.Map;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.EventInfo;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.OriginInfo;
-import llnl.gnem.core.waveform.BaseTraceData;
-import llnl.gnem.core.waveform.filter.FilterClient;
-import llnl.gnem.core.waveform.filter.StoredFilter;
+import llnl.gnem.dftt.core.waveform.BaseTraceData;
+import llnl.gnem.dftt.core.waveform.filter.FilterClient;
+import llnl.gnem.dftt.core.waveform.filter.StoredFilter;
 
 /**
  *

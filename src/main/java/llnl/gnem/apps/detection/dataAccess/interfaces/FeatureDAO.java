@@ -35,7 +35,7 @@ import java.util.Map;
 import llnl.gnem.apps.detection.classify.DbLabeledFeature;
 import llnl.gnem.apps.detection.classify.LabeledFeature;
 import llnl.gnem.apps.detection.classify.TriggerClassification;
-import llnl.gnem.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
 
 /**
  *

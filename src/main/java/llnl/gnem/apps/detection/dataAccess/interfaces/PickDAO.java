@@ -28,8 +28,8 @@ package llnl.gnem.apps.detection.dataAccess.interfaces;
 import java.util.ArrayList;
 import java.util.Collection;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.PhasePick;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.util.Epoch;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.util.Epoch;
 
 /**
  *

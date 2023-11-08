@@ -45,8 +45,8 @@ import llnl.gnem.apps.detection.classify.LabeledFeature;
 import llnl.gnem.apps.detection.classify.TriggerClassification;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.dataAccess.interfaces.FeatureDAO;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.database.ConnectionManager;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.database.ConnectionManager;
 
 /**
  *

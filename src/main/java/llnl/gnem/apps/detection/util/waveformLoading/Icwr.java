@@ -52,16 +52,16 @@ import edu.iris.dmc.service.ServiceNotSupportedException;
 import edu.iris.dmc.service.WaveformService;
 import edu.iris.dmc.timeseries.model.Segment;
 import edu.iris.dmc.timeseries.model.Timeseries;
-import llnl.gnem.core.database.ConnectionManager;
-import llnl.gnem.core.database.DbCommandLineParser;
-import llnl.gnem.core.database.login.DbCredentials;
-import llnl.gnem.core.fdsn.DataCenter;
-import llnl.gnem.core.fdsn.FedCatalog;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
-import llnl.gnem.core.util.FileUtil.DriveMapper;
-import llnl.gnem.core.waveform.merge.NamedIntWaveform;
+import llnl.gnem.dftt.core.database.ConnectionManager;
+import llnl.gnem.dftt.core.database.DbCommandLineParser;
+import llnl.gnem.dftt.core.database.login.DbCredentials;
+import llnl.gnem.dftt.core.fdsn.DataCenter;
+import llnl.gnem.dftt.core.fdsn.FedCatalog;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
+import llnl.gnem.dftt.core.util.FileUtil.DriveMapper;
+import llnl.gnem.dftt.core.waveform.merge.NamedIntWaveform;
 
 /**
  *

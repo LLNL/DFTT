@@ -36,7 +36,7 @@ import llnl.gnem.apps.detection.core.framework.detectors.array.ArrayDetectorSpec
 import llnl.gnem.apps.detection.core.framework.detectors.bulletin.BulletinSpecification;
 import llnl.gnem.apps.detection.core.framework.detectors.power.STALTASpecification;
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceSpecification;
-import llnl.gnem.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
 
 public class SpecificationFactory {
 

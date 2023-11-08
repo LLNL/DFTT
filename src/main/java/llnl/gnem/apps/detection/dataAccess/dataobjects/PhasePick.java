@@ -26,19 +26,20 @@
 package llnl.gnem.apps.detection.dataAccess.dataobjects;
 
 import java.util.Objects;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *
  * @author dodge1
  */
 public class PhasePick {
-    private  int pickid;
+
+    private int pickid;
     private final int configid;
     private final Integer detectionid;
-     private final String phase;
-    private  double time;
-    private  double std;
+    private final String phase;
+    private double time;
+    private double std;
     private final StreamKey key;
 
     public PhasePick(int pickid, int configid, Integer detectionid, StreamKey key, String phase, double time, double std) {
@@ -46,7 +47,7 @@ public class PhasePick {
         this.configid = configid;
         this.detectionid = detectionid;
         this.key = key;
-         this.phase = phase;
+        this.phase = phase;
         this.time = time;
         this.std = Math.abs(std);
     }
@@ -70,18 +71,20 @@ public class PhasePick {
     public double getTime() {
         return time;
     }
-    
-    public void adjustPickTime(double deltaT){
+
+    public void adjustPickTime(double deltaT) {
         time += deltaT;
     }
 
     public double getStd() {
         return std;
     }
-    
-    public void adjustStd(double deltaStd){
+
+    public void adjustStd(double deltaStd) {
         std += deltaStd;
-        if(std < 0)std = 0;
+        if (std < 0) {
+            std = 0;
+        }
     }
 
     public StreamKey getKey() {
@@ -142,11 +145,8 @@ public class PhasePick {
         return true;
     }
 
-   
-
-
     public void setPickid(long pickid) {
-        this.pickid = (int)pickid;
+        this.pickid = (int) pickid;
     }
 
 }

@@ -47,7 +47,7 @@ import llnl.gnem.apps.detection.dataAccess.database.DetectorUtil;
 
 import llnl.gnem.apps.detection.util.DetectoridRestriction;
 import llnl.gnem.apps.detection.util.initialization.ProcessingPrescription;
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
 
 /**
  * Created by dodge1 Date: Oct 11, 2010 COPYRIGHT NOTICE Copyright (C) 2007

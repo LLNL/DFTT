@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,7 +26,9 @@
 package llnl.gnem.apps.detection.sdBuilder.configuration;
 
 import java.util.prefs.Preferences;
+
 import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
+import llnl.gnem.dftt.core.correlation.clustering.ClusterType;
 
 /**
  *
@@ -81,6 +83,13 @@ public class ParameterModel {
     private boolean refineWindow;
     private double rWAnalysisWindowLength;
     private double rWMinimumWindowLength;
+    private double snrRefTime;
+    private double snrWinLength;
+    private Double postCorrWindowStart = null;
+    private Double postCorrWindowEnd = null;
+    private boolean autoZoomEnabled = false;
+    private int desiredClusterCount;
+    private ClusterType clusterType;
 
     private ParameterModel() {
         prefs = Preferences.userNodeForPackage(this.getClass());
@@ -135,6 +144,12 @@ public class ParameterModel {
         rWAnalysisWindowLength = prefs.getDouble("REFINE_WINDOW_ANALYSIS_WINDOW_LENGTH", 10.0);
         rWMinimumWindowLength = prefs.getDouble("REFINE_WINDOW_MIN_WINDOW_LENGTH", 30.0);
 
+        snrRefTime = prefs.getDouble("SNR_SORT_REF_TIME", 0.0);
+        snrWinLength = prefs.getDouble("SNR_SORT_WINDOW_LENGTH", 1.0);
+        desiredClusterCount = prefs.getInt("DESIRED_CLUSTER_COUNT", 10);
+
+        String clusterTypeString = prefs.get("CLUSTER_TYPE", "CORRELATION_THRESHOLD");
+        clusterType = ClusterType.valueOf(clusterTypeString);
     }
 
     public static ParameterModel getInstance() {
@@ -232,6 +247,63 @@ public class ParameterModel {
         prefs.putBoolean("DISPLAY_ALL_STATION_DETECTION_MARKERS", value);
     }
 
+    public double getSNRRefTime() {
+        return snrRefTime;
+    }
+
+    public double getSNRWinLength() {
+        return snrWinLength;
+    }
+
+    public void adjustSNRWindowStart(double deltaT) {
+        snrRefTime += deltaT;
+        prefs.putDouble("SNR_SORT_REF_TIME", snrRefTime);
+    }
+
+    public void adjustSNRWindowLength(double deltaT) {
+        snrWinLength += deltaT;
+        prefs.putDouble("SNR_SORT_WINDOW_LENGTH", snrWinLength);
+    }
+
+    public void setAutoZoomLimits(Double postCorrWindowStart, Double postCorrWindowEnd) {
+        this.postCorrWindowStart = postCorrWindowStart;
+        this.postCorrWindowEnd = postCorrWindowEnd;
+    }
+
+    public void setAutoZoomEnabled(boolean enabled) {
+        autoZoomEnabled = enabled;
+    }
+
+    public Double getPostCorrWindowStart() {
+        return postCorrWindowStart;
+    }
+
+    public Double getPostCorrWindowEnd() {
+        return postCorrWindowEnd;
+    }
+
+    public boolean isAutoZoomEnabled() {
+        return autoZoomEnabled;
+    }
+
+    public int getDesiredClusterCount() {
+        return desiredClusterCount;
+    }
+
+    public void setDesiredClusterCount(int desiredClusterCount) {
+        this.desiredClusterCount = desiredClusterCount;
+        prefs.putInt("DESIRED_CLUSTER_COUNT", desiredClusterCount);
+    }
+
+    public ClusterType getClusterType() {
+        return this.clusterType;
+    }
+
+    public void setClusterType(ClusterType clusterType) {
+        this.clusterType = clusterType;
+        prefs.put("CLUSTER_TYPE", clusterType.name());
+    }
+
     private static class ParameterModelHolder {
 
         private static final ParameterModel INSTANCE = new ParameterModel();
@@ -318,8 +390,8 @@ public class ParameterModel {
     }
 
     /*
-    fixSubspaceDimension = prefs.getBoolean("FIX_SUBSPACE_DIMENSION", false);
-        subspaceDimension = prefs.getInt("SUBSPACE_DIMENSION", 1);
+     * fixSubspaceDimension = prefs.getBoolean("FIX_SUBSPACE_DIMENSION", false);
+     * subspaceDimension = prefs.getInt("SUBSPACE_DIMENSION", 1);
      */
     /**
      * @param blackoutSeconds the blackoutSeconds to set

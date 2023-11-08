@@ -35,8 +35,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayConfiguration;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
 
 /**
  *

@@ -36,10 +36,10 @@ import llnl.gnem.apps.detection.util.ArrayInfoModel;
 import llnl.gnem.apps.detection.util.RunInfo;
 import llnl.gnem.apps.detection.util.SourceDataHolder;
 import llnl.gnem.apps.detection.util.initialization.ProcessingPrescription;
-import llnl.gnem.core.dataAccess.SeismogramSourceInfo;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.BuildInfo;
-import llnl.gnem.core.util.FileUtil.DriveMapper;
+import llnl.gnem.dftt.core.dataAccess.SeismogramSourceInfo;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.BuildInfo;
+import llnl.gnem.dftt.core.util.FileUtil.DriveMapper;
 
 public class FrameworkRunner {
 
@@ -73,6 +73,9 @@ public class FrameworkRunner {
         Integer startingJdate = null;
         if (CommandLineInfo.getInstance().getRunidToResume() != null) {
             startingJdate = DetectionDAOFactory.getInstance().getFrameworkRunDAO().getJdateOfLastTrigger(CommandLineInfo.getInstance().getRunidToResume());
+            Integer resumeJdate = CommandLineInfo.getInstance().getResumeJdate();
+            if(resumeJdate != null)
+            startingJdate = resumeJdate;
         }
 
         ConfigurationInfo.getInstance().initialize(configName, startingJdate);

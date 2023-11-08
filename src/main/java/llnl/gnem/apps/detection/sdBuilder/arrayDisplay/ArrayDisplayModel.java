@@ -28,10 +28,10 @@ package llnl.gnem.apps.detection.sdBuilder.arrayDisplay;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import llnl.gnem.core.correlation.CorrelationComponent;
+import llnl.gnem.dftt.core.correlation.CorrelationComponent;
 
-import llnl.gnem.core.waveform.filter.FilterClient;
-import llnl.gnem.core.waveform.filter.StoredFilter;
+import llnl.gnem.dftt.core.waveform.filter.FilterClient;
+import llnl.gnem.dftt.core.waveform.filter.StoredFilter;
 
 /**
  *

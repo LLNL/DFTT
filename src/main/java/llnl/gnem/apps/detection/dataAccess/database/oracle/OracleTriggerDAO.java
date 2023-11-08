@@ -49,8 +49,8 @@ import llnl.gnem.apps.detection.dataAccess.database.TableNames;
 import llnl.gnem.apps.detection.triggerProcessing.EvaluatedTrigger;
 import llnl.gnem.apps.detection.util.RunInfo;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.SubstitutionReason;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.dataAccess.database.oracle.OracleDBUtil;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.database.oracle.OracleDBUtil;
 
 /**
  *
@@ -171,9 +171,10 @@ public class OracleTriggerDAO extends DbTriggerDAO {
         String sql = String.format("insert into %s values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 TableNames.getTriggerDataFeatureTable());
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            double snr = Math.sqrt(fc.getSnr());// 
             int idx = 1;
             stmt.setInt(idx++, triggerid);
-            stmt.setDouble(idx++, screenDouble(fc.getSnr()));
+            stmt.setDouble(idx++, screenDouble(snr));
             stmt.setDouble(idx++, screenDouble(fc.getAmplitude()));
             stmt.setDouble(idx++, screenDouble(fc.getTimeCentroid()));
             stmt.setDouble(idx++, screenDouble(fc.getTimeSigma()));

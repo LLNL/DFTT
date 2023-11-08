@@ -35,8 +35,8 @@ import java.util.Collection;
 import java.util.logging.Level;
 
 import llnl.gnem.apps.detection.util.DirectoryListing;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 
 /*

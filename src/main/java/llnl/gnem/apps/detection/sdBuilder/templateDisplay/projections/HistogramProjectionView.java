@@ -28,9 +28,9 @@ package llnl.gnem.apps.detection.sdBuilder.templateDisplay.projections;
 import java.awt.Color;
 import java.awt.geom.Point2D;
 import llnl.gnem.apps.detection.statistics.HistogramData;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JMultiAxisPlot;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JSubplot;
-import llnl.gnem.core.gui.plotting.plotobject.JPolygon;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JMultiAxisPlot;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JSubplot;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.JPolygon;
 
 /**
  *

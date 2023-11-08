@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.PhasePick;
-import llnl.gnem.core.correlation.CorrelationComponent;
+import llnl.gnem.dftt.core.correlation.CorrelationComponent;
 
 /**
  *

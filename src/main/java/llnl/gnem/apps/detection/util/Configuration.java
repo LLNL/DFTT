@@ -26,7 +26,7 @@
 package llnl.gnem.apps.detection.util;
 
 import java.io.File;
-import llnl.gnem.core.util.FileUtil.DriveMapper;
+import llnl.gnem.dftt.core.util.FileUtil.DriveMapper;
 import net.jcip.annotations.ThreadSafe;
 
 /**

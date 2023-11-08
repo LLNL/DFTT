@@ -36,15 +36,15 @@ import java.util.logging.Level;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.util.initialization.ProcessingPrescription;
 import llnl.gnem.apps.detection.util.initialization.StreamsConfig;
-import llnl.gnem.core.dataAccess.DAOFactory;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.dataAccess.SeismogramSourceInfo;
-import llnl.gnem.core.dataAccess.dataObjects.continuous.StreamSupport;
+import llnl.gnem.dftt.core.dataAccess.DAOFactory;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.SeismogramSourceInfo;
+import llnl.gnem.dftt.core.dataAccess.dataObjects.continuous.StreamSupport;
 
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
 
 /**
  *

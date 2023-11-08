@@ -34,9 +34,9 @@ import java.util.Collection;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.OriginInfo;
 import llnl.gnem.apps.detection.dataAccess.interfaces.OriginDAO;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.database.Connections;
-import llnl.gnem.core.util.Epoch;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.database.Connections;
+import llnl.gnem.dftt.core.util.Epoch;
 
 public abstract class DbOriginDAO implements OriginDAO {
 

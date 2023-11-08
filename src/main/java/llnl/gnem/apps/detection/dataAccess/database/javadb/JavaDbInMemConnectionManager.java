@@ -32,9 +32,9 @@ import java.sql.SQLNonTransientConnectionException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 
-import llnl.gnem.core.database.ConnectedUser;
-import llnl.gnem.core.database.Connections;
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.database.ConnectedUser;
+import llnl.gnem.dftt.core.database.Connections;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
 
 /**
  *

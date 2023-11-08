@@ -42,8 +42,8 @@ import llnl.gnem.apps.detection.core.cluster.dendrogram.LinkageType;
 import llnl.gnem.apps.detection.core.cluster.dendrogram.SimilarityMeasure;
 import llnl.gnem.apps.detection.core.cluster.dendrogram.SingleLink;
 import llnl.gnem.apps.detection.core.dataObjects.PreprocessorParams;
-import llnl.gnem.core.signalprocessing.Sequence;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.signalprocessing.Sequence;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *

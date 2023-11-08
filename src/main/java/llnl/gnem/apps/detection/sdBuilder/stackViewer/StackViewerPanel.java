@@ -42,9 +42,9 @@ import javax.swing.JPanel;
 import javax.swing.JToolBar;
 import llnl.gnem.apps.detection.sdBuilder.actions.BuildStackBeamAction;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.SeismogramViewer;
-import llnl.gnem.core.correlation.CorrelationComponent;
-import llnl.gnem.core.gui.plotting.MouseMode;
-import llnl.gnem.core.gui.util.Utility;
+import llnl.gnem.dftt.core.correlation.CorrelationComponent;
+import llnl.gnem.dftt.core.gui.plotting.MouseMode;
+import llnl.gnem.dftt.core.gui.util.Utility;
 
 /**
  *
@@ -156,6 +156,10 @@ public class StackViewerPanel extends JPanel implements SeismogramViewer {
     @Override
     public void clearAllPicks() {
         stackViewer.clearAllPicks();
+    }
+
+    public void zoomToNewXLimits(double start, double end) {
+        stackViewer.zoomToNewXLimits(start, end);
     }
 
     private class WindowCheckActionListener implements ActionListener {

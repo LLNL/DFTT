@@ -34,9 +34,9 @@ import java.util.Collection;
 
 import llnl.gnem.apps.detection.core.dataObjects.FKScreenParams;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
-import llnl.gnem.core.dataAccess.SeismogramSourceInfo;
-import llnl.gnem.core.util.FileUtils;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.dataAccess.SeismogramSourceInfo;
+import llnl.gnem.dftt.core.util.FileUtils;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *
@@ -64,7 +64,7 @@ public class ConfigFileWriter {
     private final DetectorType bootDetectorType;
     private final Double beamAzimuth;
     private final Double beamVelocity;
-    private final File bulletinFile;
+    private File bulletinFile;
     private final double blockSizeSeconds;
     private final int decimationRate;
     private final boolean spawnCorrelationDetectors;
@@ -100,6 +100,10 @@ public class ConfigFileWriter {
 
     public void create() throws IOException {
         buildCleanBaseDir();
+        String parent = bulletinFile.getParent();
+        if (parent == null || parent.isEmpty()) {
+            bulletinFile = new File(configDirectory, bulletinFile.getName()).toPath().normalize().toFile();
+        }
         File streamFile = createStream1().toPath().normalize().toFile();
         File streamsFile = createStreamsTxtFile(streamFile).toPath().normalize().toFile();
         File detStatDirFile = createDetStatDir().toPath().normalize().toFile();
@@ -203,6 +207,15 @@ public class ConfigFileWriter {
             writer.print(String.format("UseDynamicThresholds   = true%s%s", sep, sep));
             writer.print(String.format("# StatsRefreshIntervalInBlocks is the number of blocks processed between statistics refreshes.%s", sep));
             writer.print(String.format("StatsRefreshIntervalInBlocks   = 1000%s%s", sep, sep));
+
+            writer.print(String.format("%s", sep));
+            writer.print(String.format("# In situations with large numbers of repeating events the assumption that detection statistics are dominated by noise is not true;%s", sep));
+            writer.print(String.format("# This can bias the computed distribution so that the computed threshold is much too high.%s", sep));
+            writer.print(String.format("# The next parameter allows setting a maximum value for the detection threshold.%s", sep));
+            writer.print(String.format("MaxComputedThreshold = 0.65%s", sep));
+            writer.print(String.format("# The minimum value can be controlled as well.%s", sep));
+            writer.print(String.format("MinComputedThreshold = 0.05%s", sep));
+            writer.print(String.format("%s", sep));
 
             writer.print(
                     String.format(

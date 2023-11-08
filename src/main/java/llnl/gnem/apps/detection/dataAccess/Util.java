@@ -37,8 +37,8 @@ import java.util.Map;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayConfiguration;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.ArrayElementInfo;
 import llnl.gnem.apps.detection.util.ArrayInfoModel;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.util.TimeT;
 
 /**
  *

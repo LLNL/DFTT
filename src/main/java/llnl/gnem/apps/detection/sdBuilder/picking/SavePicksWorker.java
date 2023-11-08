@@ -34,8 +34,8 @@ import javax.swing.JFrame;
 import javax.swing.SwingWorker;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.PhasePick;
-import llnl.gnem.core.gui.util.ProgressDialog;
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.gui.util.ProgressDialog;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
 
 /**
  * Created by dodge1 Date: Feb 12, 2012 COPYRIGHT NOTICE Copyright (C) 2007
@@ -61,7 +61,7 @@ public class SavePicksWorker extends SwingWorker<Void, Void> {
     @Override
     protected Void doInBackground() throws Exception {
         
-        DetectionDAOFactory.getInstance().getPickDAO().saveDetectionPhasePicks(picks,picksToRemove);
+                DetectionDAOFactory.getInstance().getPickDAO().saveDetectionPhasePicks(picks,picksToRemove);
         return null;
 
     }

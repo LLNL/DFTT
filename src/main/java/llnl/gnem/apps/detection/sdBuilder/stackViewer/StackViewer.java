@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,45 +25,56 @@
  */
 package llnl.gnem.apps.detection.sdBuilder.stackViewer;
 
-import llnl.gnem.apps.detection.sdBuilder.picking.DetectionPhasePickModel;
 import java.awt.Color;
+import java.awt.Point;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseWheelEvent;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.prefs.Preferences;
+
+import javax.swing.JComponent;
+import javax.swing.KeyStroke;
+
 import llnl.gnem.apps.detection.sdBuilder.ChannelCombo;
+import llnl.gnem.apps.detection.sdBuilder.actions.ComputeCorrelationsAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.NextCorrelationAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.PreviousCorrelationAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.ShowOrHideCorrelationWindowAction;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
+import llnl.gnem.apps.detection.sdBuilder.picking.DetectionPhasePickModel;
+import llnl.gnem.apps.detection.sdBuilder.picking.MultiOperationApplier;
 import llnl.gnem.apps.detection.sdBuilder.stackViewer.StackModel.StackData;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.SeismogramViewer;
-import llnl.gnem.core.correlation.CorrelationComponent;
-
-import llnl.gnem.core.gui.plotting.MouseMode;
-import llnl.gnem.core.gui.plotting.PickCreationInfo;
-import llnl.gnem.core.gui.plotting.PlotObjectClicked;
-import llnl.gnem.core.gui.plotting.VertAlignment;
-import llnl.gnem.core.gui.plotting.ZoomType;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JMultiAxisPlot;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JPlotKeyMessage;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JSubplot;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.PickErrorChangeState;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.PickMovedState;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.VPickLine;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.WindowDurationChangedState;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.XAxis;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.ZoomInStateChange;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.ZoomOutStateChange;
-import llnl.gnem.core.gui.plotting.plotobject.Line;
-import llnl.gnem.core.gui.plotting.plotobject.PlotObject;
-import llnl.gnem.core.gui.plotting.plotobject.XPinnedText;
-import llnl.gnem.core.gui.plotting.transforms.Coordinate;
-import llnl.gnem.core.util.SeriesMath;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.waveform.BaseTraceData;
+import llnl.gnem.dftt.core.correlation.CorrelationComponent;
+import llnl.gnem.dftt.core.gui.plotting.MouseMode;
+import llnl.gnem.dftt.core.gui.plotting.PickCreationInfo;
+import llnl.gnem.dftt.core.gui.plotting.PlotObjectClicked;
+import llnl.gnem.dftt.core.gui.plotting.VertAlignment;
+import llnl.gnem.dftt.core.gui.plotting.ZoomType;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JMultiAxisPlot;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JPlotKeyMessage;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JSubplot;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.PickErrorChangeState;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.PickMovedState;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.VPickLine;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.WindowDurationChangedState;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.XAxis;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.ZoomInStateChange;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.ZoomOutStateChange;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.Line;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.PlotObject;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.XPinnedText;
+import llnl.gnem.dftt.core.gui.plotting.transforms.Coordinate;
+import llnl.gnem.dftt.core.util.PairT;
+import llnl.gnem.dftt.core.util.SeriesMath;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.waveform.BaseTraceData;
 
 /**
  *
@@ -81,6 +92,7 @@ public class StackViewer extends JMultiAxisPlot implements Observer, SeismogramV
     private final Map<Line, StackModel.StackData> lineStackDataMap;
     private VPickLine corrWindowPickLine;
     private VPickLine fkWindowPickLine;
+    private boolean allowAutoProcessing = true;
 
     public StackViewer() {
         XAxis axis = this.getXaxis();
@@ -97,6 +109,17 @@ public class StackViewer extends JMultiAxisPlot implements Observer, SeismogramV
         lineStackMap = new HashMap<>();
         vplTraceDataMap = new HashMap<>();
         lineStackDataMap = new HashMap<>();
+
+        getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB,
+                java.awt.event.InputEvent.CTRL_DOWN_MASK),
+                "nextGroup");
+        getActionMap().put("nextGroup", NextCorrelationAction.getInstance(this));
+
+        getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_Q,
+                java.awt.event.InputEvent.CTRL_DOWN_MASK),
+                "previousGroup");
+        getActionMap().put("previousGroup", PreviousCorrelationAction.getInstance(this));
+
     }
 
     @Override
@@ -160,9 +183,16 @@ public class StackViewer extends JMultiAxisPlot implements Observer, SeismogramV
         addCorrelationWindow();
         addfkWindow();
         setAllXlimits();
+        if (replotData && ParameterModel.getInstance().isAutoZoomEnabled()) {
+            Double min = ParameterModel.getInstance().getPostCorrWindowStart();
+            Double max = ParameterModel.getInstance().getPostCorrWindowEnd();
+            if (min != null && max != null) {
+                this.zoomToNewXLimits(min, max);
+            }
+        }
         setMouseMode(MouseMode.SELECT_ZOOM);
         repaint();
-
+        allowAutoProcessing = true;
     }
 
     private void addCorrelationWindow() {
@@ -177,7 +207,7 @@ public class StackViewer extends JMultiAxisPlot implements Observer, SeismogramV
         corrWindowPickLine.getWindowHandle().setWidth(3);
         boolean visible = ParameterModel.getInstance().isShowCorrelationWindow();
         corrWindowPickLine.getWindow().setVisible(visible);
-        
+
         subplot.AddPlotObject(corrWindowPickLine);
     }
 
@@ -229,8 +259,7 @@ public class StackViewer extends JMultiAxisPlot implements Observer, SeismogramV
     private static void scaleAndShiftTrace(double centerValue, float[] traceToMeasure, float[] traceToModify) {
         double minVal = Double.MAX_VALUE;
         double maxVal = -minVal;
-        for (int j = 0; j < traceToMeasure.length; ++j) {
-            float value = traceToMeasure[j];
+        for (float value : traceToMeasure) {
             if (value > maxVal) {
                 maxVal = value;
             }
@@ -282,6 +311,14 @@ public class StackViewer extends JMultiAxisPlot implements Observer, SeismogramV
     public void update(Observable o, Object obj) {
         if (obj instanceof PlotObjectClicked) {
             PlotObjectClicked poc = (PlotObjectClicked) obj;
+            if (poc.mode == MouseMode.WINDOW) {
+                Point point = poc.me.getPoint();
+                PairT<Double, Double> coords = pointToCoordinate(point);
+                if (allowAutoProcessing) {
+                    allowAutoProcessing = false;
+                    MultiOperationApplier.getInstance().performOperations(coords.getFirst());
+                }
+            }
             if (poc.po instanceof Line) {
             }
 
@@ -298,16 +335,71 @@ public class StackViewer extends JMultiAxisPlot implements Observer, SeismogramV
             }
         } else if (obj instanceof MouseMode) {
             // System.out.println( "owner.setMouseModeMessage((MouseMode) obj);");
+        } else if (obj instanceof MouseWheelEvent) {
+            MouseWheelEvent mwe = (MouseWheelEvent) obj;
+            int rotation = mwe.getWheelRotation();
+            if (rotation < 0) {
+                ClusterBuilderFrame.getInstance().magnifyTraces();
+            } else {
+                ClusterBuilderFrame.getInstance().reduceTraces();
+            }
         } else if (obj instanceof JPlotKeyMessage) {
             JPlotKeyMessage msg = (JPlotKeyMessage) obj;
             KeyEvent e = msg.getKeyEvent();
-            //       ControlKeyMapper controlKeyMapper = msg.getControlKeyMapper();
-            // int keyCode = e.getKeyCode();
-            if (e.getKeyChar() == '+') {
-                zoomInAroundMouse(msg);
-                return;
+
+            int down = KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK;
+            if ((e.getModifiersEx() & down) == down && (e.getKeyCode() == KeyEvent.VK_E || e.getKeyCode() == KeyEvent.VK_N || e.getKeyCode() == KeyEvent.VK_Z)) {
+                ChannelCombo.getInstance().changeChannel(e.getKeyCode());
             }
-            //    PlotObject po = msg.getPlotObject();
+
+            switch (e.getKeyChar()) {
+                case '+': {
+                    zoomInAroundMouse(msg);
+                    return;
+                }
+                case KeyEvent.VK_TAB: {
+                    if (NextCorrelationAction.getInstance(this).isEnabled()) {
+                        NextCorrelationAction.getInstance(this).actionPerformed(null);
+                    }
+                    return;
+                }
+                case 'q':
+                case 'Q': {
+                    if (PreviousCorrelationAction.getInstance(this).isEnabled()) {
+                        PreviousCorrelationAction.getInstance(this).actionPerformed(null);
+                        return;
+                    }
+                }
+                case 'f':
+                case 'F': {
+                    ClusterBuilderFrame.getInstance().applyCurrentFilter();
+                    break;
+                }
+                case 'u':
+                case 'U': {
+                    CorrelatedTracesModel.getInstance().unApplyFilter();
+                    break;
+                }
+                case 'c':
+                case 'C': {
+                    ComputeCorrelationsAction.getInstance(this).actionPerformed(null);
+                    break;
+                }
+                case 'w':
+                case 'W':
+                    ShowOrHideCorrelationWindowAction.getInstance(this).actionPerformed(null);
+                    break;
+
+                case 'r':
+                case 'R':
+                    ClusterBuilderFrame.getInstance().classifyAndNext("r", true);
+                    break;
+                case 'l':
+                case 'L':
+                    ClusterBuilderFrame.getInstance().classifyAndNext("l", true);
+                    break;
+
+            }
 
         } else if (obj instanceof ZoomInStateChange) {
 //            ZoomInStateChange zisc = (ZoomInStateChange) obj;
@@ -344,7 +436,8 @@ public class StackViewer extends JMultiAxisPlot implements Observer, SeismogramV
                     double pointerXvalue = coord.getWorldC1();
                     double pickStd = btd.estimatePickStdErr(pointerXvalue);
                     Collection<CorrelationComponent> channels = stackData.getInputStackData().getStackData();
-                    DetectionPhasePickModel.getInstance().createMultiplePicksForCurrentPhase(pointerXvalue, pickStd, btd.getStreamKey(), channels);
+                    DetectionPhasePickModel.getInstance().createMultiplePicksForCurrentPhase(pointerXvalue, pickStd,
+                            btd.getStreamKey(), channels);
                     this.setMouseMode(MouseMode.SELECT_ZOOM);
 
                     Color pickColor = prefs.getPickPrefs().getColor();
@@ -355,7 +448,8 @@ public class StackViewer extends JMultiAxisPlot implements Observer, SeismogramV
                     String phase = DetectionPhasePickModel.getInstance().getCurrentPhase();
                     VPickLine stackPickLine = stackPickLines.get(phase);
                     if (stackPickLine == null) {
-                        stackPickLine = new VPickLine(pointerXvalue, 0.9, phase, pickColor, pickWidth, draggable, textSize, prefs.getPickPrefs().getTextPosition());
+                        stackPickLine = new VPickLine(pointerXvalue, 0.9, phase, pickColor, pickWidth, draggable,
+                                textSize, prefs.getPickPrefs().getTextPosition());
                         stackPickLine.setStd(pickStd);
                         stackPickLine.setShowErrorBars(showErrorBars);
                         stackPickLine.setPenStyle(prefs.getPickPrefs().getPenStyle());
@@ -394,22 +488,30 @@ public class StackViewer extends JMultiAxisPlot implements Observer, SeismogramV
     }
 
     public void setCorrelationWindowLength(double duration) {
-        corrWindowPickLine.getWindow().setDuration(duration);
+        if (corrWindowPickLine != null) {
+            corrWindowPickLine.getWindow().setDuration(duration);
+        }
         repaint();
     }
 
     public void setCorrelationWindowStart(double newStart) {
-        corrWindowPickLine.setXval(newStart);
+        if (corrWindowPickLine != null) {
+            corrWindowPickLine.setXval(newStart);
+        }
         repaint();
     }
 
     public void setCorrelationWindowVisible(boolean value) {
-        corrWindowPickLine.getWindow().setVisible(value);
+        if (corrWindowPickLine != null) {
+            corrWindowPickLine.getWindow().setVisible(value);
+        }
         repaint();
     }
 
     public void setfkWindowVisible(boolean value) {
-        fkWindowPickLine.getWindow().setVisible(value);
+        if (fkWindowPickLine != null) {
+            fkWindowPickLine.getWindow().setVisible(value);
+        }
         repaint();
     }
 

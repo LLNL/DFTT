@@ -50,11 +50,11 @@ import llnl.gnem.apps.detection.util.Configuration;
 import llnl.gnem.apps.detection.util.RunInfo;
 import llnl.gnem.apps.detection.util.initialization.ProcessingPrescription;
 import llnl.gnem.apps.detection.util.initialization.StreamsConfig;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.dataAccess.SeismogramSourceInfo;
-import llnl.gnem.core.dataAccess.SeismogramSourceInfo.SourceType;
-import llnl.gnem.core.dataAccess.database.oracle.OracleDBUtil;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.SeismogramSourceInfo;
+import llnl.gnem.dftt.core.dataAccess.SeismogramSourceInfo.SourceType;
+import llnl.gnem.dftt.core.dataAccess.database.oracle.OracleDBUtil;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *
@@ -180,7 +180,8 @@ public class OracleConfigurationDAO implements ConfigurationDAO {
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         String tmp = rs.getString(1);
-                        SourceType sourceType = SourceType.valueOf(tmp);
+
+                        SourceType sourceType = tmp == null ? SourceType.CssDatabase : SourceType.valueOf(tmp);
                         tmp = OracleDBUtil.getStringFromCursor(rs, 2);
                         return new SeismogramSourceInfo(sourceType, tmp);
                     }

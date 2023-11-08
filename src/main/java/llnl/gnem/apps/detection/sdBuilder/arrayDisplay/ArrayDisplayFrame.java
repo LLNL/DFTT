@@ -27,7 +27,7 @@ package llnl.gnem.apps.detection.sdBuilder.arrayDisplay;
 
 import java.awt.BorderLayout;
 
-import llnl.gnem.core.gui.util.PersistentPositionContainer;
+import llnl.gnem.dftt.core.gui.util.PersistentPositionContainer;
 
 /**
  * Created by dodge1 Date: Feb 4, 2010 COPYRIGHT NOTICE Copyright (C) 2007

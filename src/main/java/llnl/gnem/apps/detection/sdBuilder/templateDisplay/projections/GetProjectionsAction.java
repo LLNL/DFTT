@@ -30,7 +30,7 @@ import java.awt.event.KeyEvent;
 import java.util.prefs.Preferences;
 import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
-import llnl.gnem.core.gui.util.Utility;
+import llnl.gnem.dftt.core.gui.util.Utility;
 
 /**
  * Created by dodge1 Date: Feb 12, 2012 COPYRIGHT NOTICE Copyright (C) 2007

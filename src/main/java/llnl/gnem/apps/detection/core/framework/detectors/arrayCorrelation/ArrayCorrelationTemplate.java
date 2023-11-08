@@ -38,9 +38,9 @@ import org.ojalgo.matrix.store.RawStore;
 import llnl.gnem.apps.detection.core.dataObjects.PreprocessorParams;
 import llnl.gnem.apps.detection.core.framework.detectors.EmpiricalTemplate;
 import llnl.gnem.apps.detection.util.io.SACFileWriter;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.FileSystemException;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.FileSystemException;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *

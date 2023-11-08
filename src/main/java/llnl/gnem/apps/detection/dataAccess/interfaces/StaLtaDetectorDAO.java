@@ -33,7 +33,7 @@ package llnl.gnem.apps.detection.dataAccess.interfaces;
 import llnl.gnem.apps.detection.core.framework.detectors.Detector;
 import llnl.gnem.apps.detection.core.framework.detectors.power.STALTASpecification;
 import llnl.gnem.apps.detection.streams.ConcreteStreamProcessor;
-import llnl.gnem.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
 
 /**
  *

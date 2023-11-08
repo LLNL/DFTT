@@ -32,8 +32,8 @@ import javax.swing.JOptionPane;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
-import llnl.gnem.core.gui.util.ExceptionDialog;
-import llnl.gnem.core.gui.util.Utility;
+import llnl.gnem.dftt.core.gui.util.ExceptionDialog;
+import llnl.gnem.dftt.core.gui.util.Utility;
 
 /**
  * Created by dodge1 Date: Feb 12, 2012 COPYRIGHT NOTICE Copyright (C) 2007
@@ -42,7 +42,7 @@ import llnl.gnem.core.gui.util.Utility;
 public class CreateTemplateAction extends AbstractAction {
 
     private static CreateTemplateAction ourInstance;
-    private static final long serialVersioylnUID = 8266219106056871649L;
+    private static final long serialVersionUID = 8266219106056871649L;
 
     public static CreateTemplateAction getInstance(Object owner) {
         if (ourInstance == null) {

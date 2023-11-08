@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,62 +31,83 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.TreeMap;
 import java.util.prefs.Preferences;
+
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.KeyStroke;
 import javax.swing.filechooser.FileFilter;
+
 import llnl.gnem.apps.detection.sdBuilder.RemoveComponentAction;
 import llnl.gnem.apps.detection.sdBuilder.actions.DisplayAllStationsAction;
 import llnl.gnem.apps.detection.sdBuilder.actions.DisplayArrayAction;
-import llnl.gnem.apps.detection.sdBuilder.actions.RemoveSinglePickAction;
-import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.PhasePick;
+import llnl.gnem.apps.detection.sdBuilder.ChannelCombo;
+import llnl.gnem.apps.detection.sdBuilder.actions.ComputeCorrelationsAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.NextCorrelationAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.PreviousCorrelationAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.RemoveSinglePickAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.ShowOrHideCorrelationWindowAction;
+import llnl.gnem.apps.detection.sdBuilder.actions.ShowSNRWindowsAction;
+import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
 import llnl.gnem.apps.detection.sdBuilder.picking.DetectionPhasePickModel;
 import llnl.gnem.apps.detection.sdBuilder.picking.PredictedPhasePick;
 import llnl.gnem.apps.detection.sdBuilder.picking.PredictedPhasePickModel;
-import llnl.gnem.core.correlation.CorrelationComponent;
-import llnl.gnem.core.correlation.CorrelationTraceData;
-import llnl.gnem.core.correlation.clustering.GroupData;
-import llnl.gnem.core.correlation.util.*;
-import llnl.gnem.core.gui.plotting.HorizAlignment;
-import llnl.gnem.core.gui.plotting.HorizPinEdge;
-import llnl.gnem.core.gui.plotting.Limits;
-import llnl.gnem.core.gui.plotting.MouseMode;
-import llnl.gnem.core.gui.plotting.MouseOverPlotObject;
-import llnl.gnem.core.gui.plotting.PickCreationInfo;
-import llnl.gnem.core.gui.plotting.PlotObjectClicked;
-import llnl.gnem.core.gui.plotting.PlotObjectClicked.ButtonState;
-import llnl.gnem.core.gui.plotting.VertAlignment;
-import llnl.gnem.core.gui.plotting.VertPinEdge;
-import llnl.gnem.core.gui.plotting.ZoomLimits;
-import llnl.gnem.core.gui.plotting.ZoomType;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JMultiAxisPlot;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JPlotKeyMessage;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JSubplot;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.PickErrorChangeState;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.PickMovedState;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.VPickLine;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.WindowDurationChangedState;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.XAxis;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.ZoomInStateChange;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.ZoomOutStateChange;
-import llnl.gnem.core.gui.plotting.plotobject.Line;
-import llnl.gnem.core.gui.plotting.plotobject.LineBounds;
-import llnl.gnem.core.gui.plotting.plotobject.PinnedText;
-import llnl.gnem.core.gui.plotting.plotobject.PlotObject;
-import llnl.gnem.core.gui.plotting.plotobject.XPinnedText;
-import llnl.gnem.core.gui.plotting.transforms.Coordinate;
-import llnl.gnem.core.gui.util.ExceptionDialog;
-import llnl.gnem.core.util.SeriesMath;
+
 import org.apache.batik.svggen.SVGGraphics2DIOException;
+import llnl.gnem.dftt.core.correlation.CorrelationComponent;
+import llnl.gnem.dftt.core.correlation.CorrelationTraceData;
+import llnl.gnem.dftt.core.correlation.clustering.GroupData;
+import llnl.gnem.dftt.core.correlation.util.NominalArrival;
+import llnl.gnem.dftt.core.gui.plotting.HorizAlignment;
+import llnl.gnem.dftt.core.gui.plotting.HorizPinEdge;
+import llnl.gnem.dftt.core.gui.plotting.Limits;
+import llnl.gnem.dftt.core.gui.plotting.MouseMode;
+import llnl.gnem.dftt.core.gui.plotting.MouseOverPlotObject;
+import llnl.gnem.dftt.core.gui.plotting.PickCreationInfo;
+import llnl.gnem.dftt.core.gui.plotting.PlotObjectClicked;
+import llnl.gnem.dftt.core.gui.plotting.PlotObjectClicked.ButtonState;
+import llnl.gnem.dftt.core.gui.plotting.VertAlignment;
+import llnl.gnem.dftt.core.gui.plotting.VertPinEdge;
+import llnl.gnem.dftt.core.gui.plotting.ZoomType;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JMultiAxisPlot;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JPlotKeyMessage;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JSubplot;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.PickErrorChangeState;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.PickMovedState;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.VPickLine;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.WindowDurationChangedState;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.XAxis;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.ZoomInStateChange;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.ZoomOutStateChange;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.Line;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.LineBounds;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.PinnedText;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.PlotObject;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.XPinnedText;
+import llnl.gnem.dftt.core.gui.plotting.transforms.Coordinate;
+import llnl.gnem.dftt.core.gui.util.ExceptionDialog;
+import llnl.gnem.dftt.core.util.SeriesMath;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *
  * @author dodge1
  */
 public class ClusterViewer extends JMultiAxisPlot implements Observer, SeismogramViewer {
+
+    private static enum SortType {
+        CC, SNR
+    }
 
     private static final long serialVersionUID = -6780212745942796784L;
 
@@ -100,7 +121,9 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
     private final Map<PhasePick, VPickLine> detPhasePickVplMap;
     private final JPopupMenu traceMenu;
     private VPickLine corrWindowPickLine;
+    private VPickLine snrWindowPickLine;
     private final Preferences viewerPrefs;
+    private SortType sortType = SortType.CC;
 
     public ClusterViewer() {
         lineCompMap = new HashMap<>();
@@ -134,6 +157,16 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
         addPlotObjectObserver(this);
 
         viewerPrefs = Preferences.userNodeForPackage(getClass());
+
+        getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB,
+                java.awt.event.InputEvent.CTRL_DOWN_MASK),
+                "nextGroup");
+        getActionMap().put("nextGroup", NextCorrelationAction.getInstance(this));
+
+        getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_Q,
+                java.awt.event.InputEvent.CTRL_DOWN_MASK),
+                "previousGroup");
+        getActionMap().put("previousGroup", PreviousCorrelationAction.getInstance(this));
 
     }
 
@@ -170,15 +203,17 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
         detPhasePickVplMap.clear();
         lineCenterValueMap.clear();
         updateButtonStates();
+        getTitle().setText("");
         repaint();
     }
 
     public void updateTraceColors() {
         Collection<CorrelationComponent> data = CorrelatedTracesModel.getInstance().getMatchingTraces();
         for (CorrelationComponent cc : data) {
-            CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
+            CorrelationTraceData td = cc.getCorrelationTraceData();
             long detectionid = cc.getEvent().getEvid();
-            Color color = CorrelatedTracesModel.getInstance().getTriggerClassification((int) detectionid).getTraceDisplayColor();
+            Color color = CorrelatedTracesModel.getInstance().getTriggerClassification((int) detectionid)
+                    .getTraceDisplayColor();
             Line line = compLineMap.get(cc);
             if (line != null) {
                 line.setColor(color);
@@ -187,10 +222,15 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
         repaint();
     }
 
+    public void sortCurrentData() {
+        sortType = SortType.SNR;
+        dataWereLoaded(true);
+        sortType = SortType.CC;
+    }
+
     @Override
     public void dataWereLoaded(boolean replotData) {
         getPlotRegion().setBackgroundColor(Color.white);
-        Stack<ZoomLimits> oldLimits = this.getZoomLimits(subplot);
         clear();
         subplot = addSubplot();
 
@@ -203,20 +243,30 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
         if (data.isEmpty()) {
             return;
         }
-        data = sortByCC(data);
+        switch (sortType) {
+            case CC:
+                data = sortByCC(data);
+                break;
+            case SNR:
+                data = sortBySNR(data);
+                break;
+        }
+
         double centerValue = 0;
         double overlap = 10.0; // percent overlap
         double verticalShift = 1 - overlap / 100.0;
         double minStart = Double.MAX_VALUE;
         double maxEnd = -minStart;
+        int detectorid = CorrelatedTracesModel.getInstance().getCurrentDetectorid();
         CorrelationComponent component = data.iterator().next();
-        String text = String.format(" %d detections on %s(%3.0f Hz)",
-                data.size(), component.getCorrelationTraceData().getName(), component.getSeismogram().getSamprate());
+        String text = String.format(" %d detections for detectorid = %d on %s(%3.0f Hz)",
+                data.size(), detectorid, component.getCorrelationTraceData().getName(),
+                component.getSeismogram().getSamprate());
         getTitle().setText(text);
 
         for (CorrelationComponent cc : data) {
 
-            CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
+            CorrelationTraceData td = cc.getCorrelationTraceData();
 
             float[] plotData = td.getPlotData();
             double traceStart = td.getTime().getEpochTime();
@@ -229,7 +279,8 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
             Line line = new Line(start, td.getDelta(), plotData);
             lineCenterValueMap.put(line, centerValue);
             long detectionid = component.getEvent().getEvid();
-            Color color = CorrelatedTracesModel.getInstance().getTriggerClassification((int) detectionid).getTraceDisplayColor();
+            Color color = CorrelatedTracesModel.getInstance().getTriggerClassification((int) detectionid)
+                    .getTraceDisplayColor();
             if (residualColor != null) {
                 color = residualColor;
             }
@@ -250,6 +301,7 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
         }
 
         addCorrelationWindow();
+        addSNRWindow();
 
         subplot.setXlimits(minStart, maxEnd);
         double minY = 0;
@@ -260,16 +312,17 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
 
         setAllXlimits();
 
-        if (replotData && !oldLimits.isEmpty()) {
-            while (!oldLimits.empty()) {
-                ZoomLimits limits = oldLimits.pop();
-                this.zoomToNewLimits(limits);
-            }
-        }
-
         setMouseMode(MouseMode.SELECT_ZOOM);
         displayAllPicks();
         displayPredictedPicks();
+        if (replotData && ParameterModel.getInstance().isAutoZoomEnabled()) {
+            Double min = ParameterModel.getInstance().getPostCorrWindowStart();
+            Double max = ParameterModel.getInstance().getPostCorrWindowEnd();
+            if (min != null && max != null) {
+                this.zoomToNewXLimits(min, max);
+            }
+        }
+
         repaint();
 
     }
@@ -371,7 +424,7 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
         } else if (obj instanceof PlotObjectClicked && this.getMouseMode() != MouseMode.CREATE_PICK) {
             PlotObjectClicked poc = (PlotObjectClicked) obj;
             if (poc.po instanceof Line) {
-                CorrelationComponent cc = lineCompMap.get((Line) poc.po);
+                CorrelationComponent cc = lineCompMap.get(poc.po);
                 if (cc != null) {
                     RemoveComponentAction.getInstance(this).setComponent(cc);
                     DisplayArrayAction.getInstance(this).setComponent(cc);
@@ -408,22 +461,73 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
                 double newLength = ParameterModel.getInstance().getCorrelationWindowLength() + delta;
                 ClusterBuilderFrame.getInstance().setCorrelationWindowLength(newLength);
                 ParameterModel.getInstance().setCorrelationWindowLength(newLength);
+            } else if (wdcs.getWindowHandle().getAssociatedPick() == snrWindowPickLine) {
+                double delta = wdcs.getDeltaD();
+                ParameterModel.getInstance().adjustSNRWindowLength(delta);
             }
         } else if (obj instanceof MouseMode) {
             // System.out.println( "owner.setMouseModeMessage((MouseMode) obj);");
         } else if (obj instanceof JPlotKeyMessage) {
             JPlotKeyMessage msg = (JPlotKeyMessage) obj;
+
             KeyEvent e = msg.getKeyEvent();
-            if (e.getKeyChar() == '+') {
-                zoomInAroundMouse(msg);
+           int down = KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK;
+            if ((e.getModifiersEx() & down) == down && (e.getKeyCode() == KeyEvent.VK_E || e.getKeyCode() == KeyEvent.VK_N || e.getKeyCode() == KeyEvent.VK_Z)) {
+                ChannelCombo.getInstance().changeChannel(e.getKeyCode());
+            }
+
+            if ((e.getModifiersEx() & KeyEvent.CTRL_DOWN_MASK) == KeyEvent.CTRL_DOWN_MASK) {
+                switch (e.getKeyChar()) {
+                    case 'q':
+                    case 'Q': {
+                        if (PreviousCorrelationAction.getInstance(this).isEnabled()) {
+                            PreviousCorrelationAction.getInstance(this).actionPerformed(null);
+                        }
+                        e.consume();
+                    }
+                }
                 return;
             }
-            //       ControlKeyMapper controlKeyMapper = msg.getControlKeyMapper();
+            switch (e.getKeyChar()) {
+                case '+': {
+                    zoomInAroundMouse(msg);
+                    return;
+                }
+                case 'f':
+                case 'F': {
+                    ClusterBuilderFrame.getInstance().applyCurrentFilter();
+                    break;
+                }
+                case 'u':
+                case 'U': {
+                    CorrelatedTracesModel.getInstance().unApplyFilter();
+                    break;
+                }
+                case 'c':
+                case 'C': {
+                    ComputeCorrelationsAction.getInstance(this).actionPerformed(null);
+                    break;
+                }
+                case 'w':
+                case 'W':
+                    ShowOrHideCorrelationWindowAction.getInstance(this).actionPerformed(null);
+                    break;
+                case 'r':
+                case 'R':
+                    ClusterBuilderFrame.getInstance().classifyAndNext("r", true);
+                    break;
+                case 'l':
+                case 'L':
+                    ClusterBuilderFrame.getInstance().classifyAndNext("l", true);
+                    break;
+                    
+            }
+
             int keyCode = e.getKeyCode();
 
             PlotObject po = msg.getPlotObject();
             if (keyCode == 127 && po instanceof Line) {
-                CorrelationComponent cc = lineCompMap.get((Line) po);
+                CorrelationComponent cc = lineCompMap.get(po);
                 if (cc != null) {
                     RemoveComponentAction.getInstance(this).setComponent(cc);
                     RemoveComponentAction.getInstance(this).actionPerformed(null);
@@ -431,10 +535,7 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
             }
 
         } else if (obj instanceof ZoomInStateChange) {
-//            ZoomInStateChange zisc = (ZoomInStateChange) obj;
-//            this.getSubplotManager().zoomToBox(zisc.getZoomBounds());
         } else if (obj instanceof ZoomOutStateChange) {
-//            this.getSubplotManager().UnzoomAll();
         } else if (obj instanceof PickMovedState) {
             PickMovedState pms = (PickMovedState) obj;
             double deltaT = pms.getDeltaT();
@@ -443,6 +544,8 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
                 ParameterModel.getInstance().adjustWindowStart(deltaT);
                 double newStart = ParameterModel.getInstance().getWindowStart();
                 ClusterBuilderFrame.getInstance().setCorrelationWindowStart(newStart);
+            } else if (snrWindowPickLine != null && vpl == snrWindowPickLine) {
+                ParameterModel.getInstance().adjustSNRWindowStart(deltaT);
             } else {
                 PhasePick dpp = pickLinePickMap.get(vpl);
                 if (dpp != null) {
@@ -454,12 +557,12 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
             PlotObject po = pci.getSelectedObject();
             if (po instanceof Line) {
                 Line line = (Line) po;
-                //BaseTraceData
+                // BaseTraceData
                 CorrelationComponent cc = lineCompMap.get(line);
                 if (cc != null) {
                     Coordinate coord = pci.getCoordinate();
                     double pointerXvalue = coord.getWorldC1();
-                    CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
+                    CorrelationTraceData td = cc.getCorrelationTraceData();
                     double nominalPickTime = td.getNominalPick().getTime();
                     double ccShift = cc.getShift();
                     double pickEpochTime = nominalPickTime - ccShift + pointerXvalue;
@@ -474,11 +577,11 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
                         detPhasePickVplMap.remove(dpp);
                         subplot.DeletePlotObject(vpl);
                     }
-                    dpp = DetectionPhasePickModel.getInstance().addSinglePick(cc, pickEpochTime, pickStd, td.getStreamKey());
+                    dpp = DetectionPhasePickModel.getInstance().addSinglePick(cc, pickEpochTime, pickStd,
+                            td.getStreamKey());
                     if (dpp != null) {
-                        LineBounds bounds = line.getLineBounds();
                         double traceStart = td.getTime().getEpochTime();
-                        createSinglePick(dpp, traceStart, ccShift, bounds);
+                        createSinglePick(dpp, traceStart, ccShift, line);
                     }
 
                 }
@@ -497,8 +600,7 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
     private static void scaleAndShiftTrace(double centerValue, float[] traceToMeasure, float[] traceToModify) {
         double minVal = Double.MAX_VALUE;
         double maxVal = -minVal;
-        for (int j = 0; j < traceToMeasure.length; ++j) {
-            float value = traceToMeasure[j];
+        for (float value : traceToMeasure) {
             if (value > maxVal) {
                 maxVal = value;
             }
@@ -514,7 +616,7 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
     }
 
     private void addNominalPick(CorrelationComponent cc, double centerValue) {
-        CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
+        CorrelationTraceData td = cc.getCorrelationTraceData();
         NominalArrival arrival = td.getNominalPick();
         String phase = arrival.getPhase();
         String auth = arrival.getAuth();
@@ -544,7 +646,28 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
     }
 
     public void setCorrelationWindowVisible(boolean value) {
-        corrWindowPickLine.getWindow().setVisible(value);
+        if (corrWindowPickLine != null) {
+            corrWindowPickLine.getWindow().setVisible(value);
+        }
+        repaint();
+    }
+
+    private void addSNRWindow() {
+
+        snrWindowPickLine = new VPickLine(ParameterModel.getInstance().getSNRRefTime(), 1.0, "");
+        double duration = ParameterModel.getInstance().getSNRWinLength();
+        snrWindowPickLine.getWindow().setDuration(duration);
+        boolean showCorrelationWindow = ShowSNRWindowsAction.getInstance(this).isShowSNRWindow();
+        snrWindowPickLine.getWindow().setVisible(showCorrelationWindow);
+        snrWindowPickLine.getWindow().setCanDragX(true);
+        snrWindowPickLine.getWindowHandle().setCanDragX(true);
+        snrWindowPickLine.getWindow().setRightHandleFractionalWidth(1.0);
+        snrWindowPickLine.getWindowHandle().setWidth(3);
+        subplot.AddPlotObject(snrWindowPickLine);
+    }
+
+    public void setSNRWindowVisible(boolean value) {
+        snrWindowPickLine.getWindow().setVisible(value);
         repaint();
     }
 
@@ -577,7 +700,8 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
     @Override
     public void updateForFailedCorrelation() {
         String textString = "No Groups Built!";
-        PinnedText ptext = new PinnedText(75.0, 100, textString, HorizPinEdge.LEFT, VertPinEdge.TOP, "Arial", 72.0, new Color(0, 0, 0, 50), HorizAlignment.LEFT, VertAlignment.CENTER);
+        PinnedText ptext = new PinnedText(75.0, 100, textString, HorizPinEdge.LEFT, VertPinEdge.TOP, "Arial", 72.0,
+                new Color(0, 0, 0, 50), HorizAlignment.LEFT, VertAlignment.CENTER);
         subplot.AddPlotObject(ptext);
         getPlotRegion().setBackgroundColor(new Color(255, 200, 200));
 
@@ -646,6 +770,40 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
         return result;
     }
 
+    private Collection<CorrelationComponent> sortBySNR(Collection<CorrelationComponent> data) {
+        Collection<CorrelationComponent> result = new ArrayList<>();
+        TreeMap<Double, Collection<CorrelationComponent>> cv = new TreeMap<>();
+        double refTime = ParameterModel.getInstance().getSNRRefTime();
+        double winLen = ParameterModel.getInstance().getSNRWinLength();
+
+        for (CorrelationComponent cc : data) {
+            CorrelationTraceData td = cc.getCorrelationTraceData();
+
+            float[] plotData = td.getPlotData();
+            double traceStart = td.getTime().getEpochTime();
+            double nominalPickTime = td.getNominalPick().getTime();
+            double ccShift = cc.getShift();
+            double start = traceStart - nominalPickTime + ccShift;
+            int pickIndex = (int) Math.round((refTime - start) * td.getSampleRate());
+            int winSamples = (int) Math.round(winLen * td.getSampleRate()) + 1;
+            double snr = SeriesMath.getSnr(plotData, td.getSampleRate(), pickIndex, pickIndex - winSamples,
+                    pickIndex + pickIndex);
+
+            Collection<CorrelationComponent> ccc = cv.get(snr);
+            if (ccc == null) {
+                ccc = new ArrayList<>();
+                cv.put(snr, ccc);
+            }
+            ccc.add(cc);
+        }
+        for (Double correlation : cv.keySet()) {
+            Collection<CorrelationComponent> ccc = cv.get(correlation);
+            result.addAll(ccc);
+        }
+
+        return result;
+    }
+
     private void setLineSelected(Line line) {
         for (Line aline : lineCompMap.keySet()) {
             if (line == aline) {
@@ -680,19 +838,21 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
         }
         pickLinePickMap.clear();
         detPhasePickVplMap.clear();
-        Map<CorrelationComponent, Collection<PhasePick>> ccPickMap = DetectionPhasePickModel.getInstance().getAllPicks();
+        Map<CorrelationComponent, Collection<PhasePick>> ccPickMap = DetectionPhasePickModel.getInstance()
+                .getAllPicks();
         for (CorrelationComponent cc : ccPickMap.keySet()) {
+            StreamKey compKey = cc.getStreamKey();
             Line line = compLineMap.get(cc);
             if (line != null) {
 
                 Collection<PhasePick> picks = ccPickMap.get(cc);
-                LineBounds bounds = line.getLineBounds();
-                CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
+                CorrelationTraceData td = cc.getCorrelationTraceData();
                 double ccShift = cc.getShift();
                 double traceStart = td.getTime().getEpochTime();
                 for (PhasePick dpp : picks) {
-                    if (cc.getStreamKey().equals(dpp.getKey())) {
-                        createSinglePick(dpp, traceStart, ccShift, bounds);
+                    StreamKey pickKey = dpp.getKey();
+                    if (compKey.getSta().equals(pickKey.getSta()) && compKey.getChan().equals(pickKey.getChan())){
+                        createSinglePick(dpp, traceStart, ccShift, line);
                     }
                 }
             }
@@ -700,10 +860,10 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
         repaint();
     }
 
-    private void createSinglePick(PhasePick dpp, double traceStart, double ccShift, LineBounds bounds) {
+    private void createSinglePick(PhasePick dpp, double traceStart, double ccShift, Line line) {
         double x = dpp.getTime() - traceStart - ParameterModel.getInstance().getPrepickSeconds() + ccShift;
         double aheight = 20.0; // millimeters
-        double yval = (bounds.ymax + bounds.ymin) / 2;
+        double yval = line.getValueAt(x);
         VPickLine vpl = new VPickLine(x, yval, aheight, dpp.getPhase());
         vpl.setColor(Color.black);
         vpl.setSelectable(true);
@@ -723,28 +883,30 @@ public class ClusterViewer extends JMultiAxisPlot implements Observer, Seismogra
             subplot.DeletePlotObject(vpl);
         }
         pickLinePredPickMap.clear();
-        Map<CorrelationComponent, Collection<PredictedPhasePick>> ccPickMap = PredictedPhasePickModel.getInstance().getAllPicks();
+        Map<CorrelationComponent, Collection<PredictedPhasePick>> ccPickMap = PredictedPhasePickModel.getInstance()
+                .getAllPicks();
         for (CorrelationComponent cc : ccPickMap.keySet()) {
             Line line = compLineMap.get(cc);
             if (line != null) {
                 Collection<PredictedPhasePick> picks = ccPickMap.get(cc);
-                LineBounds bounds = line.getLineBounds();
-                CorrelationTraceData td = (CorrelationTraceData) cc.getCorrelationTraceData();
+                CorrelationTraceData td = cc.getCorrelationTraceData();
                 double ccShift = cc.getShift();
                 double traceStart = td.getTime().getEpochTime();
                 for (PredictedPhasePick dpp : picks) {
                     double x = dpp.getTime() - traceStart - ParameterModel.getInstance().getPrepickSeconds() + ccShift;
                     double aheight = 20.0; // millimeters
-                    double yval = (bounds.ymax + bounds.ymin) / 2;
-                    VPickLine vpl = new VPickLine(x, yval, aheight, dpp.getPhase());
-                    vpl.setColor(Color.LIGHT_GRAY);
-                    vpl.setWidth(4);
-                    vpl.setSelectable(false);
-                    vpl.setDraggable(false);
-                    vpl.setShowErrorBars(false);
-
-                    subplot.AddPlotObject(vpl);
-                    pickLinePredPickMap.put(vpl, dpp);
+                    LineBounds bounds = line.getLineBounds();
+                    if (x >= bounds.xmin && x <= bounds.xmax) {
+                        double yval = line.getValueAt(x);
+                        VPickLine vpl = new VPickLine(x, yval, aheight, dpp.getPhase());
+                        vpl.setColor(Color.RED);
+                        vpl.setWidth(4);
+                        vpl.setSelectable(false);
+                        vpl.setDraggable(false);
+                        vpl.setShowErrorBars(false);
+                        subplot.AddPlotObject(vpl);
+                        pickLinePredPickMap.put(vpl, dpp);
+                    }
                 }
             }
         }

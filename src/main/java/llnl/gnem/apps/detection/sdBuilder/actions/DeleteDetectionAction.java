@@ -31,9 +31,9 @@ import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
 import llnl.gnem.apps.detection.sdBuilder.dataSelection.DeleteDetectionWorker;
-import llnl.gnem.core.gui.util.ExceptionDialog;
+import llnl.gnem.dftt.core.gui.util.ExceptionDialog;
 
-import llnl.gnem.core.gui.util.Utility;
+import llnl.gnem.dftt.core.gui.util.Utility;
 
 /**
  * Created by dodge1 Date: Mar 22, 2010 COPYRIGHT NOTICE Copyright (C) 2007

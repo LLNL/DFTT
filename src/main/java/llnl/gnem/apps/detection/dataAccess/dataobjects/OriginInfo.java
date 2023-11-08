@@ -26,7 +26,7 @@
 package llnl.gnem.apps.detection.dataAccess.dataobjects;
 
 import java.util.Objects;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.util.TimeT;
 
 /**
  *

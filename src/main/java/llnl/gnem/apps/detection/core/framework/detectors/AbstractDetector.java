@@ -31,7 +31,7 @@ import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.core.dataObjects.TransformedStreamSegment;
 import llnl.gnem.apps.detection.core.dataObjects.TriggerPositionType;
 import llnl.gnem.apps.detection.core.framework.DetectionStatistic;
-import llnl.gnem.core.util.FileSystemException;
+import llnl.gnem.dftt.core.util.FileSystemException;
 
 public abstract class AbstractDetector implements Detector, Serializable {
 

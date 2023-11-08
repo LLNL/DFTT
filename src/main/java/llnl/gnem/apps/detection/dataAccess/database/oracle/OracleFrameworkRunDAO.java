@@ -47,9 +47,9 @@ import llnl.gnem.apps.detection.dataAccess.database.TableNames;
 import llnl.gnem.apps.detection.util.FrameworkRun;
 import llnl.gnem.apps.detection.util.RunInfo;
 import llnl.gnem.apps.detection.util.initialization.ProcessingPrescription;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.dataAccess.database.oracle.OracleDBUtil;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.database.oracle.OracleDBUtil;
+import llnl.gnem.dftt.core.util.TimeT;
 import oracle.sql.BLOB;
 
 /**

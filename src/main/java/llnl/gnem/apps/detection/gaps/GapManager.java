@@ -30,14 +30,14 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-import llnl.gnem.core.waveform.qc.DataDefect;
-import llnl.gnem.core.waveform.qc.DataGap;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.PairT;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
-import llnl.gnem.core.waveform.merge.IntWaveform;
-import llnl.gnem.core.waveform.merge.NamedIntWaveform;
+import llnl.gnem.dftt.core.waveform.qc.DataDefect;
+import llnl.gnem.dftt.core.waveform.qc.DataGap;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.PairT;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
+import llnl.gnem.dftt.core.waveform.merge.IntWaveform;
+import llnl.gnem.dftt.core.waveform.merge.NamedIntWaveform;
 
 /**
  *

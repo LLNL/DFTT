@@ -32,7 +32,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SpringLayout;
-import llnl.gnem.core.gui.util.SpringUtilities;
+import llnl.gnem.dftt.core.gui.util.SpringUtilities;
 
 /**
  *

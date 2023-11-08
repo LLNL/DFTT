@@ -31,19 +31,20 @@ import java.util.logging.Level;
 import org.ojalgo.matrix.Primitive32Matrix;
 import org.ojalgo.matrix.Primitive32Matrix.DenseReceiver;
 import org.ojalgo.matrix.decomposition.SingularValue;
+import org.ojalgo.matrix.store.Primitive64Store;
 import org.ojalgo.matrix.store.RawStore;
 
 import llnl.gnem.apps.detection.core.signalProcessing.RFFTdp;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.StreamKey;
-import org.ojalgo.matrix.store.Primitive64Store;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 public class Projection {
 
     private int delay;
     private float cmax;
 
-    public Projection(SubspaceTemplate existingTemplate, ArrayList<float[][]> newTemplateRepresentation, ArrayList<StreamKey> chanIDs, int shiftRange) {
+    public Projection(SubspaceTemplate existingTemplate, ArrayList<float[][]> newTemplateRepresentation,
+            ArrayList<StreamKey> chanIDs, int shiftRange) {
 
         int nchannels = existingTemplate.getnchannels();
         int templateLength = existingTemplate.getTemplateLength();
@@ -86,6 +87,7 @@ public class Projection {
             Primitive32Matrix U2s = shiftTemplate(U2.get(), shift, nchannels, templateLength);
             Primitive32Matrix C = U1t.multiply(U2s);
             SingularValue<Double> svd = SingularValue.PRIMITIVE.make(C);
+            svd.decompose(C);
             float c = svd.getSingularValues().floatValue(0);
             if (c > cmax) {
                 cmax = c;
@@ -134,7 +136,8 @@ public class Projection {
         // get dimensions of templates
         int dim1 = template1.getdimension();
         int dim2 = template2.getdimension();
-        String msg = String.format("Template1 of dimension %d and length %d, Template2 of dimension %d and length %d", dim1, n1, dim2, n2);
+        String msg = String.format("Template1 of dimension %d and length %d, Template2 of dimension %d and length %d",
+                dim1, n1, dim2, n2);
         ApplicationLogger.getInstance().log(Level.FINE, msg);
 
         // pull templates into double[dimension][channel][samples]
@@ -159,7 +162,7 @@ public class Projection {
         }
 
         // unpack second template - don't assume channels are in the same order
-        //   as in the first template
+        // as in the first template
         ArrayList<StreamKey> channels1 = template1.getStaChanList();
         ArrayList<StreamKey> channels2 = template2.getStaChanList();
 
@@ -191,10 +194,11 @@ public class Projection {
         // calculate SVDs
         cmax = 0.0f;
 
-        //   positive lags
+        // positive lags
         for (int i = 0; i < n2; i++) {
             Primitive64Store data = Primitive64Store.FACTORY.rows(c[i]);
             SingularValue<Double> svd = SingularValue.PRIMITIVE.make(data);
+            svd.decompose(data);
             float ct = getSingularValue(data, svd);
             if (ct > cmax) {
                 cmax = ct;
@@ -202,10 +206,11 @@ public class Projection {
             }
         }
 
-        //   negative lags
+        // negative lags
         for (int i = 1; i < n1; i++) {
             Primitive64Store data2 = Primitive64Store.FACTORY.rows(c[N - i]);
             SingularValue<Double> svd = SingularValue.PRIMITIVE.make(data2);
+            svd.decompose(data2);
             float ct = getSingularValue(data2, svd);
             if (ct > cmax) {
                 cmax = ct;
@@ -316,7 +321,8 @@ public class Projection {
         return retval;
     }
 
-    public static ArrayList<float[]> getRegisteredSegment(SubspaceTemplate template, float[][] preprocessedDataFromStream) {
+    public static ArrayList<float[]> getRegisteredSegment(SubspaceTemplate template,
+            float[][] preprocessedDataFromStream) {
 
         // construct projection Primitive32Matrix from template
         int nchannels = template.getnchannels();

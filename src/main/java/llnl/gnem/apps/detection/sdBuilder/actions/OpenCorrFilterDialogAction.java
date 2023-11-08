@@ -28,8 +28,8 @@ package llnl.gnem.apps.detection.sdBuilder.actions;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import javax.swing.AbstractAction;
-import llnl.gnem.core.gui.util.Utility;
-import llnl.gnem.core.gui.waveform.factory.FilterComponentFactoryHolder;
+import llnl.gnem.dftt.core.gui.util.Utility;
+import llnl.gnem.dftt.core.gui.waveform.factory.FilterComponentFactoryHolder;
 
 /**
  * Created by IntelliJ IDEA.

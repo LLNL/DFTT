@@ -34,20 +34,20 @@ import llnl.gnem.apps.detection.ConfigurationInfo;
 
 import llnl.gnem.apps.detection.source.SourceData;
 
-import llnl.gnem.core.database.DbCommandLineParser;
-import llnl.gnem.core.io.SAC.SACFile;
-import llnl.gnem.core.io.SAC.SACHeader;
-import llnl.gnem.core.signalprocessing.Sequence;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.FileSystemException;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.database.DbCommandLineParser;
+import llnl.gnem.dftt.core.io.SAC.SACFile;
+import llnl.gnem.dftt.core.io.SAC.SACHeader;
+import llnl.gnem.dftt.core.signalprocessing.Sequence;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.FileSystemException;
+import llnl.gnem.dftt.core.util.TimeT;
 import llnl.gnem.apps.detection.core.dataObjects.WaveformSegment;
 import llnl.gnem.apps.detection.dataAccess.ApplicationRoleManager;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectionSummary;
-import llnl.gnem.core.dataAccess.DAOFactory;
-import llnl.gnem.core.dataAccess.SeismogramSourceInfo;
-import llnl.gnem.core.util.FileUtil.DriveMapper;
+import llnl.gnem.dftt.core.dataAccess.DAOFactory;
+import llnl.gnem.dftt.core.dataAccess.SeismogramSourceInfo;
+import llnl.gnem.dftt.core.util.FileUtil.DriveMapper;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
@@ -203,7 +203,7 @@ public class DetSegExtractor {
     private void writeSacFile(int detectionid, WaveformSegment data) throws FileSystemException {
         WaveformSegment waveformSegment = data;
         SACHeader header = new SACHeader();
-        header.setTime(new llnl.gnem.core.util.TimeT(waveformSegment.getTimeAsDouble()));
+        header.setTime(new llnl.gnem.dftt.core.util.TimeT(waveformSegment.getTimeAsDouble()));
         header.b = 0;
         header.delta = (float) (1.0 / data.getSamprate());
         header.kstnm = waveformSegment.getSta();

@@ -34,7 +34,7 @@ import llnl.gnem.apps.detection.core.dataObjects.TransformedStreamSegment;
 import llnl.gnem.apps.detection.core.framework.DetectionStatistic;
 import llnl.gnem.apps.detection.core.framework.detectors.AbstractSimpleDetector;
 import llnl.gnem.apps.detection.core.framework.detectors.DetectorInfo;
-import llnl.gnem.core.util.Epoch;
+import llnl.gnem.dftt.core.util.Epoch;
 
 public class BulletinDetector extends AbstractSimpleDetector {
 

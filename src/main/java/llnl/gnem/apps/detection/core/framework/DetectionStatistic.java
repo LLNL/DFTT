@@ -28,7 +28,7 @@ package llnl.gnem.apps.detection.core.framework;
 import java.util.Map;
 import java.util.TreeMap;
 import llnl.gnem.apps.detection.core.framework.detectors.DetectorInfo;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.util.TimeT;
 
 /**
  *

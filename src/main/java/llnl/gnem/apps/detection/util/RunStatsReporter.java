@@ -26,11 +26,11 @@
 package llnl.gnem.apps.detection.util;
 
 import java.util.Collection;
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
 
 import java.util.logging.Level;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
-import llnl.gnem.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
 
 /**
  * Created by dodge1 Date: Dec 20, 2010 COPYRIGHT NOTICE Copyright (C) 2007

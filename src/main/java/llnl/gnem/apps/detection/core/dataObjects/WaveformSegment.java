@@ -32,13 +32,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.waveform.qc.DataDefect;
-import llnl.gnem.core.util.Epoch;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
-import llnl.gnem.core.waveform.merge.NamedIntWaveform;
-import llnl.gnem.core.waveform.seismogram.BasicSeismogram;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.waveform.qc.DataDefect;
+import llnl.gnem.dftt.core.util.Epoch;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
+import llnl.gnem.dftt.core.waveform.merge.NamedIntWaveform;
+import llnl.gnem.dftt.core.waveform.seismogram.BasicSeismogram;
 import net.jcip.annotations.ThreadSafe;
 
 /**

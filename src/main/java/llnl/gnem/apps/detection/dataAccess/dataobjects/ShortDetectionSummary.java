@@ -25,7 +25,7 @@
  */
 package llnl.gnem.apps.detection.dataAccess.dataobjects;
 
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.util.TimeT;
 
 /**
  *

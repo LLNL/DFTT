@@ -32,10 +32,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import javax.swing.SwingWorker;
-import llnl.gnem.core.correlation.CorrelationComponent;
-import llnl.gnem.core.gui.util.ProgressDialog;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.waveform.filter.StoredFilter;
+import llnl.gnem.dftt.core.correlation.CorrelationComponent;
+import llnl.gnem.dftt.core.gui.util.ProgressDialog;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.waveform.filter.StoredFilter;
 
 /**
  *

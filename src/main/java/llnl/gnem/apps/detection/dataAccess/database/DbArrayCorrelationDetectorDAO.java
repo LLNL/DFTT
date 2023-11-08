@@ -54,10 +54,10 @@ import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import llnl.gnem.apps.detection.dataAccess.interfaces.ArrayCorrelationDetectorDAO;
 import llnl.gnem.apps.detection.streams.ConcreteStreamProcessor;
 import llnl.gnem.apps.detection.util.RunInfo;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.database.ConnectionManager;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.database.ConnectionManager;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *

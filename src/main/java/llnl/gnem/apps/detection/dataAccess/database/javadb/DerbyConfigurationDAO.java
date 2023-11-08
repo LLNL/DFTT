@@ -34,9 +34,9 @@ import java.util.Collection;
 import llnl.gnem.apps.detection.dataAccess.interfaces.ConfigurationDAO;
 
 import llnl.gnem.apps.detection.util.Configuration;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.dataAccess.SeismogramSourceInfo;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.SeismogramSourceInfo;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *

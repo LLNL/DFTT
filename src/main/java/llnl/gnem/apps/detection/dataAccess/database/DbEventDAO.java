@@ -32,12 +32,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
-import llnl.gnem.apps.detection.dataAccess.dataobjects.EventInfo;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.StationInfo;
 import llnl.gnem.apps.detection.dataAccess.interfaces.EventDAO;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.database.Connections;
-import llnl.gnem.core.util.Epoch;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.database.Connections;
 
 public abstract class DbEventDAO implements EventDAO {
 
@@ -54,24 +52,6 @@ public abstract class DbEventDAO implements EventDAO {
     public Collection<StationInfo> getEventStationInfo(int evid) throws DataAccessException {
         try {
             return getEventStationInfoP(evid);
-        } catch (SQLException ex) {
-            throw new DataAccessException(ex.getMessage());
-        }
-    }
-
-    @Override
-    public void defineNewEvent(double minTime, double maxTime) throws DataAccessException {
-        try {
-            defineNewEventP(minTime, maxTime);
-        } catch (SQLException ex) {
-            throw new DataAccessException(ex.getMessage());
-        }
-    }
-    
-    @Override
-    public Collection<EventInfo> getEventsInTimeWindow(Epoch epoch) throws DataAccessException{
-        try {
-            return getEventsInTimeWindowP(epoch);
         } catch (SQLException ex) {
             throw new DataAccessException(ex.getMessage());
         }
@@ -99,7 +79,13 @@ public abstract class DbEventDAO implements EventDAO {
 
     private Collection<StationInfo> getEventStationInfoP(int evid) throws SQLException {
         Collection<StationInfo> result = new ArrayList<>();
-        String sql = String.format("select configid,sta,stla,stlo from %s where evid = ? order by stime", TableNames.getEventStationTimesTable());
+        String sql = String.format("select distinct a.configid, a.station_code, b.stla, b.stlo\n"
+                + "  from %s a, %s b\n"
+                + " where event_id = ?\n"
+                + "   and a.configid = b.configid\n"
+                + "   and a.station_code = b.sta order by stime",
+                TableNames.getArrivalTable(),
+                TableNames.getGroupStationDataTable());
         Connection conn = null;
         try {
             Connections connections = DetectionDAOFactory.getInstance().getConnections();
@@ -148,65 +134,6 @@ public abstract class DbEventDAO implements EventDAO {
             DetectionDAOFactory.getInstance().getConnections().checkIn(conn);
         }
 
-    }
-
-    private void defineNewEventP(double minTime, double maxTime) throws SQLException {
-        String sql = String.format("insert into %s values ( %s.nextval,?,?)",
-                TableNames.getEventTable(),
-                SequenceNames.getEventidSequenceName());
-        Connection conn = null;
-        try {
-            Connections connections = DetectionDAOFactory.getInstance().getConnections();
-            conn = connections.checkOut();
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setDouble(1, minTime);
-                stmt.setDouble(2, maxTime);
-                stmt.execute();
-                addPicks(minTime, maxTime, conn);
-                conn.commit();
-            }
-        } finally {
-            DetectionDAOFactory.getInstance().getConnections().checkIn(conn);
-        }
-    }
-
-    private void addPicks(double minTime, double maxTime, Connection conn) throws SQLException {
-        String sql = String.format("insert into %s select %s.currval, pickid from %s where time between ? and ?",
-                TableNames.getEventPickAssocTable(),
-                SequenceNames.getEventidSequenceName(),
-                TableNames.getPhasePickTable());
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setDouble(1, minTime);
-            stmt.setDouble(2, maxTime);
-            stmt.execute();
-        }
-    }
-
-    private Collection<EventInfo> getEventsInTimeWindowP(Epoch epoch) throws SQLException {
-        Collection<EventInfo> result = new ArrayList<>();
-        String sql = String.format("select eventid, min_time,max_time from %s where min_time >= ? and max_time <= ?", 
-                TableNames.getEventTable());
-        Connection conn = null;
-        try {
-            Connections connections = DetectionDAOFactory.getInstance().getConnections();
-            conn = connections.checkOut();
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setDouble(1, epoch.getStart());
-            stmt.setDouble(2, epoch.getEnd());
-                try (ResultSet rs = stmt.executeQuery()) {
-                    while (rs.next()) {
-                        int jdx = 1;
-                        int eventId = rs.getInt(jdx++);
-                        double minTime = rs.getDouble(jdx++);
-                        double maxTime = rs.getDouble(jdx++);
-                        result.add(new EventInfo(eventId, minTime, maxTime));
-                    }
-                }
-                return result;
-            }
-        } finally {
-            DetectionDAOFactory.getInstance().getConnections().checkIn(conn);
-        }
     }
 
 }

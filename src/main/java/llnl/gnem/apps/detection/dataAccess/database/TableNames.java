@@ -32,7 +32,6 @@ package llnl.gnem.apps.detection.dataAccess.database;
 public class TableNames {
 
     private static final String ORIGIN_TABLE = "ORIGIN";
-    private static final String EVENT_STATION_TIMES_TABLE = "EVENT_STATION_TIMES";
     private static final String FRAMEWORK_RUN_TABLE = "FRAMEWORK_RUN";
     private static final String DETECTION_TABLE = "DETECTION";
     private static final String TRIGGER_RECORD_TABLE = "TRIGGER_RECORD";
@@ -43,8 +42,6 @@ public class TableNames {
     private static final String STREAM_CHANNEL_TABLE = "STREAM_CHANNEL";
     private static final String STREAM_TABLE = "STREAM";
     private static final String STORED_FILTER_TABLE = "STORED_FILTER";
-    private static final String EVENT_TABLE = "EVENT";
-    private static final String EVENT_PICK_ASSOC_TABLE = "EVENT_PICK_ASSOC";
     private static final String DETECTOR_THRESHOLD_HISTORY_TABLE = "DETECTOR_THRESHOLD_HISTORY";
     private static final String SUBSPACE_TEMPLATE_TABLE = "SUBSPACE_TEMPLATE";
     private static final String SUBSPACE_DETECTOR_PARAMS_TABLE = "SUBSPACE_DETECTOR_PARAMS";
@@ -60,15 +57,12 @@ public class TableNames {
     private static final String BULLETIN_DETECTOR_SPEC_TABLE = "BULLETIN_DETECTOR_SPEC";
     private static final String STALTA_DETECTOR_PARAMS_TABLE = "STALTA_DETECTOR_PARAMS";
     private static final String BEAM_RECIPE_TABLE = "BEAM_RECIPE";
-    private static final String  ARRAY_INFO_TABLE = "ARRAY_INFO";
+    private static final String ARRAY_INFO_TABLE = "ARRAY_INFO";
+    private static final String ARRIVAL_TABLE = "ARRIVAL";
 
 
     public static String getOriginTable() {
         return  ORIGIN_TABLE;
-    }
-
-    public static String getEventStationTimesTable() {
-        return EVENT_STATION_TIMES_TABLE;
     }
 
     public static String getFrameworkRunTable() {
@@ -109,14 +103,6 @@ public class TableNames {
 
     public static String getStoredFilterTable() {
         return  STORED_FILTER_TABLE;
-    }
-
-    public static String getEventTable() {
-        return EVENT_TABLE;
-    }
-
-    public static String getEventPickAssocTable() {
-        return EVENT_PICK_ASSOC_TABLE;
     }
 
     public static String getDetectorThresholdHistoryTable() {
@@ -184,4 +170,7 @@ public class TableNames {
         return  ARRAY_INFO_TABLE;
     }
 
+    public static String getArrivalTable(){
+        return ARRIVAL_TABLE;
+    }
 }

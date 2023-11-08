@@ -30,8 +30,8 @@
  */
 package llnl.gnem.apps.detection.core.signalProcessing;
 
-import llnl.gnem.core.signalprocessing.Sequence;
-import llnl.gnem.core.signalprocessing.filter.IIRFilter;
+import llnl.gnem.dftt.core.signalprocessing.Sequence;
+import llnl.gnem.dftt.core.signalprocessing.filter.IIRFilter;
 
 /**
  *

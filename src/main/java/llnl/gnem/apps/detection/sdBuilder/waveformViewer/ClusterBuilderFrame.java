@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,24 +26,29 @@
 package llnl.gnem.apps.detection.sdBuilder.waveformViewer;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.util.Collection;
-import javax.swing.JButton;
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
-import javax.swing.JToolBar;
+import javax.swing.SpringLayout;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import llnl.gnem.apps.detection.sdBuilder.ClusterDlgToolbar;
-import llnl.gnem.apps.detection.sdBuilder.actions.BuildStackBeamAction;
+import llnl.gnem.apps.detection.sdBuilder.ClusterDlgToolbar2;
 import llnl.gnem.apps.detection.sdBuilder.dataSelection.ConfigDataModel;
 import llnl.gnem.apps.detection.sdBuilder.dataSelection.GetConfigurationsWorker;
 import llnl.gnem.apps.detection.sdBuilder.dataSelection.TreePanel;
-import llnl.gnem.apps.detection.sdBuilder.stackViewer.StackViewer;
+import llnl.gnem.apps.detection.sdBuilder.help.HelpDocumentModel;
 import llnl.gnem.apps.detection.sdBuilder.stackViewer.StackViewerPanel;
-import llnl.gnem.core.correlation.CorrelationComponent;
-import llnl.gnem.core.gui.plotting.Limits;
-import llnl.gnem.core.gui.plotting.MouseMode;
-import llnl.gnem.core.gui.util.PersistentPositionContainer;
+import llnl.gnem.dftt.core.correlation.CorrelationComponent;
+import llnl.gnem.dftt.core.gui.plotting.Limits;
+import llnl.gnem.dftt.core.gui.plotting.MouseMode;
+import llnl.gnem.dftt.core.gui.util.PersistentPositionContainer;
+import llnl.gnem.dftt.core.gui.util.SpringUtilities;
+import llnl.gnem.dftt.core.waveform.filter.StoredFilter;
 
 /**
  * Created by dodge1 Date: Feb 4, 2010 COPYRIGHT NOTICE Copyright (C) 2007
@@ -51,11 +56,13 @@ import llnl.gnem.core.gui.util.PersistentPositionContainer;
  */
 public class ClusterBuilderFrame extends PersistentPositionContainer {
 
+    private static final Logger log = LoggerFactory.getLogger(ClusterBuilderFrame.class);
+
     private static ClusterBuilderFrame instance;
     private static final long serialVersionUID = 7841877980319845713L;
     private final ClusterViewer traceViewer;
     private final StackViewerPanel stackViewer;
-    
+
     private final TreePanel treePanel;
 
     public synchronized static ClusterBuilderFrame getInstance() {
@@ -64,9 +71,11 @@ public class ClusterBuilderFrame extends PersistentPositionContainer {
         }
         return instance;
     }
-    private final ClusterDlgToolbar toolbar;
 
-    private ClusterBuilderFrame()  {
+    private final ClusterDlgToolbar toolbar;
+    private final ClusterDlgToolbar2 toolbar2;
+
+    private ClusterBuilderFrame() {
         super("detection/sdBuilder", "Subspace Detector Builder" + ": Detector Waveforms", 800, 800);
         setIconImage(null);
 
@@ -75,36 +84,41 @@ public class ClusterBuilderFrame extends PersistentPositionContainer {
         traceViewer = new ClusterViewer();
         stackViewer = new StackViewerPanel();
         new GetConfigurationsWorker().execute();
-         
-        JSplitPane waveformSplitter = new JSplitPane(JSplitPane.VERTICAL_SPLIT,traceViewer,stackViewer);
+
+        JSplitPane waveformSplitter = new JSplitPane(JSplitPane.VERTICAL_SPLIT, traceViewer, stackViewer);
         this.registerSplitter(waveformSplitter, "traceTraceSplitter", 500);
-        
-        JSplitPane splitter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,treePanel,waveformSplitter);
+
+        JSplitPane splitter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treePanel, waveformSplitter);
         this.registerSplitter(splitter, "treeTraceSplitter", 200);
-      
-        
-        
+
         CorrelatedTracesModel.getInstance().setViewer(traceViewer);
         CorrelatedTracesModel.getInstance().setViewer(stackViewer);
-        
-        
+
         this.getContentPane().add(splitter, BorderLayout.CENTER);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         toolbar = new ClusterDlgToolbar(traceViewer);
-        this.getContentPane().add(toolbar, BorderLayout.NORTH);
-
-
-//        updateCaption();
+        toolbar2 = new ClusterDlgToolbar2();
+        JPanel toolbarPanel = new JPanel(new SpringLayout());
+        toolbarPanel.add(toolbar);
+        toolbarPanel.add(toolbar2);
+        SpringUtilities.makeCompactGrid(toolbarPanel,
+                2, 1,
+                0, 0, // initX, initY
+                0, 0);
+        getContentPane().add(toolbarPanel, BorderLayout.NORTH);
+        try {
+            HelpDocumentModel.getInstance().initialize();
+        } catch (Exception ex) {
+            log.error("Failed initializing help document!", ex);
+        }
     }
-    
 
     public void setCorrelationWindowVisible(boolean value) {
         traceViewer.setCorrelationWindowVisible(value);
         stackViewer.setCorrelationWindowVisible(value);
         repaint();
     }
-    
 
     @Override
     protected void updateCaption() {
@@ -120,7 +134,6 @@ public class ClusterBuilderFrame extends PersistentPositionContainer {
         traceViewer.reduceTraces();
         stackViewer.reduceTraces();
     }
-
 
     public void autoScaleTraces() {
         traceViewer.scaleAllTraces(false);
@@ -143,45 +156,46 @@ public class ClusterBuilderFrame extends PersistentPositionContainer {
     public void clearTree() {
         treePanel.clearTree();
     }
-    
-    public Limits getCurrentXLimits()
-    {
+
+    public Limits getCurrentXLimits() {
         return traceViewer.getCurrentXLimits();
     }
 
     void setSelectedDetection(int detectionid) {
         treePanel.setSelectedDetection(detectionid);
     }
-    
-    public void applyCurrentFilter()
-    {
+
+    public void applyCurrentFilter() {
         toolbar.applyCurrentFilter();
     }
     
-    public void returnFocusToTree()
+    public StoredFilter getCurrentFilter()
     {
+        return toolbar.getCurrentFilter();
+    }
+
+    public void returnFocusToTree() {
         treePanel.returnFocusToTree();
     }
-    
-    public void setMouseMode(MouseMode mode){
+
+    public void setMouseMode(MouseMode mode) {
         stackViewer.setMouseMode(mode);
         traceViewer.setMouseMode(mode);
     }
-    
+
     public void loadDetectionWaveforms() {
         treePanel.loadDetections();
     }
-    
-    public void removeMultipleDetections(Collection<Integer> detectionIdValues){
+
+    public void removeMultipleDetections(Collection<Integer> detectionIdValues) {
         treePanel.removeMultipleDetections(detectionIdValues);
     }
 
     public Collection<CorrelationComponent> getVisibleTraces() {
         return traceViewer.getVisibleTraces();
     }
-    
-    public void updateTraceColors()
-    {
+
+    public void updateTraceColors() {
         traceViewer.updateTraceColors();
     }
 
@@ -189,11 +203,34 @@ public class ClusterBuilderFrame extends PersistentPositionContainer {
         stackViewer.setCorrelationWindowLength(newLength);
         traceViewer.setCorrelationWindowLength(newLength);
     }
-    
-    
+
     public void setCorrelationWindowStart(double newStart) {
         stackViewer.setCorrelationWindowStart(newStart);
         traceViewer.setCorrelationWindowStart(newStart);
     }
 
+    public void sortBySNR() {
+        traceViewer.sortCurrentData();
+    }
+
+    public void setSNRWindowVisible(boolean value) {
+        traceViewer.setSNRWindowVisible(value);
+    }
+
+    public void setSelectedFilter(StoredFilter selected) {
+        toolbar.setSelectedFilter(selected);
+    }
+
+    public void unApplyFilter() {
+        toolbar.unApplyFilter();
+    }
+
+    public void classifyAndNext(String l, boolean b) {
+        treePanel.classifyAndNext(l, b);
+    }
+
+    public void zoomToNewXLimits(double start, double end) {
+        stackViewer.zoomToNewXLimits(start, end);
+        traceViewer.zoomToNewXLimits(start, end);
+    }
 }

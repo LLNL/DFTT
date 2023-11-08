@@ -27,9 +27,9 @@ package llnl.gnem.apps.detection.sdBuilder.arrayDisplay.fkDisplay;
 
 import java.awt.BorderLayout;
 import javax.swing.JFrame;
-import llnl.gnem.core.gui.plotting.fkPlot.FKPlot;
-import llnl.gnem.core.gui.util.PersistentPositionContainer;
-import llnl.gnem.core.signalprocessing.arrayProcessing.FKResult;
+import llnl.gnem.dftt.core.gui.plotting.fkPlot.FKPlot;
+import llnl.gnem.dftt.core.gui.util.PersistentPositionContainer;
+import llnl.gnem.dftt.core.signalprocessing.arrayProcessing.FKResult;
 
 public class SingleEventFKFrame extends PersistentPositionContainer {
 

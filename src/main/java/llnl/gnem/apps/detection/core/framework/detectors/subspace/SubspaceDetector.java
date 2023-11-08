@@ -34,7 +34,7 @@ import llnl.gnem.apps.detection.core.framework.DetectionStatistic;
 import llnl.gnem.apps.detection.core.framework.detectors.AbstractEmpiricalDetector;
 import llnl.gnem.apps.detection.core.framework.detectors.DetectorInfo;
 import llnl.gnem.apps.detection.core.signalProcessing.OverlapAdd_dp;
-import llnl.gnem.core.signalprocessing.Sequence;
+import llnl.gnem.dftt.core.signalprocessing.Sequence;
 
 /**
  * Revised by D. Harris from earlier versions on November 24 - Dec 3, 2012

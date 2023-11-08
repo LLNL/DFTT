@@ -29,8 +29,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import javax.swing.AbstractAction;
 import llnl.gnem.apps.detection.sdBuilder.allStations.SeismogramModel;
-import llnl.gnem.core.gui.util.Utility;
-import llnl.gnem.core.waveform.BaseTraceData;
+import llnl.gnem.dftt.core.gui.util.Utility;
+import llnl.gnem.dftt.core.waveform.BaseTraceData;
 
 public class HideTraceAction extends AbstractAction {
 

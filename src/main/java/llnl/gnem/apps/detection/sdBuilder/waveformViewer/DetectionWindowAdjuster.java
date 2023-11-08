@@ -28,11 +28,11 @@ package llnl.gnem.apps.detection.sdBuilder.waveformViewer;
 import java.util.ArrayList;
 import java.util.Collection;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
-import llnl.gnem.core.correlation.CorrelationComponent;
-import llnl.gnem.core.correlation.CorrelationTraceData;
-import llnl.gnem.core.signalprocessing.TimeFreqStatistics;
-import llnl.gnem.core.util.PairT;
-import llnl.gnem.core.util.SeriesMath;
+import llnl.gnem.dftt.core.correlation.CorrelationComponent;
+import llnl.gnem.dftt.core.correlation.CorrelationTraceData;
+import llnl.gnem.dftt.core.signalprocessing.TimeFreqStatistics;
+import llnl.gnem.dftt.core.util.PairT;
+import llnl.gnem.dftt.core.util.SeriesMath;
 
 /**
  *

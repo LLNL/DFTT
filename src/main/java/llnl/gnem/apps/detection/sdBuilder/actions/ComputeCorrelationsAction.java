@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,14 +25,14 @@
  */
 package llnl.gnem.apps.detection.sdBuilder.actions;
 
-
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import javax.swing.*;
-import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ComputeCorrelationsWorker;
-import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
 
-import llnl.gnem.core.gui.util.Utility;
+import javax.swing.AbstractAction;
+
+import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
+import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ComputeCorrelationsWorker;
+import llnl.gnem.dftt.core.gui.util.Utility;
 
 /**
  * Created by dodge1
@@ -40,30 +40,28 @@ import llnl.gnem.core.gui.util.Utility;
  * COPYRIGHT NOTICE
  * Copyright (C) 2007 Lawrence Livermore National Laboratory.
  */
-@SuppressWarnings({"NonThreadSafeLazyInitialization"})
+@SuppressWarnings({ "NonThreadSafeLazyInitialization" })
 public class ComputeCorrelationsAction extends AbstractAction {
     private static ComputeCorrelationsAction ourInstance;
     private static final long serialVersionUID = 6163681618566924860L;
 
-    public static ComputeCorrelationsAction getInstance(Object owner)
-    {
-        if( ourInstance == null )
+    public static ComputeCorrelationsAction getInstance(Object owner) {
+        if (ourInstance == null) {
             ourInstance = new ComputeCorrelationsAction(owner);
+        }
         return ourInstance;
     }
 
-    private ComputeCorrelationsAction(Object owner)
-    {
-        super( "Compute", Utility.getIcon(owner,"miscIcons/process32.gif") );
+    private ComputeCorrelationsAction(Object owner) {
+        super("Compute", Utility.getIcon(owner, "miscIcons/process32.gif"));
         putValue(SHORT_DESCRIPTION, "Compute Correlations");
-        putValue(MNEMONIC_KEY, KeyEvent.VK_C );
+        putValue(MNEMONIC_KEY, KeyEvent.VK_C);
     }
 
     @Override
-    public void actionPerformed(ActionEvent e)
-    {
-        ComputeCorrelationsWorker worker = new ComputeCorrelationsWorker(ParameterModel.getInstance().isFixShiftsToZero());
+    public void actionPerformed(ActionEvent e) {
+        ComputeCorrelationsWorker worker = new ComputeCorrelationsWorker(
+                ParameterModel.getInstance().isFixShiftsToZero(), null, null, null);
         worker.execute();
     }
-
 }

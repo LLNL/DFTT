@@ -26,9 +26,9 @@
 package llnl.gnem.apps.detection.statistics.fileWriting;
 
 import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
-import llnl.gnem.core.io.SAC.SACFileWriter;
+import llnl.gnem.dftt.core.io.SAC.SACFileWriter;
 
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.util.TimeT;
 
 import java.io.File;
 import java.io.IOException;

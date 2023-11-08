@@ -28,7 +28,7 @@ package llnl.gnem.apps.detection.sdBuilder.histogramDisplay;
 import llnl.gnem.apps.detection.sdBuilder.templateDisplay.*;
 import java.awt.BorderLayout;
 import javax.swing.JButton;
-import llnl.gnem.core.gui.util.PersistentPositionContainer;
+import llnl.gnem.dftt.core.gui.util.PersistentPositionContainer;
 
 /**
  *

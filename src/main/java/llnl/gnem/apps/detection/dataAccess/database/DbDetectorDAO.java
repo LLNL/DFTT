@@ -54,13 +54,13 @@ import llnl.gnem.apps.detection.streams.ConcreteStreamProcessor;
 import llnl.gnem.apps.detection.util.DetectoridRestriction;
 import llnl.gnem.apps.detection.util.SubspaceThreshold;
 import llnl.gnem.apps.detection.util.initialization.ProcessingPrescription;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.dataAccess.database.oracle.OracleDBUtil;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.dataAccess.database.oracle.OracleDBUtil;
 
-import llnl.gnem.core.database.Connections;
-import llnl.gnem.core.util.ApplicationLogger;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
+import llnl.gnem.dftt.core.database.Connections;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
 
 public abstract class DbDetectorDAO implements DetectorDAO {
 
@@ -355,7 +355,7 @@ public abstract class DbDetectorDAO implements DetectorDAO {
 
     private List<StreamKey> getDetectorChannelsPFromConfigP(long configid) throws SQLException {
         ArrayList<StreamKey> result = new ArrayList<>();
-        String sql = String.format("select sta, chan from %s where streamid in (\n"
+        String sql = String.format("select station_code, chan from %s where streamid in (\n"
                 + "select streamid from stream where configid = ?)",
                 TableNames.getStreamChannelTable(),
                 TableNames.getStreamTable());

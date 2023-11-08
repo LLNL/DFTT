@@ -31,7 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 import llnl.gnem.apps.detection.sdBuilder.DetectionWaveforms;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
-import llnl.gnem.core.correlation.CorrelationComponent;
+import llnl.gnem.dftt.core.correlation.CorrelationComponent;
 
 /**
  *

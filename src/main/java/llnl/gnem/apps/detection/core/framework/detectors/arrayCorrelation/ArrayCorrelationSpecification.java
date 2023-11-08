@@ -32,7 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList; 
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 
 public class ArrayCorrelationSpecification extends AbstractEmpiricalSpecification {

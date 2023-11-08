@@ -30,7 +30,7 @@ import java.awt.event.KeyEvent;
 import javax.swing.*;
 import llnl.gnem.apps.detection.classify.ClassifyAllInstancesWorker;
 
-import llnl.gnem.core.gui.util.Utility;
+import llnl.gnem.dftt.core.gui.util.Utility;
 
 /**
  * Created by dodge1 Date: Mar 22, 2010 COPYRIGHT NOTICE Copyright (C) 2007

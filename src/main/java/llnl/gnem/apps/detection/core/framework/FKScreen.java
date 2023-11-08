@@ -27,10 +27,10 @@ package llnl.gnem.apps.detection.core.framework;
 
 import java.util.ArrayList;
 import java.util.logging.Level;
-import llnl.gnem.core.signalprocessing.arrayProcessing.FKProducer;
-import llnl.gnem.core.signalprocessing.arrayProcessing.FKResult;
-import llnl.gnem.core.signalprocessing.arrayProcessing.SlownessValue;
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.signalprocessing.arrayProcessing.FKProducer;
+import llnl.gnem.dftt.core.signalprocessing.arrayProcessing.FKResult;
+import llnl.gnem.dftt.core.signalprocessing.arrayProcessing.SlownessValue;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
 
 /**
  *

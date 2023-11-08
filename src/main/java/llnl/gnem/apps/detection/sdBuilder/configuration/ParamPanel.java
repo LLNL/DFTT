@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,10 +28,13 @@ package llnl.gnem.apps.detection.sdBuilder.configuration;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+
 import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
+import llnl.gnem.dftt.core.correlation.clustering.ClusterType;
 
 /**
  *
@@ -90,12 +93,15 @@ public class ParamPanel extends JPanel {
             boolean rWRefineWindow,
             double rWSnrThreshold,
             double rWAnalysisWindowLength,
-            double rWMinimumWindowLength) {
+            double rWMinimumWindowLength,
+            ClusterType clusterType,
+            int numGroups) {
 
         super(new BorderLayout());
         generalParams = new GeneralParamsPanel(clusterThreshold, detectorType, traceLength,
                 fixShiftsToZero, originTableName, minDetectionCount,
-                prePickSeconds, minDetectionStat, maxDetectionStat, suppressBadDetectors, requireCorrelation, autoApplyFilter, retrieveByBlocks, blockSize);
+                prePickSeconds, minDetectionStat, maxDetectionStat, suppressBadDetectors, requireCorrelation,
+                autoApplyFilter, retrieveByBlocks, blockSize, clusterType, numGroups);
         commonDetectorParams = new CommonDetectorParamsPanel(detectionThreshold, blackoutSeconds);
         subspaceParams = new SubspaceParamPane(energyCapture, fixSubspaceDimension, capSubspaceDimension,
                 subspaceDimension, requireWindowPositionConfirmation, displayNewTemplates, detectorCreationOption);
@@ -104,18 +110,21 @@ public class ParamPanel extends JPanel {
         pickingParams = new PickingParamPane(displayPredictedPicks, displayEventIDLabels, displayDetectionLabels);
 
         fkParams = new FKParamsPanel(maxSlowness, numSlowness, minFrequency, maxFrequency);
-        
-       refineWindowParams =  new WindowSelectionParamPane( rWFloorFactor, rWRefineWindow, rWSnrThreshold, rWAnalysisWindowLength, rWMinimumWindowLength);
+
+        refineWindowParams = new WindowSelectionParamPane(rWFloorFactor, rWRefineWindow, rWSnrThreshold,
+                rWAnalysisWindowLength, rWMinimumWindowLength);
 
         add(generalParams, BorderLayout.NORTH);
 
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setPreferredSize(new Dimension(800, 300));
 
-        tabbedPane.addTab("Common Detector Params", null, commonDetectorParams, "Parameters that apply to all detectors");
+        tabbedPane.addTab("Common Detector Params", null, commonDetectorParams,
+                "Parameters that apply to all detectors");
         tabbedPane.addTab("Subspace Params", null, subspaceParams, "Parameters that apply to subspace detectors");
 
-        tabbedPane.addTab("ArrayCorrelation Params", null, arrayCorrelationParams, "Parameters that apply to array correlation detectors");
+        tabbedPane.addTab("ArrayCorrelation Params", null, arrayCorrelationParams,
+                "Parameters that apply to array correlation detectors");
         tabbedPane.addTab("Picking Params", null, pickingParams, "Parameters that apply to picking");
         tabbedPane.addTab("FK Params", null, fkParams, "Parameters controlling FK analysis");
         tabbedPane.addTab("Refine Window Params", null, refineWindowParams, "Parameters controlling window refinement");
@@ -202,6 +211,14 @@ public class ParamPanel extends JPanel {
         return generalParams.getDetectorType();
     }
 
+    public ClusterType getClusterType() {
+        return generalParams.getClusterType();
+    }
+
+    public int getNumberOfGroups() {
+        return generalParams.getNumberOfGroups();
+    }
+
     public int getMinDetectionCount() {
         return generalParams.getMinDetectionCount();
     }
@@ -282,7 +299,6 @@ public class ParamPanel extends JPanel {
         return fkParams.getMaxFrequency();
     }
 
- 
     public double getRWFloorFactor() {
         return refineWindowParams.getFloorFactor();
     }
@@ -302,6 +318,5 @@ public class ParamPanel extends JPanel {
     public double getRWMinimumWindowLength() {
         return refineWindowParams.getMinimumWindowLength();
     }
-   
-    
+
 }

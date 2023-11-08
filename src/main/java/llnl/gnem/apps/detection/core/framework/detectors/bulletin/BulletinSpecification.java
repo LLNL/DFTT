@@ -40,9 +40,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
-import llnl.gnem.core.util.FileUtil.DriveMapper;
+import llnl.gnem.dftt.core.util.FileUtil.DriveMapper;
 
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 public class BulletinSpecification extends AbstractSpecification implements Serializable {
 

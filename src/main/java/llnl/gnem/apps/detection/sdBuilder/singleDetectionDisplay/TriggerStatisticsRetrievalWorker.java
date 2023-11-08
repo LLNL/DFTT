@@ -30,8 +30,8 @@ import java.util.logging.Level;
 import javax.swing.SwingWorker;
 import llnl.gnem.apps.detection.core.dataObjects.TriggerDataFeatures;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
-import llnl.gnem.core.gui.util.ProgressDialog;
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.gui.util.ProgressDialog;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
 
 /**
  *

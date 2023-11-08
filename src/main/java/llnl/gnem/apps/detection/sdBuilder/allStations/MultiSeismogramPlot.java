@@ -53,27 +53,27 @@ import llnl.gnem.apps.detection.sdBuilder.allStations.actions.RemoveSinglePickAc
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
 import llnl.gnem.apps.detection.util.KeyPhaseMapper;
 
-import llnl.gnem.core.gui.plotting.MouseMode;
-import llnl.gnem.core.gui.plotting.MouseOverPlotObject;
-import llnl.gnem.core.gui.plotting.PickCreationInfo;
-import llnl.gnem.core.gui.plotting.PlotObjectClicked;
-import llnl.gnem.core.gui.plotting.VertAlignment;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JMultiAxisPlot;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JPlotKeyMessage;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JSubplot;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.PickMovedState;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.PickTextPosition;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.VPickLine;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.WindowDurationChangedState;
-import llnl.gnem.core.gui.plotting.plotobject.Line;
-import llnl.gnem.core.gui.plotting.plotobject.PlotObject;
-import llnl.gnem.core.gui.plotting.plotobject.XPinnedText;
-import llnl.gnem.core.gui.plotting.transforms.Coordinate;
-import llnl.gnem.core.traveltime.Ak135.TraveltimeCalculatorProducer;
-import llnl.gnem.core.traveltime.SinglePhaseTraveltimeCalculator;
-import llnl.gnem.core.util.Geometry.EModel;
-import llnl.gnem.core.util.SeriesMath;
-import llnl.gnem.core.waveform.BaseTraceData;
+import llnl.gnem.dftt.core.gui.plotting.MouseMode;
+import llnl.gnem.dftt.core.gui.plotting.MouseOverPlotObject;
+import llnl.gnem.dftt.core.gui.plotting.PickCreationInfo;
+import llnl.gnem.dftt.core.gui.plotting.PlotObjectClicked;
+import llnl.gnem.dftt.core.gui.plotting.VertAlignment;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JMultiAxisPlot;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JPlotKeyMessage;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JSubplot;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.PickMovedState;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.PickTextPosition;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.VPickLine;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.WindowDurationChangedState;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.Line;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.PlotObject;
+import llnl.gnem.dftt.core.gui.plotting.plotobject.XPinnedText;
+import llnl.gnem.dftt.core.gui.plotting.transforms.Coordinate;
+import llnl.gnem.dftt.core.traveltime.Ak135.TraveltimeCalculatorProducer;
+import llnl.gnem.dftt.core.traveltime.SinglePhaseTraveltimeCalculator;
+import llnl.gnem.dftt.core.util.Geometry.EModel;
+import llnl.gnem.dftt.core.util.SeriesMath;
+import llnl.gnem.dftt.core.waveform.BaseTraceData;
 
 /**
  *
@@ -494,14 +494,6 @@ public class MultiSeismogramPlot extends JMultiAxisPlot implements Observer {
         Collection<PhasePick> picks = AllStationsPickModel.getInstance().getAllPicks();
         Collection<Integer> picksToRemove = AllStationsPickModel.getInstance().getPicksToRemove();
         new SavePicksWorker(picks, picksToRemove, AllStationsFrame.getInstance()).execute();
-    }
-
-    public void defineEventWindow() {
-        double minTime = minStart + getXaxis().getMin();
-        double maxTime = minStart + getXaxis().getMax();
-        Collection<PhasePick> picks = AllStationsPickModel.getInstance().getAllPicks();
-        Collection<Integer> picksToRemove = AllStationsPickModel.getInstance().getPicksToRemove();
-        new DefineEventWorker(minTime, maxTime, picks, picksToRemove).execute();
     }
 
     private class PlotKeyListener extends KeyAdapter {

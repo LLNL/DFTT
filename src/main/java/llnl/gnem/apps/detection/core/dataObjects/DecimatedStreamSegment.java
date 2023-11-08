@@ -29,9 +29,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import llnl.gnem.apps.detection.util.TimeStamp;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.util.TimeT;
-import llnl.gnem.core.waveform.seismogram.BasicSeismogram;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.util.TimeT;
+import llnl.gnem.dftt.core.waveform.seismogram.BasicSeismogram;
 
 public class DecimatedStreamSegment {
 

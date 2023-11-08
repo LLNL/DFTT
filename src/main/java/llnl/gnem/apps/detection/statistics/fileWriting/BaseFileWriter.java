@@ -27,7 +27,7 @@ package llnl.gnem.apps.detection.statistics.fileWriting;
 
 
 import java.io.File;
-import llnl.gnem.core.util.FileSystemException;
+import llnl.gnem.dftt.core.util.FileSystemException;
 
 
 

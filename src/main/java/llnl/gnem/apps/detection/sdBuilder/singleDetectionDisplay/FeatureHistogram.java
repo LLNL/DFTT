@@ -28,8 +28,8 @@ package llnl.gnem.apps.detection.sdBuilder.singleDetectionDisplay;
 import java.awt.Color;
 import java.util.Collection;
 import llnl.gnem.apps.detection.core.dataObjects.TriggerDataFeatures;
-import llnl.gnem.core.gui.plotting.histogram.Histogram;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.VPickLine;
+import llnl.gnem.dftt.core.gui.plotting.histogram.Histogram;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.VPickLine;
 
 /**
  *

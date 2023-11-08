@@ -25,8 +25,8 @@
  */
 package llnl.gnem.apps.detection.dataAccess.database.oracle;
 
-import llnl.gnem.core.dataAccess.SeismogramSourceInfo;
-import llnl.gnem.core.dataAccess.SeismogramSourceInfo.SourceType;
+import llnl.gnem.dftt.core.dataAccess.SeismogramSourceInfo;
+import llnl.gnem.dftt.core.dataAccess.SeismogramSourceInfo.SourceType;
 import llnl.gnem.apps.detection.dataAccess.interfaces.ArrayConfigurationDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.ArrayCorrelationDetectorDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.ArrayDetectorDAO;
@@ -51,10 +51,10 @@ import llnl.gnem.apps.detection.dataAccess.interfaces.StreamProcessorDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.SubspaceDetectorDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.SubspaceTemplateDAO;
 import llnl.gnem.apps.detection.dataAccess.interfaces.TriggerDAO;
-import llnl.gnem.core.dataAccess.streaming.FDSNContinuousWaveformDAO;
-import llnl.gnem.core.dataAccess.DAOFactory;
-import llnl.gnem.core.dataAccess.database.oracle.OracleContinuousWaveformDAO;
-import llnl.gnem.core.dataAccess.interfaces.ContinuousWaveformDAO;
+import llnl.gnem.dftt.core.dataAccess.streaming.FDSNContinuousWaveformDAO;
+import llnl.gnem.dftt.core.dataAccess.DAOFactory;
+import llnl.gnem.dftt.core.dataAccess.database.oracle.OracleContinuousWaveformDAO;
+import llnl.gnem.dftt.core.dataAccess.interfaces.ContinuousWaveformDAO;
 
 
 /**

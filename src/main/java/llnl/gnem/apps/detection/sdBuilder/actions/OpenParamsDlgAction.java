@@ -33,7 +33,7 @@ import llnl.gnem.apps.detection.dataAccess.database.MutableTableNames;
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParamPanel;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
-import llnl.gnem.core.gui.util.Utility;
+import llnl.gnem.dftt.core.gui.util.Utility;
 
 /**
  * Created by dodge1 Date: Mar 22, 2012 COPYRIGHT NOTICE Copyright (C) 2007
@@ -75,7 +75,7 @@ public class OpenParamsDlgAction extends AbstractAction {
                 mod.isEnableSpawning(),
                 mod.getTraceLength(),
                 mod.isFixShiftsToZero(),
-                 MutableTableNames.getInstance().getOriginTableName(),
+                MutableTableNames.getInstance().getOriginTableName(),
                 mod.getMinDetectionCountForRetrieval(),
                 mod.getPrepickSeconds(),
                 mod.getMinDetStatThreshold(),
@@ -102,7 +102,9 @@ public class OpenParamsDlgAction extends AbstractAction {
                 mod.isRefineWindow(),
                 mod.getSNRThreshold(),
                 mod.getAnalysisWindowLength(),
-                mod.getMinimumWindowLength());
+                mod.getMinimumWindowLength(),
+                mod.getClusterType(),
+                mod.getDesiredClusterCount());
 
         Object[] options2 = {"Accept Changes", "Cancel"};
         int answer = JOptionPane.showOptionDialog(ClusterBuilderFrame.getInstance(),
@@ -127,7 +129,7 @@ public class OpenParamsDlgAction extends AbstractAction {
             mod.setTraceLength(panel.getTraceLength());
             mod.setFixShiftsToZero(panel.isFixShiftsToZero());
             mod.setMinDetectionCountForRetrieval(panel.getMinDetectionCount());
-             MutableTableNames.getInstance().setOriginTableName(panel.getOriginTableName());
+            MutableTableNames.getInstance().setOriginTableName(panel.getOriginTableName());
             mod.setPrepickSeconds(panel.getPrePickSeconds());
             mod.setMinDetStatThreshold(panel.getMinDetStatThreshold());
             mod.setMaxDetStatThreshold(panel.getMaxDetStatThreshold());
@@ -155,6 +157,9 @@ public class OpenParamsDlgAction extends AbstractAction {
             mod.setRWSNRThreshold(panel.getRWSNRThreshold());
             mod.setRWAnalysisWindowLength(panel.getRWAnalysisWindowLength());
             mod.setRWMinimumWindowLength(panel.getRWMinimumWindowLength());
+            
+            mod.setClusterType(panel.getClusterType());
+            mod.setDesiredClusterCount(panel.getNumberOfGroups());
         }
         ClusterBuilderFrame.getInstance().returnFocusToTree();
 

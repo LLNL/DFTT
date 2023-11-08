@@ -25,7 +25,7 @@
  */
 package llnl.gnem.apps.detection.sdBuilder.arrayDisplay.fkDisplay;
 
-import llnl.gnem.core.signalprocessing.arrayProcessing.FKResult;
+import llnl.gnem.dftt.core.signalprocessing.arrayProcessing.FKResult;
 
 public class SingleEventFKModel {
     

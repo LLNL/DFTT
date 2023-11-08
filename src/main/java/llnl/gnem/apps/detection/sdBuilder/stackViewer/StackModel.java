@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,9 +33,10 @@ package llnl.gnem.apps.detection.sdBuilder.stackViewer;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.CorrelatedTracesModel;
-import llnl.gnem.core.util.StreamKey;
-import llnl.gnem.core.waveform.BaseTraceData;
+import llnl.gnem.dftt.core.util.StreamKey;
+import llnl.gnem.dftt.core.waveform.BaseTraceData;
 
 /**
  *
@@ -61,9 +62,8 @@ public class StackModel {
     public Collection<StreamKey> getElementKeys() {
         return elementMap.keySet();
     }
-    
-    public StackData getStackData(StreamKey key)
-    {
+
+    public StackData getStackData(StreamKey key) {
         return elementMap.get(key);
     }
 
@@ -92,7 +92,8 @@ public class StackModel {
         private final Double dEast;
         private final SingleComponentStack inputStackData;
 
-        public StackData(StreamKey key, SingleComponentStack inputStackData, BaseTraceData stackTrace, Double dNorth, Double dEast) {
+        public StackData(StreamKey key, SingleComponentStack inputStackData, BaseTraceData stackTrace, Double dNorth,
+                Double dEast) {
             this.key = key;
             this.inputStackData = inputStackData;
             this.stackTrace = stackTrace;

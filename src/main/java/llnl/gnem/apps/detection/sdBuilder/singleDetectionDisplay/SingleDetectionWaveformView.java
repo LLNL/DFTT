@@ -30,14 +30,14 @@ import java.util.Collection;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.Detection;
 import llnl.gnem.apps.detection.core.dataObjects.TriggerDataFeatures;
 import llnl.gnem.apps.detection.sdBuilder.configuration.ParameterModel;
-import llnl.gnem.core.correlation.CorrelationComponent;
-import llnl.gnem.core.correlation.CorrelationTraceData;
-import llnl.gnem.core.correlation.util.NominalArrival;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JMultiAxisPlot;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.JSubplot;
-import llnl.gnem.core.gui.plotting.jmultiaxisplot.VPickLine;
-import llnl.gnem.core.waveform.qc.DataSpike;
-import llnl.gnem.core.waveform.qc.SpikeProcessor;
+import llnl.gnem.dftt.core.correlation.CorrelationComponent;
+import llnl.gnem.dftt.core.correlation.CorrelationTraceData;
+import llnl.gnem.dftt.core.correlation.util.NominalArrival;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JMultiAxisPlot;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.JSubplot;
+import llnl.gnem.dftt.core.gui.plotting.jmultiaxisplot.VPickLine;
+import llnl.gnem.dftt.core.waveform.qc.DataSpike;
+import llnl.gnem.dftt.core.waveform.qc.SpikeProcessor;
 
 /**
  *

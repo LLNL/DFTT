@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,13 +25,18 @@
  */
 package llnl.gnem.apps.detection.util.configuration;
 
-import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
-import llnl.gnem.core.util.StreamKey;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectorType;
+import llnl.gnem.dftt.core.util.StreamKey;
 
 /**
  *
@@ -47,7 +52,10 @@ public class BootDetectorCreator {
     private final Double beamAzimuth;
     private final Double beamVelocity;
 
-    public BootDetectorCreator(File stream1Dir, double staLtaThreshold, Collection<StreamKey> staChansToUse, DetectorType bootDetectorType, Double beamAzimuth, Double beamVelocity) {
+    private static final Logger log = LoggerFactory.getLogger(BootDetectorCreator.class);
+
+    public BootDetectorCreator(File stream1Dir, double staLtaThreshold, Collection<StreamKey> staChansToUse,
+            DetectorType bootDetectorType, Double beamAzimuth, Double beamVelocity) {
         this.staChansToUse = new ArrayList<>(staChansToUse);
         this.staLtaThresh = staLtaThreshold;
         this.bootDetectorType = bootDetectorType;
@@ -71,6 +79,13 @@ public class BootDetectorCreator {
                     return writeBootDetectorsFile(arrayDetectorFile, bootDetectorType);
                 case BULLETIN:
                     File bulletinDetectorFile = writeBulletinDetectorFile(bulletinFile).toPath().normalize().toFile();
+                    if (!bulletinFile.exists()) {
+                        try {
+                            bulletinFile.createNewFile();
+                        } catch (IOException ex) {
+                            log.error("Failed creating bulletin file!", ex);
+                        }
+                    }
                     return writeBootDetectorsFile(bulletinDetectorFile, bootDetectorType);
                 default:
                     throw new IllegalStateException("Unsupported boot detector type: " + bootDetectorType);
@@ -136,14 +151,14 @@ public class BootDetectorCreator {
 
     private void printStaChanSection(PrintWriter writer) {
         writer.print(".StaChanList" + sep);
-            for (StreamKey sc : staChansToUse) {
-                writer.print(sc.getAgency() != null ? sc.getAgency() + " " : "");
-                writer.print(sc.getNet() != null ? sc.getNet() + " " : "");
-                writer.print(sc.getSta() != null ? sc.getSta() + " " : "");
-                writer.print(sc.getChan() != null ? sc.getChan() + " " : "");
-                writer.print(sc.getLocationCode() != null ? sc.getLocationCode() + " " : "");
-                writer.print( sep);
-            }
+        for (StreamKey sc : staChansToUse) {
+            writer.print(sc.getAgency() != null ? sc.getAgency() + " " : "");
+            writer.print(sc.getNet() != null ? sc.getNet() + " " : "");
+            writer.print(sc.getSta() != null ? sc.getSta() + " " : "");
+            writer.print(sc.getChan() != null ? sc.getChan() + " " : "");
+            writer.print(sc.getLocationCode() != null ? sc.getLocationCode() + " " : "");
+            writer.print(sep);
+        }
 
         writer.print(".EndList" + sep);
     }

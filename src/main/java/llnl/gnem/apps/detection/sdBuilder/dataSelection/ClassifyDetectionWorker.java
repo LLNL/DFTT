@@ -32,7 +32,7 @@ import javax.swing.SwingWorker;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 
 import llnl.gnem.apps.detection.sdBuilder.waveformViewer.ClusterBuilderFrame;
-import llnl.gnem.core.util.ApplicationLogger;
+import llnl.gnem.dftt.core.util.ApplicationLogger;
 
 /**
  * Created by dodge1 Date: Feb 12, 2012 COPYRIGHT NOTICE Copyright (C) 2007

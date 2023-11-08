@@ -46,8 +46,8 @@ import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceSpecif
 import llnl.gnem.apps.detection.core.framework.detectors.subspace.SubspaceTemplate;
 import llnl.gnem.apps.detection.dataAccess.DetectionDAOFactory;
 import llnl.gnem.apps.detection.dataAccess.interfaces.SubspaceTemplateDAO;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.util.StreamKey;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.util.StreamKey;
 import oracle.sql.BLOB;
 
 /**

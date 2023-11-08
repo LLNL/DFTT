@@ -35,8 +35,8 @@ import llnl.gnem.apps.detection.dataAccess.dataobjects.DetectionSummary;
 import llnl.gnem.apps.detection.dataAccess.dataobjects.ShortDetectionSummary;
 import llnl.gnem.apps.detection.sdBuilder.dataSelection.ClassifiedDetection;
 import llnl.gnem.apps.detection.util.DetectorSubstitution;
-import llnl.gnem.core.dataAccess.DataAccessException;
-import llnl.gnem.core.util.Epoch;
+import llnl.gnem.dftt.core.dataAccess.DataAccessException;
+import llnl.gnem.dftt.core.util.Epoch;
 
 /**
  *

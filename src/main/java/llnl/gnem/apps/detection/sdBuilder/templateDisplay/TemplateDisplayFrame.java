@@ -30,7 +30,7 @@ import javax.swing.JSplitPane;
 import llnl.gnem.apps.detection.sdBuilder.templateDisplay.projections.HistogramProjectionView;
 import llnl.gnem.apps.detection.sdBuilder.templateDisplay.projections.ProjectionModel;
 import llnl.gnem.apps.detection.sdBuilder.templateDisplay.projections.ProjectionTableHolder;
-import llnl.gnem.core.gui.util.PersistentPositionContainer;
+import llnl.gnem.dftt.core.gui.util.PersistentPositionContainer;
 
 /**
  *
